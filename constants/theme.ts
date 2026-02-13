@@ -1,53 +1,38 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
 
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+// Colores para modo oscuro (default)
+export const darkColors = {
+  backgroundPrimary: '#0A0A0A',    // Fondo general
+  backgroundSecondary: '#121212',  // Tarjetas, contenedores
+  backgroundTertiary: '#1E1E1E',   // Inputs, elementos secundarios
+  primary: '#FF6B00',               // Acciones principales
+  primaryActive: '#FF7F26',         // Hover/Pressed
+  textPrimary: '#FFFFFF',           // Titulares y textos sobre fondo oscuro
+  textSecondary: '#B5B5B5',         // Descripciones y menor jerarquía
+  textDisabled: '#6F6F6F',          // Elementos inactivos
+  border: '#1A1A1A',                // Divisores y bordes
+  iconActive: '#FF6B00',            // Iconografía activa
+  iconInactive: '#6F6F6F',          // Iconografía inactiva
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+// Colores para modo claro (accesible)
+export const lightColors = {
+  backgroundPrimary: '#FFFFFF',     // Fondo general
+  backgroundSecondary: '#F2F2F2',   // Tarjetas, contenedores
+  backgroundTertiary: '#E0E0E0',    // Inputs, elementos secundarios
+  primary: '#FF6B00',               // Acciones principales (mismo naranja)
+  primaryActive: '#FF7F26',         // Hover/Pressed
+  textPrimary: '#121212',           // Titulares y textos sobre fondo claro
+  textSecondary: '#555555',         // Descripciones y menor jerarquía
+  textDisabled: '#A0A0A0',          // Elementos inactivos
+  border: '#CCCCCC',                // Divisores y bordes
+  iconActive: '#FF6B00',            // Iconografía activa
+  iconInactive: '#A0A0A0',          // Iconografía inactiva
+};
+
+// Export helper: devuelve colores según el esquema actual
+import { useColorScheme } from 'react-native';
+
+export const useThemeColors = () => {
+  const scheme = useColorScheme(); // 'dark' | 'light'
+  return scheme === 'dark' ? darkColors : lightColors;
+};
