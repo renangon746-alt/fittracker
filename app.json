@@ -23,6 +23,8 @@
     },
     "web": {
       "output": "static",
+      "name": "FitTracker - App de Ejercicios",
+      "shortName": "FitTracker",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [

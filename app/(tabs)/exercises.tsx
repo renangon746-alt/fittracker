@@ -3,23 +3,18 @@ import MuscleList from '@/components/MuscleList';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function Exercises() { 
 
   const [search, setSearchText] = useState(exercises);
 
-  function searchExercises(event:any){
-
-    const searchText = event.target.value;
-
-    // NUEVO ARRAY CREADO CADA VEZ QUE CAMBIA EL INPUT console.log(searchText);
+  function searchExercises(text: string){
     const filteredExercises = exercises.filter(exercise =>
       exercise.exerciseName
         .toLowerCase()
-        .includes(searchText.toLowerCase())
+        .includes(text.toLowerCase())
     );
-
     setSearchText(filteredExercises);
   }
 
@@ -36,7 +31,7 @@ export default function Exercises() {
           }]}
           placeholder="Search exercises here..."
           placeholderTextColor={colors.textSecondary}
-          onChange={searchExercises}
+          onChangeText={searchExercises} // CORRECTO para RN
           accessibilityLabel="Search exercises"
           accessibilityHint="Type to filter exercises"
         />
@@ -47,7 +42,14 @@ export default function Exercises() {
           color={colors.iconInactive}
         />
       </View>
-      <MuscleList exercises={search} />
+
+      {search.length === 0 ? (
+        <Text style={{ textAlign: 'center', marginTop: 20, color: colors.textSecondary }} testID="no-results">
+          No exercises found
+        </Text>
+      ) : (
+        <MuscleList exercises={search} />
+      )}
     </ScrollView>
   );
 }
