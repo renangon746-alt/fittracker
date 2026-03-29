@@ -22,6 +22,7 @@ export default function RootLayout() {
       </Head>
       <Stack>
         <Stack.Screen name="(tabs)" options={{headerShown: false, title: "FitTracker"}}></Stack.Screen>
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );
