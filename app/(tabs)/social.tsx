@@ -1,20 +1,78 @@
+import { users } from '@/assets/data/users';
+import UserList from '@/components/UserList';
 import { useTheme } from '@/context/ThemeContext';
-import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function Social() {
-   const { colors } = useTheme();
+  const [search, setSearchText] = useState(users);
+  const { colors } = useTheme();
+
+  function searchUsers(searchText: string) {
+    const filteredUsers = users.filter(
+      (user) =>
+        user.userName.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.fullName.toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    setSearchText(filteredUsers);
+  }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.backgroundPrimary }]}>
-      <Text style={{color: colors.textPrimary}}>Tab Social</Text>
-    </View>
+    <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.backgroundTertiary,
+              borderColor: colors.border,
+              color: colors.textPrimary,
+            },
+          ]}
+          placeholder="Search users here..."
+          placeholderTextColor={colors.textSecondary}
+          onChangeText={searchUsers}
+          accessibilityLabel="Search users"
+          accessibilityHint="Type to filter users"
+        />
+        <Ionicons
+          style={styles.icon}
+          name="search"
+          size={20}
+          color={colors.iconInactive}
+        />
+      </View>
+      {search.length > 0 ? (
+        <UserList users={search} />
+      ) : (
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No users found</Text>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  searchContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 16,
+  },
+  input: {
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingLeft: 16,
+    paddingRight: 44,
+    borderWidth: 1,
+  },
+  icon: {
+    position: 'absolute',
+    right: 24,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 16,
+    marginTop: 8,
   },
 });
