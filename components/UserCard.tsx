@@ -1,5 +1,6 @@
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface UserCardProps {
@@ -10,7 +11,7 @@ interface UserCardProps {
   favoriteMuscle: string;
 }
 
-export default function UserCard({ image, userName, fullName }: UserCardProps) {
+export default function UserCard({ id, image, userName, fullName, favoriteMuscle }: UserCardProps) {
   const { colors } = useTheme();
 
   return (
@@ -20,7 +21,7 @@ export default function UserCard({ image, userName, fullName }: UserCardProps) {
       accessibilityRole="button"
       accessibilityLabel={`User ${userName}`}
       accessibilityHint="Opens user profile"
-      onPress={() => {}}
+      onPress={() => router.push({ pathname: '/profileDescription', params: { id, userName, fullName, favoriteMuscle } })}
     >
       <View style={[styles.avatarContainer, { backgroundColor: colors.backgroundTertiary }]}>
         <Ionicons name="person" size={32} color="#4A4A4A" />
