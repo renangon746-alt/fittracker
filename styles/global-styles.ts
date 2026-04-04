@@ -58,6 +58,22 @@ export const globalStyles = (colors: any) =>
         borderRadius: 50,
         width: 50,
         height: 50
-    }
+    },
 
+    StreakContainer:{
+        alignItems: "center",
+        justifyContent: "center"
+    },
+
+    StreakNumber: {
+        position: "absolute",
+        color: colors.textPrimary,
+        fontSize: 30,
+        fontFamily: "Inter",
+        fontWeight: "bold",
+        top: 11,
+        textShadowColor: 'black',
+        textShadowOffset: { width: 0, height: 0 },
+        textShadowRadius: 2,
+    }
 });
