@@ -11,9 +11,9 @@ export default function StreakBadge({ count }: StreakBadgeProps) {
   const { colors } = useTheme();
   const styles = globalStyles(colors);
   return (
-    <View style={styles.StreakContainer}>
+    <View style={styles.streakContainer}>
       <FontAwesome5 name="fire-alt" solid size={48} color={colors.primary} />
-      <Text style={styles.StreakNumber}>{count}</Text>
+      <Text style={styles.streakNumber}>{count}</Text>
     </View>
   );
 }

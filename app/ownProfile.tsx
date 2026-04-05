@@ -12,11 +12,10 @@ import { ActivityIndicator, Image, Pressable, SafeAreaView, Text, View } from "r
 const defaultAvatar = require('../assets/images/defaultAvatar.png');
 
 interface UserProfile {
-    id: string;
-    user_name: string;
-    full_name: string;
-    favorite_muscle?: string;
-    bio?: string;
+    id_usuario: string;
+    nombre: string;
+    email: string;
+    // Añade aquí las demás columnas que tenga tu tabla usuario
 }
 
 export default function OwnProfile(){
@@ -25,32 +24,43 @@ export default function OwnProfile(){
     const [imgError, setImgError] = useState(false);
     const [loading, setLoading] = useState(true);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [errorMsg, setErrorMsg] = useState<string>('');
 
     useEffect(() => {
         async function loadUserProfile() {
             try {
-                // Obtener el usuario actual
-                const { data: { user } } = await supabase.auth.getUser();
+                // Obtener el usuario actual de auth
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
                 
-                if (!user) {
+                console.log('Usuario auth:', user?.id); // Debug
+                
+                if (userError || !user) {
+                    console.error('Error obteniendo usuario:', userError);
                     router.replace('/auth/login');
                     return;
                 }
 
-                // Obtener los datos del perfil desde la tabla profiles
+                // Obtener los datos del perfil desde la tabla usuario
                 const { data: profile, error } = await supabase
-                    .from('profiles')
+                    .from('usuario')
                     .select('*')
-                    .eq('id', user.id)
+                    .eq('id_usuario', user.id)
                     .single();
+
+                console.log('Profile data:', profile); // Debug
+                console.log('Profile error:', error); // Debug
 
                 if (error) {
                     console.error('Error loading profile:', error);
-                } else {
+                    setErrorMsg('Error cargando perfil: ' + error.message);
+                } else if (profile) {
                     setUserProfile(profile);
+                } else {
+                    setErrorMsg('No se encontró el perfil en la base de datos');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error general:', error);
+                setErrorMsg('Error inesperado: ' + String(error));
             } finally {
                 setLoading(false);
             }
@@ -63,19 +73,27 @@ export default function OwnProfile(){
         return (
             <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
                 <ActivityIndicator size="large" color={colors.textPrimary} />
+                <Text style={[styles.secondaryText, {marginTop: 10}]}>Cargando perfil...</Text>
             </SafeAreaView>
         );
     }
 
     if (!userProfile) {
         return (
-            <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={styles.principalText}>No se pudo cargar el perfil</Text>
+            <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center', padding: 20}}>
+                <Text style={[styles.principalText, {color: 'red', marginBottom: 10}]}>No se pudo cargar el perfil</Text>
+                <Text style={[styles.secondaryText, {textAlign: 'center'}]}>{errorMsg}</Text>
+                <Pressable 
+                    style={[styles.principalButton, {marginTop: 20}]} 
+                    onPress={() => router.back()}
+                >
+                    <Text style={styles.principalText}>Volver</Text>
+                </Pressable>
             </SafeAreaView>
         );
     }
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(`${userProfile.id}/avatar.jpg`);
+    const { data } = supabase.storage.from('avatars').getPublicUrl(`${userProfile.id_usuario}/avatar.jpg`);
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
@@ -102,7 +120,7 @@ export default function OwnProfile(){
                         onError={() => setImgError(true)}
                         style={styles.profileImage}
                     />
-                    <Text style={styles.tittleText}>{userProfile.user_name}</Text>
+                    <Text style={styles.tittleText}>{userProfile.nombre}</Text>
                     <StreakBadge count={15}/>
                 </View>
 
@@ -128,7 +146,7 @@ export default function OwnProfile(){
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, marginTop: 20 }}>
                     <View style={{ flex: 1 }}>
                         <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
-                            {userProfile.bio || 'Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.'}
+                            Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
                         </Text>
                     </View>
                 </View>

@@ -60,12 +60,12 @@ export const globalStyles = (colors: any) =>
         height: 50
     },
 
-    StreakContainer:{
+    streakContainer:{
         alignItems: "center",
         justifyContent: "center"
     },
 
-    StreakNumber: {
+    streakNumber: {
         position: "absolute",
         color: colors.textPrimary,
         fontSize: 30,
@@ -75,5 +75,23 @@ export const globalStyles = (colors: any) =>
         textShadowColor: 'black',
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 2,
+    },
+
+    calendarContainer: {
+        padding: 10,
+        borderRadius: 16,
+        marginVertical: 8,
+        alignItems: 'center',
+    },
+
+    calendarRadius:{
+        borderRadius: 16
+    },
+
+    graphContainer: {
+        marginVertical: 8,
+        borderRadius: 16,
     }
+
+
 });
