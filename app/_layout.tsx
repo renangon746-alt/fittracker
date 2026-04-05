@@ -23,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{headerShown: false}} />
         <Stack.Screen name="errorPage" options={{ headerShown: false }} />
         <Stack.Screen name="profileDescription" options={{ headerShown: false }} />
+        <Stack.Screen name="ownProfile" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

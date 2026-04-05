@@ -4,19 +4,78 @@ import StreakBadge from "@/components/StreakBadge";
 import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
-import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { Image, Pressable, SafeAreaView, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Image, Pressable, SafeAreaView, Text, View } from "react-native";
 
 const defaultAvatar = require('../assets/images/defaultAvatar.png');
 
-export default function ProfileDescription(){
-    const { id, userName, fullName, favoriteMuscle } = useLocalSearchParams();
+interface UserProfile {
+    id: string;
+    user_name: string;
+    full_name: string;
+    favorite_muscle?: string;
+    bio?: string;
+}
+
+export default function OwnProfile(){
     const {colors} = useTheme();
     const styles = globalStyles(colors);
-    const { data } = supabase.storage.from('avatars').getPublicUrl(`${id}/avatar.jpg`);
     const [imgError, setImgError] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+    useEffect(() => {
+        async function loadUserProfile() {
+            try {
+                // Obtener el usuario actual
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (!user) {
+                    router.replace('/auth/login');
+                    return;
+                }
+
+                // Obtener los datos del perfil desde la tabla profiles
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading profile:', error);
+                } else {
+                    setUserProfile(profile);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadUserProfile();
+    }, []);
+
+    if (loading) {
+        return (
+            <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
+                <ActivityIndicator size="large" color={colors.textPrimary} />
+            </SafeAreaView>
+        );
+    }
+
+    if (!userProfile) {
+        return (
+            <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
+                <Text style={styles.principalText}>No se pudo cargar el perfil</Text>
+            </SafeAreaView>
+        );
+    }
+
+    const { data } = supabase.storage.from('avatars').getPublicUrl(`${userProfile.id}/avatar.jpg`);
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
@@ -38,12 +97,12 @@ export default function ProfileDescription(){
             <View style={{flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
                 {/* Profile and Image */}
                 <View style={{ flexDirection: 'row' , alignItems: 'center',gap: 45,  justifyContent: 'space-between'}}>
-                        <Image
-                            source={imgError ? defaultAvatar : { uri: data.publicUrl }}
-                            onError={() => setImgError(true)}
-                            style={styles.profileImage}
-                        />
-                        <Text style={styles.tittleText}>{userName}</Text>
+                    <Image
+                        source={imgError ? defaultAvatar : { uri: data.publicUrl }}
+                        onError={() => setImgError(true)}
+                        style={styles.profileImage}
+                    />
+                    <Text style={styles.tittleText}>{userProfile.user_name}</Text>
                     <StreakBadge count={15}/>
                 </View>
 
@@ -65,17 +124,13 @@ export default function ProfileDescription(){
                     </View>
                 </View>
 
-                {/* Short Bio and Follow Button */}
+                {/* Short Bio */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, marginTop: 20 }}>
                     <View style={{ flex: 1 }}>
                         <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
-                        Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
+                            {userProfile.bio || 'Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.'}
                         </Text>
                     </View>
-
-                    <Pressable style={[styles.principalButton, { width: 100, height: 35 }]}>
-                        <Text style={styles.principalText}>Follow</Text>
-                    </Pressable>
                 </View>
                 
                 <View style={{padding:5}}>
