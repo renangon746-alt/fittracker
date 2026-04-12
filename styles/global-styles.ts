@@ -54,6 +54,24 @@ export const globalStyles = (colors: any) =>
         justifyContent: 'center' as const
     },
 
+    secondaryButton:{
+        backgroundColor: colors.textSecondary,
+        borderRadius: 50,
+        width: 250,
+        height:40,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const
+    },
+
+    tertiaryButton:{
+        backgroundColor: colors.textPrimary,
+        borderRadius: 50,
+        width: 250,
+        height:40,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const
+    },
+
     profileImage:{
         borderRadius: 50,
         width: 50,

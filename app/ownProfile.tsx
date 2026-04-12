@@ -2,6 +2,7 @@ import Cal from "@/components/Cal";
 import Graph from "@/components/Graph";
 import StreakBadge from "@/components/StreakBadge";
 import { useTheme } from "@/context/ThemeContext";
+import { useStreak } from "@/hooks/useStreak";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,10 +13,9 @@ import { ActivityIndicator, Image, Pressable, SafeAreaView, Text, View } from "r
 const defaultAvatar = require('../assets/images/defaultAvatar.png');
 
 interface UserProfile {
-    id_usuario: string;
+    id_usuario: number;
     nombre: string;
     email: string;
-    // Añade aquí las demás columnas que tenga tu tabla usuario
 }
 
 export default function OwnProfile(){
@@ -26,13 +26,13 @@ export default function OwnProfile(){
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
 
+    // Hook de racha
+    const { streak, loading: streakLoading } = useStreak(userProfile?.id_usuario ?? null);
+
     useEffect(() => {
         async function loadUserProfile() {
             try {
-                // Obtener el usuario actual de auth
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
-                
-                console.log('Usuario auth:', user?.id); // Debug
                 
                 if (userError || !user) {
                     console.error('Error obteniendo usuario:', userError);
@@ -40,23 +40,18 @@ export default function OwnProfile(){
                     return;
                 }
 
-                // Obtener los datos del perfil desde la tabla usuario
-                const { data: profile, error } = await supabase
+                const { data: profiles, error } = await supabase
                     .from('usuario')
                     .select('*')
-                    .eq('id_usuario', user.id)
-                    .single();
-
-                console.log('Profile data:', profile); // Debug
-                console.log('Profile error:', error); // Debug
+                    .eq('email', user.email);
 
                 if (error) {
                     console.error('Error loading profile:', error);
                     setErrorMsg('Error cargando perfil: ' + error.message);
-                } else if (profile) {
-                    setUserProfile(profile);
+                } else if (profiles && profiles.length > 0) {
+                    setUserProfile(profiles[0]);
                 } else {
-                    setErrorMsg('No se encontró el perfil en la base de datos');
+                    setErrorMsg('No se encontró ningún perfil con el email: ' + user.email);
                 }
             } catch (error) {
                 console.error('Error general:', error);
@@ -69,7 +64,7 @@ export default function OwnProfile(){
         loadUserProfile();
     }, []);
 
-    if (loading) {
+    if (loading || streakLoading) {
         return (
             <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
                 <ActivityIndicator size="large" color={colors.textPrimary} />
@@ -97,7 +92,6 @@ export default function OwnProfile(){
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
-            {/* Botón de volver atrás */}
             <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
                 <Pressable 
                     onPress={() => router.back()}
@@ -121,7 +115,7 @@ export default function OwnProfile(){
                         style={styles.profileImage}
                     />
                     <Text style={styles.tittleText}>{userProfile.nombre}</Text>
-                    <StreakBadge count={15}/>
+                    <StreakBadge count={streak} />
                 </View>
 
                 {/* Profile Stats */}
@@ -152,10 +146,7 @@ export default function OwnProfile(){
                 </View>
                 
                 <View style={{padding:5}}>
-                    {/* Graph */}
                     <Graph/>
-
-                    {/* Calendar */}
                     <Cal/>
                 </View>
                 
