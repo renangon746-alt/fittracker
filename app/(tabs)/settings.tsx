@@ -13,8 +13,6 @@ import {
   View,
 } from 'react-native';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 type RowProps = {
   icon: React.ReactNode;
   label: string;
@@ -23,8 +21,6 @@ type RowProps = {
   isLast?: boolean;
   colors: ReturnType<typeof useTheme>['colors'];
 };
-
-// ─── Reusable row ─────────────────────────────────────────────────────────────
 
 function SettingsRow({ icon, label, onPress, right, isLast, colors }: RowProps) {
   return (
@@ -39,11 +35,8 @@ function SettingsRow({ icon, label, onPress, right, isLast, colors }: RowProps) 
         },
       ]}
     >
-      {/* Icon — same color as text, no background */}
       <View style={styles.iconWrap}>{icon}</View>
-
       <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>{label}</Text>
-
       <View style={styles.rowRight}>
         {right ?? (
           onPress ? (
@@ -54,8 +47,6 @@ function SettingsRow({ icon, label, onPress, right, isLast, colors }: RowProps) 
     </Pressable>
   );
 }
-
-// ─── Section wrapper ─────────────────────────────────────────────────────────
 
 function Section({
   title,
@@ -69,11 +60,8 @@ function Section({
   return (
     <View style={styles.section}>
       {title && (
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-          {title}
-        </Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
       )}
-      {/* Card contrasts against the page background */}
       <View
         style={[
           styles.sectionCard,
@@ -89,8 +77,6 @@ function Section({
   );
 }
 
-// ─── Main screen ─────────────────────────────────────────────────────────────
-
 export default function Settings() {
   const router = useRouter();
   const { colors, toggleTheme, theme } = useTheme();
@@ -101,22 +87,6 @@ export default function Settings() {
       style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
       contentContainerStyle={styles.container}
     >
-      {/* Perfil */}
-      <Pressable style={styles.pressable}  onPress={() => router.push("/profile/ownProfile")}>
-        <FontAwesome5 
-          name="user"
-          size={24}
-          color={colors.iconInactive} // icono activo dinámico
-        />
-        <Text style={styles.text}>Profile & privacy</Text>
-        <Ionicons
-          name="chevron-forward-outline"
-          size={24}
-          color={colors.iconInactive} // icono inactivo dinámico
-          style={{ marginLeft: 'auto' }}
-        />
-      </Pressable>
-
       {/* ── Preferencias ── */}
       <Section title="PREFERENCIAS" colors={colors}>
         <SettingsRow
@@ -143,12 +113,24 @@ export default function Settings() {
           icon={<Ionicons name="lock-closed-outline" size={20} color={colors.textPrimary} />}
           label="Privacidad"
           onPress={() => router.push('/settings/privacy')}
+        />
+        <SettingsRow
+          colors={colors}
+          icon={<Ionicons name="globe-outline" size={20} color={colors.textPrimary} />}
+          label="Idioma"
+          onPress={() => router.push('/settings/language')}
           isLast
         />
       </Section>
 
       {/* ── Cuenta ── */}
       <Section title="CUENTA" colors={colors}>
+        <SettingsRow
+          colors={colors}
+          icon={<FontAwesome5 name="user" size={18} color={colors.textPrimary} />}
+          label="Mi perfil"
+          onPress={() => router.push('/profile/ownProfile')}
+        />
         <SettingsRow
           colors={colors}
           icon={<FontAwesome5 name="user-edit" size={18} color={colors.textPrimary} />}
@@ -220,7 +202,7 @@ export default function Settings() {
         />
       </Section>
 
-      {/* ── Cerrar sesión ── card style, danger text, no bg color */}
+      {/* ── Cerrar sesión ── */}
       <Pressable
         style={({ pressed }) => [
           styles.logoutBtn,
@@ -234,20 +216,12 @@ export default function Settings() {
       <Text style={[styles.footer, { color: colors.textSecondary }]}>
         @FitTracker · Todos los derechos reservados
       </Text>
-
     </ScrollView>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 24,
-    paddingBottom: 48,
-  },
-
-  // Section
+  container: { paddingVertical: 24, paddingBottom: 48 },
   section: { marginBottom: 28 },
   sectionTitle: {
     fontSize: 11,
@@ -266,8 +240,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-
-  // Row
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -276,14 +248,9 @@ const styles = StyleSheet.create({
     minHeight: 50,
     gap: 14,
   },
-  iconWrap: {
-    width: 24,
-    alignItems: 'center',
-  },
+  iconWrap: { width: 24, alignItems: 'center' },
   rowLabel: { flex: 1, fontSize: 16 },
   rowRight: { alignItems: 'flex-end' },
-
-  // Social
   socialRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -291,15 +258,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   socialBtn: { padding: 8 },
-
-  // Version
   versionText: { fontSize: 15 },
-
-  // Logout — card style, danger text color only
   logoutBtn: {
     marginHorizontal: 16,
     marginTop: 4,
-    borderRadius: 32,
+    borderRadius: 14,
     paddingVertical: 15,
     alignItems: 'center',
     shadowOffset: { width: 0, height: 1 },
@@ -308,7 +271,5 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   logoutText: { color: '#FF3B30', fontSize: 16, fontWeight: '600' },
-
-  // Footer
   footer: { textAlign: 'center', fontSize: 12, marginTop: 24 },
 });

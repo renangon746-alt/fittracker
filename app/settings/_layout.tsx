@@ -29,6 +29,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="editProfile"   options={{ title: 'Editar perfil' }} />
       <Stack.Screen name="editAccount"   options={{ title: 'Editar cuenta' }} />
       <Stack.Screen name="about"         options={{ title: 'Acerca de nosotros' }} />
+      <Stack.Screen name="language"      options={{ title: 'Idioma' }} />
     </Stack>
   );
 }
