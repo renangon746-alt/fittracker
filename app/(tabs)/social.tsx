@@ -1,23 +1,75 @@
-import { users } from '@/assets/data/users';
 import UserList from '@/components/UserList';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+
+interface DbUser {
+  id_usuario: number;
+  nombre: string;
+  nickname?: string | null;
+}
+
+interface SocialUser {
+  id: number;
+  userName: string;
+  fullName: string;
+}
 
 export default function Social() {
-  const [search, setSearchText] = useState(users);
+  const [query, setQuery] = useState('');
+  const [users, setUsers] = useState<SocialUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
   const { colors } = useTheme();
 
-  function searchUsers(searchText: string) {
-    const filteredUsers = users.filter(
-      (user) =>
-        user.userName.toLowerCase().includes(searchText.toLowerCase()) ||
-        user.fullName.toLowerCase().includes(searchText.toLowerCase())
-    );
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('usuario')
+          .select('id_usuario, nombre, nickname')
+          .order('nombre', { ascending: true });
 
-    setSearchText(filteredUsers);
-  }
+        if (error) {
+          setErrorMsg('Error cargando usuarios: ' + error.message);
+          return;
+        }
+
+        const mappedUsers: SocialUser[] = ((data as DbUser[] | null) ?? []).map((user) => ({
+          id: user.id_usuario,
+          userName: (user.nickname && user.nickname.trim().length > 0)
+            ? user.nickname
+            : `user${user.id_usuario}`,
+          fullName: user.nombre,
+        }));
+
+        setUsers(mappedUsers);
+      } catch (error) {
+        setErrorMsg('Error inesperado: ' + String(error));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return users;
+    }
+
+    return users.filter(
+      (user) =>
+        user.userName.toLowerCase().includes(normalizedQuery) ||
+        user.fullName.toLowerCase().includes(normalizedQuery)
+    );
+  }, [query, users]);
 
   return (
     <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
@@ -33,7 +85,8 @@ export default function Social() {
           ]}
           placeholder="Search users here..."
           placeholderTextColor={colors.textSecondary}
-          onChangeText={searchUsers}
+          onChangeText={setQuery}
+          value={query}
           accessibilityLabel="Search users"
           accessibilityHint="Type to filter users"
         />
@@ -44,8 +97,13 @@ export default function Social() {
           color={colors.iconInactive}
         />
       </View>
-      {search.length > 0 ? (
-        <UserList users={search} />
+
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : errorMsg ? (
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{errorMsg}</Text>
+      ) : filteredUsers.length > 0 ? (
+        <UserList users={filteredUsers} />
       ) : (
         <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No users found</Text>
       )}
@@ -74,5 +132,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     marginTop: 8,
+  },
+  loader: {
+    marginTop: 24,
   },
 });
