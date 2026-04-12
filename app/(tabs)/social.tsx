@@ -9,6 +9,7 @@ interface DbUser {
   id_usuario: number;
   nombre: string;
   nickname?: string | null;
+  email?: string | null;
 }
 
 interface SocialUser {
@@ -28,6 +29,28 @@ export default function Social() {
     async function loadUsers() {
       try {
         setLoading(true);
+
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) {
+          setErrorMsg('Error obteniendo sesion: ' + authError.message);
+          return;
+        }
+
+        const loggedEmail = authData.user?.email;
+        let loggedUserId: number | null = null;
+
+        if (loggedEmail) {
+          const { data: ownProfile, error: ownProfileError } = await supabase
+            .from('usuario')
+            .select('id_usuario')
+            .eq('email', loggedEmail)
+            .single();
+
+          if (!ownProfileError && ownProfile) {
+            loggedUserId = ownProfile.id_usuario;
+          }
+        }
+
         const { data, error } = await supabase
           .from('usuario')
           .select('id_usuario, nombre, nickname')
@@ -38,13 +61,15 @@ export default function Social() {
           return;
         }
 
-        const mappedUsers: SocialUser[] = ((data as DbUser[] | null) ?? []).map((user) => ({
-          id: user.id_usuario,
-          userName: (user.nickname && user.nickname.trim().length > 0)
-            ? user.nickname
-            : `user${user.id_usuario}`,
-          fullName: user.nombre,
-        }));
+        const mappedUsers: SocialUser[] = ((data as DbUser[] | null) ?? [])
+          .filter((user) => user.id_usuario !== loggedUserId)
+          .map((user) => ({
+            id: user.id_usuario,
+            userName: (user.nickname && user.nickname.trim().length > 0)
+              ? user.nickname
+              : `user${user.id_usuario}`,
+            fullName: user.nombre,
+          }));
 
         setUsers(mappedUsers);
       } catch (error) {
