@@ -1,16 +1,15 @@
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface UserCardProps {
   id: number;
-  image: number;
   userName: string;
   fullName: string;
-  favoriteMuscle: string;
 }
 
-export default function UserCard({ image, userName, fullName }: UserCardProps) {
+export default function UserCard({ id, userName, fullName }: UserCardProps) {
   const { colors } = useTheme();
 
   return (
@@ -20,14 +19,14 @@ export default function UserCard({ image, userName, fullName }: UserCardProps) {
       accessibilityRole="button"
       accessibilityLabel={`User ${userName}`}
       accessibilityHint="Opens user profile"
-      onPress={() => {}}
+      onPress={() => router.push({ pathname: '/profile/profileDescription', params: { id: id.toString() } })}
     >
       <View style={[styles.avatarContainer, { backgroundColor: colors.backgroundTertiary }]}>
-        <Ionicons name="person" size={32} color={colors.primary} />
+        <Ionicons name="person" size={32} color="#4A4A4A" />
       </View>
       <View style={styles.textContainer}>
-        <Text style={[styles.userName, { color: colors.textPrimary }]}>@{userName}</Text>
-        <Text style={[styles.fullName, { color: colors.textSecondary }]}>{fullName}</Text>
+        <Text style={[styles.userName, { color: colors.textPrimary }]}>@{fullName}</Text>
+        <Text style={[styles.fullName, { color: colors.textSecondary }]}>{userName}</Text>
       </View>
       <Ionicons name="chevron-forward-outline" size={24} color={colors.primary} />
     </Pressable>
