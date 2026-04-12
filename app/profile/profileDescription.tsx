@@ -6,7 +6,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { Ionicons } from '@expo/vector-icons';
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
@@ -21,6 +21,7 @@ interface UserProfile {
 export default function ProfileDescription(){
     const {colors} = useTheme();
     const styles = globalStyles(colors);
+    const { id } = useLocalSearchParams<{ id?: string }>();
     const [imgError, setImgError] = useState(false);
     const [loading, setLoading] = useState(true);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -32,26 +33,26 @@ export default function ProfileDescription(){
     useEffect(() => {
         async function loadUserProfile() {
             try {
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                
-                if (userError || !user) {
-                    console.error('Error obteniendo usuario:', userError);
-                    router.replace('/auth/login');
+                const selectedUserId = Number(id);
+
+                if (!id || Number.isNaN(selectedUserId)) {
+                    setErrorMsg('ID de usuario no valido.');
                     return;
                 }
 
-                const { data: profiles, error } = await supabase
+                const { data: profile, error } = await supabase
                     .from('usuario')
                     .select('*')
-                    .eq('email', user.email);
+                    .eq('id_usuario', selectedUserId)
+                    .single();
 
                 if (error) {
                     console.error('Error loading profile:', error);
                     setErrorMsg('Error cargando perfil: ' + error.message);
-                } else if (profiles && profiles.length > 0) {
-                    setUserProfile(profiles[0]);
+                } else if (profile) {
+                    setUserProfile(profile);
                 } else {
-                    setErrorMsg('No se encontró ningún perfil con el email: ' + user.email);
+                    setErrorMsg('No se encontro ningun perfil para ese usuario.');
                 }
             } catch (error) {
                 console.error('Error general:', error);
@@ -62,7 +63,7 @@ export default function ProfileDescription(){
         }
 
         loadUserProfile();
-    }, []);
+    }, [id]);
 
     if (loading || streakLoading) {
         return (
