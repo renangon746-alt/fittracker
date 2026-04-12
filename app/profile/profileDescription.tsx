@@ -5,12 +5,12 @@ import { useTheme } from "@/context/ThemeContext";
 import { useStreak } from "@/hooks/useStreak";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from '@expo/vector-icons';
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, SafeAreaView, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
-const defaultAvatar = require('../assets/images/defaultAvatar.png');
+const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 
 interface UserProfile {
     id_usuario: number;
@@ -18,7 +18,7 @@ interface UserProfile {
     email: string;
 }
 
-export default function OwnProfile(){
+export default function ProfileDescription(){
     const {colors} = useTheme();
     const styles = globalStyles(colors);
     const [imgError, setImgError] = useState(false);
@@ -26,7 +26,7 @@ export default function OwnProfile(){
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
 
-    // Hook de racha
+    // HookStreak
     const { streak, loading: streakLoading } = useStreak(userProfile?.id_usuario ?? null);
 
     useEffect(() => {
@@ -92,6 +92,8 @@ export default function OwnProfile(){
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
+        <ScrollView>
+            {/* Botón de volver atrás */}
             <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
                 <Pressable 
                     onPress={() => router.back()}
@@ -117,6 +119,8 @@ export default function OwnProfile(){
                     <Text style={styles.tittleText}>{userProfile.nombre}</Text>
                     <StreakBadge count={streak} />
                 </View>
+                {/* Separator */}
+                <View style={{height: 1,backgroundColor: colors.textSecondary, width: '90%', marginVertical: 10,}}/>
 
                 {/* Profile Stats */}
                 <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 15}}>
@@ -136,21 +140,29 @@ export default function OwnProfile(){
                     </View>
                 </View>
 
-                {/* Short Bio */}
+                {/* Short Bio and Follow Button */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, marginTop: 20 }}>
                     <View style={{ flex: 1 }}>
                         <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
-                            Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
+                        Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
                         </Text>
                     </View>
+
+                    <Pressable style={[styles.principalButton, { width: 100, height: 35 }]}>
+                        <Text style={styles.principalText}>Follow</Text>
+                    </Pressable>
                 </View>
                 
                 <View style={{padding:5}}>
+                    {/* Graph */}
                     <Graph/>
+
+                    {/* Calendar */}
                     <Cal/>
                 </View>
                 
             </View>
+        </ScrollView>
         </SafeAreaView>
     );
 }

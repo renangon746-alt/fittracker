@@ -33,7 +33,7 @@ export default function Settings() {
     <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
       
       {/* Perfil */}
-      <Pressable style={styles.pressable}  onPress={() => router.push("/ownProfile")}>
+      <Pressable style={styles.pressable}  onPress={() => router.push("/profile/ownProfile")}>
         <FontAwesome5 
           name="user"
           size={24}

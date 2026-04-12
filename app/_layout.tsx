@@ -22,8 +22,9 @@ export default function RootLayout() {
         <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{headerShown: false}} />
         <Stack.Screen name="errorPage" options={{ headerShown: false }} />
-        <Stack.Screen name="profileDescription" options={{ headerShown: false }} />
-        <Stack.Screen name="ownProfile" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

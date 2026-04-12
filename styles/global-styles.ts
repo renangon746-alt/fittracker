@@ -109,6 +109,15 @@ export const globalStyles = (colors: any) =>
     graphContainer: {
         marginVertical: 8,
         borderRadius: 16,
+    },
+
+    icon:{
+        backgroundColor: colors.primary,
+        borderRadius: 50,
+        width: 250,
+        height:40,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const
     }
 
 

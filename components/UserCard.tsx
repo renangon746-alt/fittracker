@@ -21,7 +21,7 @@ export default function UserCard({ id, image, userName, fullName, favoriteMuscle
       accessibilityRole="button"
       accessibilityLabel={`User ${userName}`}
       accessibilityHint="Opens user profile"
-      onPress={() => router.push({ pathname: '/profileDescription', params: { id, userName, fullName, favoriteMuscle } })}
+      onPress={() => router.push({ pathname: '/profile/profileDescription', params: { id, userName, fullName, favoriteMuscle } })}
     >
       <View style={[styles.avatarContainer, { backgroundColor: colors.backgroundTertiary }]}>
         <Ionicons name="person" size={32} color="#4A4A4A" />
