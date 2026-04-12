@@ -1,5 +1,6 @@
 import { useFonts } from 'expo-font';
 import { Stack } from "expo-router";
+import Head from 'expo-router/head';
 import { ThemeProvider } from '../context/ThemeContext';
 
 export default function RootLayout() {
@@ -15,6 +16,10 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
+      <Head>
+        <title>FitTracker</title>
+        <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
+      </Head>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="auth/login" options={{ headerShown: false }} />

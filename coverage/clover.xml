@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1771780677872" clover="3.2.0">
+  <project timestamp="1771780677872" name="All files">
+    <metrics statements="55" coveredstatements="51" conditionals="12" coveredconditionals="6" methods="12" coveredmethods="9" elements="79" coveredelements="66" complexity="0" loc="55" ncloc="55" packages="6" files="31" classes="31"/>
+    <package name="app.(tabs)">
+      <metrics statements="7" coveredstatements="7" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
+      <file name="exercises.tsx" path="C:\Users\renan\Documents\fittracker\app\(tabs)\exercises.tsx">
+        <metrics statements="7" coveredstatements="7" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
+        <line num="10" count="8" type="stmt"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="14" count="100" type="stmt"/>
+        <line num="18" count="4" type="stmt"/>
+        <line num="21" count="8" type="stmt"/>
+        <line num="23" count="8" type="stmt"/>
+        <line num="57" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="assets.data">
+      <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="exercises.ts" path="C:\Users\renan\Documents\fittracker\assets\data\exercises.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="assets.images">
+      <metrics statements="25" coveredstatements="25" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="arnold_press.png" path="C:\Users\renan\Documents\fittracker\assets\images\arnold_press.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="back_extension.png" path="C:\Users\renan\Documents\fittracker\assets\images\back_extension.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="bench_press.png" path="C:\Users\renan\Documents\fittracker\assets\images\bench_press.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="bicepsCurl.png" path="C:\Users\renan\Documents\fittracker\assets\images\bicepsCurl.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="bulgarian_split_squat.png" path="C:\Users\renan\Documents\fittracker\assets\images\bulgarian_split_squat.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="calf_raise.png" path="C:\Users\renan\Documents\fittracker\assets\images\calf_raise.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="chest_fly.png" path="C:\Users\renan\Documents\fittracker\assets\images\chest_fly.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="concentration_curl.png" path="C:\Users\renan\Documents\fittracker\assets\images\concentration_curl.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="face_pull.png" path="C:\Users\renan\Documents\fittracker\assets\images\face_pull.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="glute_bridge.png" path="C:\Users\renan\Documents\fittracker\assets\images\glute_bridge.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="hammer_curl.png" path="C:\Users\renan\Documents\fittracker\assets\images\hammer_curl.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="hamstring_curl.png" path="C:\Users\renan\Documents\fittracker\assets\images\hamstring_curl.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="hanging_leg_raise.png" path="C:\Users\renan\Documents\fittracker\assets\images\hanging_leg_raise.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="hip_thrust.png" path="C:\Users\renan\Documents\fittracker\assets\images\hip_thrust.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="inclined_bench_press.png" path="C:\Users\renan\Documents\fittracker\assets\images\inclined_bench_press.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="lat_pulldown.png" path="C:\Users\renan\Documents\fittracker\assets\images\lat_pulldown.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="lateral_raise.png" path="C:\Users\renan\Documents\fittracker\assets\images\lateral_raise.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="leg_press.png" path="C:\Users\renan\Documents\fittracker\assets\images\leg_press.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="press_hombro.png" path="C:\Users\renan\Documents\fittracker\assets\images\press_hombro.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="pull_up.png" path="C:\Users\renan\Documents\fittracker\assets\images\pull_up.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="romanian_deadlift.png" path="C:\Users\renan\Documents\fittracker\assets\images\romanian_deadlift.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="seated_row.png" path="C:\Users\renan\Documents\fittracker\assets\images\seated_row.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="skull_crusher.png" path="C:\Users\renan\Documents\fittracker\assets\images\skull_crusher.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="squat_barbell.png" path="C:\Users\renan\Documents\fittracker\assets\images\squat_barbell.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="tricep_extension.png" path="C:\Users\renan\Documents\fittracker\assets\images\tricep_extension.png">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="components">
+      <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+      <file name="MuscleCard.tsx" path="C:\Users\renan\Documents\fittracker\components\MuscleCard.tsx">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="14" count="129" type="stmt"/>
+        <line num="16" count="129" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="42" count="2" type="stmt"/>
+      </file>
+      <file name="MuscleList.tsx" path="C:\Users\renan\Documents\fittracker\components\MuscleList.tsx">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="16" count="7" type="stmt"/>
+        <line num="19" count="128" type="stmt"/>
+      </file>
+    </package>
+    <package name="constants">
+      <metrics statements="5" coveredstatements="3" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="0"/>
+      <file name="theme.ts" path="C:\Users\renan\Documents\fittracker\constants\theme.ts">
+        <metrics statements="5" coveredstatements="3" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="18" count="2" type="stmt"/>
+        <line num="35" count="2" type="stmt"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="37" count="0" type="cond" truecount="0" falsecount="2"/>
+      </file>
+    </package>
+    <package name="context">
+      <metrics statements="11" coveredstatements="9" conditionals="8" coveredconditionals="4" methods="4" coveredmethods="2"/>
+      <file name="ThemeContext.tsx" path="C:\Users\renan\Documents\fittracker\context\ThemeContext.tsx">
+        <metrics statements="11" coveredstatements="9" conditionals="8" coveredconditionals="4" methods="4" coveredmethods="2"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="18" count="5" type="stmt"/>
+        <line num="20" count="5" type="stmt"/>
+        <line num="24" count="5" type="stmt"/>
+        <line num="25" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="28" count="5" type="cond" truecount="1" falsecount="1"/>
+        <line num="30" count="5" type="stmt"/>
+        <line num="42" count="137" type="stmt"/>
+        <line num="44" count="137" type="cond" truecount="1" falsecount="1"/>
+        <line num="45" count="0" type="stmt"/>
+        <line num="48" count="137" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>
