@@ -1,11 +1,11 @@
-
 import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, SafeAreaView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, Text, TextInput, View } from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 
@@ -13,15 +13,18 @@ interface UserProfile {
     id_usuario: number;
     nombre: string;
     email: string;
+    foto_perfil?: string;
 }
 
 export default function EditProfile() {
-const {colors} = useTheme();
+    const {colors} = useTheme();
     const styles = globalStyles(colors);
     const [imgError, setImgError] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
+    const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadUserProfile() {
@@ -58,6 +61,152 @@ const {colors} = useTheme();
         loadUserProfile();
     }, []);
 
+    async function pickAndUploadImage() {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para cambiar el avatar.');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+            base64: true,
+        });
+
+        if (result.canceled || !result.assets[0].base64 || !userProfile) {
+            return;
+        }
+
+        setUploading(true);
+
+        try {
+            // Obtener el UUID de auth
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                Alert.alert('Error', 'No se pudo obtener el usuario');
+                setUploading(false);
+                return;
+            }
+
+            const base64 = result.assets[0].base64;
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+
+            // Usar UUID de auth en lugar de id_usuario
+            const fileName = `${user.id}/avatar.jpg`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, bytes, { 
+                    contentType: 'image/jpeg', 
+                    upsert: true 
+                });
+
+            if (uploadError) {
+                console.error('Error subiendo imagen:', uploadError);
+                Alert.alert('Error', 'No se pudo subir la imagen: ' + uploadError.message);
+                setUploading(false);
+                return;
+            }
+
+            const { data: urlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            const { error: dbError } = await supabase
+                .from('usuario')
+                .update({ foto_perfil: urlData.publicUrl })
+                .eq('id_usuario', userProfile.id_usuario);
+
+            if (dbError) {
+                console.error('Error actualizando BD:', dbError);
+                Alert.alert('Error', 'No se pudo actualizar el perfil');
+                setUploading(false);
+                return;
+            }
+
+            setAvatarUri(result.assets[0].uri);
+            setUserProfile({ ...userProfile, foto_perfil: urlData.publicUrl });
+            setImgError(false);
+            
+            Alert.alert('¡Éxito!', 'Avatar actualizado correctamente');
+
+        } catch (error) {
+            console.error('Error general:', error);
+            Alert.alert('Error', 'Ocurrió un error inesperado');
+        } finally {
+            setUploading(false);
+        }
+    }
+
+    async function deleteAvatar() {
+        if (!userProfile) return;
+
+        Alert.alert(
+            'Eliminar avatar',
+            '¿Estás seguro de que quieres eliminar tu avatar?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setUploading(true);
+
+                        try {
+                            // Obtener UUID de auth
+                            const { data: { user } } = await supabase.auth.getUser();
+                            if (!user) {
+                                Alert.alert('Error', 'No se pudo obtener el usuario');
+                                setUploading(false);
+                                return;
+                            }
+
+                            const fileName = `${user.id}/avatar.jpg`;
+
+                            const { error: deleteError } = await supabase.storage
+                                .from('avatars')
+                                .remove([fileName]);
+
+                            if (deleteError) {
+                                console.error('Error eliminando imagen:', deleteError);
+                            }
+
+                            const { error: dbError } = await supabase
+                                .from('usuario')
+                                .update({ foto_perfil: null })
+                                .eq('id_usuario', userProfile.id_usuario);
+
+                            if (dbError) {
+                                Alert.alert('Error', 'No se pudo actualizar el perfil');
+                                setUploading(false);
+                                return;
+                            }
+
+                            setAvatarUri(null);
+                            setUserProfile({ ...userProfile, foto_perfil: undefined });
+                            setImgError(true);
+                            
+                            Alert.alert('¡Éxito!', 'Avatar eliminado correctamente');
+
+                        } catch (error) {
+                            console.error('Error general:', error);
+                            Alert.alert('Error', 'Ocurrió un error inesperado');
+                        } finally {
+                            setUploading(false);
+                        }
+                    }
+                }
+            ]
+        );
+    }
+
     if (loading) {
         return (
             <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
@@ -82,8 +231,12 @@ const {colors} = useTheme();
         );
     }
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(`${userProfile.id_usuario}/avatar.jpg`);
-
+    // Usar avatarUri local si existe, sino la URL de la BD
+    const avatarSource = avatarUri 
+        ? { uri: avatarUri }
+        : (imgError || !userProfile.foto_perfil)
+            ? defaultAvatar
+            : { uri: userProfile.foto_perfil };
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
@@ -108,7 +261,7 @@ const {colors} = useTheme();
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 20}}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
                         <Image
-                            source={imgError ? defaultAvatar : { uri: data.publicUrl }}
+                            source={avatarSource}
                             onError={() => setImgError(true)}
                             style={styles.profileImage}
                         />
@@ -116,11 +269,23 @@ const {colors} = useTheme();
                     </View>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <Pressable style={[styles.icon, { width: 40, height: 40, backgroundColor: colors.textPrimary }]}>
-                            <Ionicons name="cloud-upload" size={24} color={colors.backgroundPrimary} />
+                        <Pressable 
+                            style={[styles.icon, { width: 40, height: 40, backgroundColor: colors.textPrimary }]}
+                            onPress={pickAndUploadImage}
+                            disabled={uploading}
+                        >
+                            {uploading ? (
+                                <ActivityIndicator size="small" color={colors.backgroundPrimary} />
+                            ) : (
+                                <Ionicons name="cloud-upload" size={24} color={colors.backgroundPrimary} />
+                            )}
                         </Pressable>
 
-                        <Pressable style={[styles.icon, { width: 40, height: 40, backgroundColor: "red" }]}>
+                        <Pressable 
+                            style={[styles.icon, { width: 40, height: 40, backgroundColor: "red" }]}
+                            onPress={deleteAvatar}
+                            disabled={uploading}
+                        >
                             <Ionicons name="trash" size={24} color={colors.textPrimary} />
                         </Pressable>
                     </View>
@@ -168,7 +333,7 @@ const {colors} = useTheme();
                 </Pressable>
                 <View style={{padding: 5}}/>
                 <Pressable style={[styles.secondaryButton, { width: '70%', height: 35 }]} onPress={router.back}>
-                        <Text style={styles.principalText}>Go Back</Text> 
+                    <Text style={styles.principalText}>Go Back</Text> 
                 </Pressable>
             </View>
         </SafeAreaView>
