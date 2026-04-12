@@ -5,17 +5,17 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 
 export default function EditProfile() {
@@ -29,6 +29,7 @@ export default function EditProfile() {
   const [bio, setBio] = useState('');
   const [enlace, setEnlace] = useState('');
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
+  const [idUsuario, setIdUsuario] = useState<number | null>(null);
 
   // ── Cargar datos actuales ─────────────────────────────────────────────────
   useEffect(() => {
@@ -42,13 +43,14 @@ export default function EditProfile() {
 
       const { data, error } = await supabase
         .from('usuario')
-        .select('nombre, bio, enlace, foto_perfil')
-        .eq('id_usuario', user.id)
+        .select('id_usuario, nombre, bio, enlace, foto_perfil')
+        .eq('email', user.email)
         .single();
 
       if (error) {
         Alert.alert('Error', 'No se pudo cargar el perfil.');
       } else {
+        setIdUsuario(data.id_usuario);
         setNombre(data.nombre ?? '');
         setBio(data.bio ?? '');
         setEnlace(data.enlace ?? '');
@@ -93,7 +95,7 @@ export default function EditProfile() {
 
       // Subir imagen si es una URI local (no una URL de Supabase)
       if (fotoPerfil && fotoPerfil.startsWith('file://')) {
-        const fileName = `avatar_${user.id}_${Date.now()}.jpg`;
+        const fileName = `${idUsuario}/avatar.jpg`;
         const response = await fetch(fotoPerfil);
         const blob = await response.blob();
 
@@ -113,7 +115,7 @@ export default function EditProfile() {
       const { error } = await supabase
         .from('usuario')
         .update({ nombre, bio, enlace, foto_perfil: fotoUrl })
-        .eq('id_usuario', user.id);
+        .eq('email', user.email);
 
       if (error) throw error;
 

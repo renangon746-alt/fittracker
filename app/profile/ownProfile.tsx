@@ -145,7 +145,7 @@ export default function OwnProfile(){
                         Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
                     </Text>
 
-                    <Pressable style={[styles.tertiaryButton, { width: 100, height: 35 }]} onPress={() => router.push("/profile/editProfile")}>
+                    <Pressable style={[styles.tertiaryButton, { width: 100, height: 35 }]} onPress={() => router.push("/settings/editProfile")}>
                         <Text style={{color: colors.backgroundPrimary}}>Edit</Text>
                     </Pressable>
                 </View>

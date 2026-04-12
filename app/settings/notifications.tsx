@@ -3,14 +3,14 @@ import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
 } from 'react-native';
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ export default function Notifications() {
         const { data, error } = await supabase
           .from('usuario')
           .select('notificaciones_activas')
-          .eq('id_usuario', user.id)
+          .eq('email', user.email)
           .single();
 
         if (error) throw error;
@@ -59,7 +59,7 @@ export default function Notifications() {
       const { error } = await supabase
         .from('usuario')
         .update({ notificaciones_activas: value })
-        .eq('id_usuario', user.id);
+        .eq('email', user.email);
 
       if (error) throw error;
     } catch (error) {

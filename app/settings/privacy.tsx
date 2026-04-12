@@ -19,29 +19,6 @@ export default function Privacy() {
   const [publicProfile, setPublicProfile] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // ── Cargar preferencia actual ─────────────────────────────────────────────
-  /*useEffect(() => {
-    async function fetchPreference() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('usuario')
-        .select('perfil_publico')
-        .eq('id_usuario', user.id)
-        .single();
-
-      if (error) {
-        Alert.alert('Error', 'No se pudo cargar la configuración.');
-        setPublicProfile(false);
-        return;
-      }
-
-      setPublicProfile(data.perfil_publico);
-    }
-
-    fetchPreference();
-  }, []);*/
   useEffect(() => {
   async function fetchPreference() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -55,7 +32,7 @@ export default function Privacy() {
     const { data, error } = await supabase
       .from('usuario')
       .select('perfil_publico')
-      .eq('id_usuario', user.id)
+      .eq('email', user.email)
       .single();
 
     if (error) {
@@ -81,7 +58,7 @@ export default function Privacy() {
     const { error } = await supabase
       .from('usuario')
       .update({ perfil_publico: value })
-      .eq('id_usuario', user.id);
+      .eq('email', user.email);
 
     if (error) {
       setPublicProfile(!value);

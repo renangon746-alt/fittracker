@@ -4,16 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 
 export default function EditAccount() {
@@ -184,7 +184,10 @@ export default function EditAccount() {
 
         {/* ── Olvidé mi contraseña ── */}
         <Pressable
-          onPress={() => supabase.auth.resetPasswordForEmail(email)}
+          onPress={() => router.push({
+            pathname: '/auth/forgotPassword',
+            params: { from: 'settings' }
+          })}
           style={styles.forgotWrap}
         >
           <Text style={[styles.forgotText, { color: colors.primary }]}>
