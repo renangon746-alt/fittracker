@@ -18,13 +18,13 @@ export default function Login(){
 
             <Text style={styles.tittleText}>Iniciar Sesion</Text>
 
-            <View style={{paddingTop: 20}}>
+            <View style={{paddingTop: 8}}>
                 <Text style={[styles.principalText, {paddingLeft:10}]}>E-mail</Text>
-                <TextInput style={styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                <TextInput style={[styles.inputs, { borderRadius: 24 }]} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
 
-                <View style={{ paddingTop: 20}}>
+                <View style={{ paddingTop: 8}}>
                     <Text style={[styles.principalText, {paddingLeft:10}]}>Contrasena</Text>
-                    <TextInput style={styles.inputs} value={password} onChangeText={setPassword} secureTextEntry />
+                    <TextInput style={[styles.inputs, { borderRadius: 24 }]} value={password} onChangeText={setPassword} secureTextEntry />
                     <Pressable onPress={() => router.push('/auth/forgotPassword')}>
                         <Text style={[styles.underlineText, {paddingLeft:10}]}>Olvide mi contrasena</Text>
                     </Pressable>

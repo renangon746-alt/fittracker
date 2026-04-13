@@ -34,7 +34,7 @@ export const globalStyles = (colors: any) =>
         padding: 10,
         borderWidth: 1,
         borderColor: colors.primary,
-        borderRadius: 8,
+        borderRadius: 24,
         color: colors.textPrimary,
         backgroundColor: colors.backgroundSecondary,
         width: 300

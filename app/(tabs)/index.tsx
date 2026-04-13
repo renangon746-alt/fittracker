@@ -111,12 +111,12 @@ function SquareCard({ label, value, sub, accent, colors, size, isStreak }: {
 }) {
   return (
     <View style={[
-      { width: size, height: size, borderRadius: 24, padding: 14, justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary },
+      { width: size, height: size, borderRadius: 24, padding: 16, justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary },
       SHADOW,
     ]}>
       {isStreak && <Text style={{ fontSize: 24, marginBottom: 4 }}>🔥</Text>}
       <Text
-        style={{ fontSize: 20, fontWeight: '700', letterSpacing: -0.4, color: accent ?? colors.textPrimary }}
+        style={{ fontSize: 20, fontWeight: '700', color: accent ?? colors.textPrimary }}
         numberOfLines={1} adjustsFontSizeToFit
       >
         {value}
@@ -571,7 +571,7 @@ export default function Dashboard() {
           </View>
 
           {/* Weight chart */}
-          <View style={{ marginHorizontal: H_PAD, marginBottom: 12 }}>
+          <View style={{ marginHorizontal: H_PAD, marginBottom: 16 }}>
             <WeightChart data={data.pesosGrafico} colors={colors} onEdit={() => setShowAddWeight(true)} containerWidth={containerWidth} />
           </View>
 
