@@ -1,7 +1,7 @@
 // Colores para modo oscuro (default)
 export const darkColors = {
-  backgroundPrimary: '#0A0A0A',
-  backgroundSecondary: '#121212',
+  backgroundPrimary: '#121212',
+  backgroundSecondary: '#0A0A0A',
   backgroundTertiary: '#1E1E1E',
   primary: '#FF6B00',
   primaryActive: '#FF7F26',
