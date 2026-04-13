@@ -88,7 +88,7 @@ function WeekSelector({ colors }: { colors: any }) {
         return (
           <View key={i} style={{ alignItems: 'center' }}>
             <View style={[
-              { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+              { width: 34, height: 34, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
               isToday && { backgroundColor: colors.primary },
               !isToday && isPast && { borderColor: colors.primary, borderWidth: 1.5 },
               !isToday && !isPast && { borderColor: colors.border, borderWidth: 1 },
@@ -111,7 +111,7 @@ function SquareCard({ label, value, sub, accent, colors, size, isStreak }: {
 }) {
   return (
     <View style={[
-      { width: size, height: size, borderRadius: 16, padding: 14, justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary },
+      { width: size, height: size, borderRadius: 24, padding: 14, justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary },
       SHADOW,
     ]}>
       {isStreak && <Text style={{ fontSize: 24, marginBottom: 4 }}>🔥</Text>}
@@ -136,7 +136,7 @@ function CheckInCard({ foto, colors, size, onPress }: {
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        { width: size, height: size, borderRadius: 16, overflow: 'hidden', justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.85 : 1 },
+        { width: size, height: size, borderRadius: 24, overflow: 'hidden', justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.85 : 1 },
         SHADOW,
       ]}
     >
@@ -149,7 +149,7 @@ function CheckInCard({ foto, colors, size, onPress }: {
         </>
       ) : (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.primary + '22', alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 46, height: 46, borderRadius: 24, backgroundColor: colors.primary + '22', alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="camera-outline" size={24} color={colors.primary} />
           </View>
           <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary }}>Check In</Text>
@@ -185,14 +185,14 @@ function WeightChart({ data, colors, onEdit, containerWidth }: {
   // Empty state
   if (pts.length < 2) {
     return (
-      <View style={[{ borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
+      <View style={[{ borderRadius: 24, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
         <WeightHeader peso={pesoActual} colors={colors} onEdit={onEdit} />
         <View style={{ alignItems: 'center', paddingVertical: 24, gap: 10 }}>
           <Ionicons name="scale-outline" size={30} color={colors.iconInactive} />
           <Text style={{ fontSize: 12, textAlign: 'center', color: colors.textSecondary }}>
             Registra tu peso para ver el progreso
           </Text>
-          <Pressable onPress={onEdit} style={{ backgroundColor: colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20 }}>
+          <Pressable onPress={onEdit} style={{ backgroundColor: colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 24 }}>
             <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Registrar peso →</Text>
           </Pressable>
         </View>
@@ -218,7 +218,7 @@ function WeightChart({ data, colors, onEdit, containerWidth }: {
   const xIdxs = [...new Set([0, Math.round((pts.length - 1) / 3), Math.round(2 * (pts.length - 1) / 3), pts.length - 1])];
 
   return (
-    <View style={[{ borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
+    <View style={[{ borderRadius: 24, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
       <WeightHeader peso={pesoActual} colors={colors} onEdit={onEdit} />
 
       <Pressable
@@ -297,7 +297,7 @@ function WeightHeader({ peso, colors, onEdit }: { peso: number | null; colors: a
         </Text>
       </View>
       <Pressable onPress={onEdit}
-        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.backgroundTertiary, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}>
+        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 24, backgroundColor: colors.backgroundTertiary, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}>
         <Text style={{ fontSize: 15 }}>✏️</Text>
       </Pressable>
     </View>
@@ -309,7 +309,7 @@ function RangeBar({ range, setRange, colors }: { range: Range; setRange: (r: Ran
     <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 4, marginTop: 10 }}>
       {(['90D', '6M', '1Y', 'ALL'] as Range[]).map(r => (
         <Pressable key={r} onPress={() => setRange(r)}
-          style={[{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20 }, r === range && { backgroundColor: colors.backgroundTertiary }]}>
+          style={[{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 24 }, r === range && { backgroundColor: colors.backgroundTertiary }]}>
           <Text style={{ fontSize: 12, fontWeight: '600', color: r === range ? colors.textPrimary : colors.textSecondary }}>{r}</Text>
         </Pressable>
       ))}
@@ -348,10 +348,10 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
           <Pressable onPress={e => e.stopPropagation()}>
             <View style={{ backgroundColor: colors.backgroundPrimary, borderRadius: 24, padding: 24, alignItems: 'center' }}>
-              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 16 }} />
+              <View style={{ width: 36, height: 4, borderRadius: 24, backgroundColor: colors.border, marginBottom: 16 }} />
               <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>Registrar peso</Text>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingHorizontal: 20, width: '100%', marginBottom: 20, backgroundColor: colors.backgroundTertiary }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 24, paddingHorizontal: 20, width: '100%', marginBottom: 20, backgroundColor: colors.backgroundTertiary }}>
                 <TextInput
                   style={[{ flex: 1, fontSize: 38, fontWeight: '700', textAlign: 'center', paddingVertical: 10, color: colors.textPrimary }, { outlineWidth: 0 } as any]}
                   value={pesoStr} onChangeText={setPesoStr}
@@ -366,7 +366,7 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
                 {fases.map(f => (
                   <Pressable key={f.key!} onPress={() => setFase(f.key)}
                     style={[
-                      { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, gap: 4, borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
+                      { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 24, borderWidth: 1.5, gap: 4, borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
                       fase === f.key && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
                     ]}>
                     <Text style={{ fontSize: 18 }}>{f.emoji}</Text>
@@ -376,7 +376,7 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
               </View>
 
               <Pressable onPress={handleSave} disabled={saving}
-                style={({ pressed }) => ({ width: '100%', paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10, backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 })}>
+                style={({ pressed }) => ({ width: '100%', paddingVertical: 15, borderRadius: 24, alignItems: 'center', marginBottom: 10, backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 })}>
                 {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Guardar</Text>}
               </Pressable>
               <Pressable onPress={onClose} style={{ paddingVertical: 8 }}>
@@ -555,7 +555,7 @@ export default function Dashboard() {
                       {dayName}
                     </Text>
                     <View style={[
-                      { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+                      { width: 36, height: 36, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
                       isToday && { backgroundColor: colors.textPrimary },
                       !isToday && isPast && { borderColor: colors.primary, borderWidth: 1.5 },
                       !isToday && !isPast && { backgroundColor: colors.backgroundPrimary },
@@ -597,11 +597,11 @@ export default function Dashboard() {
 
           {/* Stats */}
           <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD, marginBottom: 12 }}>
-            <View style={[{ flex: 1, borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
+            <View style={[{ flex: 1, borderRadius: 24, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
               <Text style={{ fontSize: 22, fontWeight: '700', letterSpacing: -0.5, color: colors.textPrimary, marginBottom: 4 }}>{data.entrenosSemana}</Text>
               <Text style={{ fontSize: 11, color: colors.textSecondary }}>Entrenos esta semana</Text>
             </View>
-            <View style={[{ flex: 1, borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
+            <View style={[{ flex: 1, borderRadius: 24, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
               <Text style={{ fontSize: 22, fontWeight: '700', letterSpacing: -0.5, color: colors.textPrimary, marginBottom: 4 }}>
                 {data.volumenSemana > 0 ? `${(data.volumenSemana / 1000).toFixed(1)}t` : '–'}
               </Text>
@@ -611,17 +611,17 @@ export default function Dashboard() {
 
           {/* Actions */}
           <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD }}>
-            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
+            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 24, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
               onPress={() => router.push('/(tabs)/train')}>
               <Ionicons name="time-outline" size={18} color={colors.textPrimary} />
               <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textPrimary }}>Historial</Text>
             </Pressable>
-            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
+            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 24, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
               onPress={() => router.push('/(tabs)/exercises')}>
               <Ionicons name="search-outline" size={18} color={colors.textPrimary} />
               <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textPrimary }}>Ejercicios</Text>
             </Pressable>
-            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}
+            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 24, backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}
               onPress={() => router.push('/(tabs)/train')}>
               <Ionicons name="play-outline" size={18} color="#fff" />
               <Text style={{ fontSize: 12, fontWeight: '600', color: '#fff' }}>Entrenar</Text>

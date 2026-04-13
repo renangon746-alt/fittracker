@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     marginHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: 24,
     overflow: 'hidden',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.07,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   logoutBtn: {
     marginHorizontal: 16,
     marginTop: 4,
-    borderRadius: 14,
+    borderRadius: 24,
     paddingVertical: 15,
     alignItems: 'center',
     shadowOffset: { width: 0, height: 1 },
