@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Dimensions,
   Image,
   KeyboardAvoidingView,
+  LayoutChangeEvent,
   Modal,
   Platform,
   Pressable,
@@ -31,14 +31,8 @@ import Svg, {
   Text as SvgText,
 } from 'react-native-svg';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-// Two cards per row with padding and gap
-const CARD_GAP = 10;
-const H_PAD    = 16;
-const SQUARE   = (SCREEN_WIDTH - H_PAD * 2 - CARD_GAP) / 2;
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-type Fase  = 'volumen' | 'definicion' | 'mantenimiento' | null;
+// ─── Types ────────────────────────────────────────────────────────────────────
+type Fase = 'volumen' | 'definicion' | 'mantenimiento' | null;
 type Range = '90D' | '6M' | '1Y' | 'ALL';
 interface PesoPoint { fecha: string; valor: number; }
 interface DashboardData {
@@ -56,8 +50,10 @@ interface DashboardData {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const H_PAD = 24;
+const GAP = 16;
 
 function getSaludo() {
   const h = new Date().getHours();
@@ -70,28 +66,34 @@ function formatFecha(iso: string) {
   return `${d.getDate()} ${MESES[d.getMonth()]}`;
 }
 
+const SHADOW = Platform.select({
+  ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 },
+  android: { elevation: 2 },
+  default: {},
+}) as object;
+
 // ─── Week Selector ────────────────────────────────────────────────────────────
 function WeekSelector({ colors }: { colors: any }) {
   const today = new Date();
-  const days  = Array.from({ length: 7 }, (_, i) => {
+  const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() - 3 + i);
     return d;
   });
   return (
-    <View style={wStyles.row}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 4 }}>
       {days.map((d, i) => {
         const isToday = d.toDateString() === today.toDateString();
-        const isPast  = d < today && !isToday;
+        const isPast = d < today && !isToday;
         return (
-          <View key={i} style={wStyles.col}>
+          <View key={i} style={{ alignItems: 'center' }}>
             <View style={[
-              wStyles.circle,
+              { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
               isToday && { backgroundColor: colors.primary },
-              !isToday && isPast  && { borderColor: colors.primary, borderWidth: 1.5 },
-              !isToday && !isPast && { borderColor: colors.border,  borderWidth: 1 },
+              !isToday && isPast && { borderColor: colors.primary, borderWidth: 1.5 },
+              !isToday && !isPast && { borderColor: colors.border, borderWidth: 1 },
             ]}>
-              <Text style={[wStyles.num, { color: isToday ? '#fff' : isPast ? colors.primary : colors.textSecondary }]}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: isToday ? '#fff' : isPast ? colors.primary : colors.textSecondary }}>
                 {d.getDate()}
               </Text>
             </View>
@@ -101,111 +103,97 @@ function WeekSelector({ colors }: { colors: any }) {
     </View>
   );
 }
-const wStyles = StyleSheet.create({
-  row:    { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 4 },
-  col:    { alignItems: 'center' },
-  circle: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  num:    { fontSize: 13, fontWeight: '600' },
-});
 
 // ─── Square Card ──────────────────────────────────────────────────────────────
-function SquareCard({ label, value, sub, accent, colors, isStreak }: {
+function SquareCard({ label, value, sub, accent, colors, size, isStreak }: {
   label: string; value: string; sub?: string;
-  accent?: string; colors: any; isStreak?: boolean;
+  accent?: string; colors: any; size: number; isStreak?: boolean;
 }) {
   return (
-    <View style={[cStyles.card, { backgroundColor: colors.backgroundPrimary, width: SQUARE, height: SQUARE }]}>
-      {isStreak && <Text style={cStyles.fire}>🔥</Text>}
-      <Text style={[cStyles.value, { color: accent ?? colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>
+    <View style={[
+      { width: size, height: size, borderRadius: 16, padding: 14, justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary },
+      SHADOW,
+    ]}>
+      {isStreak && <Text style={{ fontSize: 24, marginBottom: 4 }}>🔥</Text>}
+      <Text
+        style={{ fontSize: 20, fontWeight: '700', letterSpacing: -0.4, color: accent ?? colors.textPrimary }}
+        numberOfLines={1} adjustsFontSizeToFit
+      >
         {value}
       </Text>
-      <Text style={[cStyles.label, { color: colors.textSecondary }]}>{label}</Text>
-      {sub ? <Text style={[cStyles.sub, { color: colors.textSecondary }]} numberOfLines={1}>{sub}</Text> : null}
+      <Text style={{ fontSize: 11, fontWeight: '500', marginTop: 2, color: colors.textSecondary }}>{label}</Text>
+      {sub ? <Text style={{ fontSize: 10, marginTop: 1, color: colors.textSecondary }} numberOfLines={1}>{sub}</Text> : null}
     </View>
   );
 }
-const cStyles = StyleSheet.create({
-  card:  { borderRadius: 16, padding: 14, justifyContent: 'flex-end' },
-  fire:  { fontSize: 24, marginBottom: 4 },
-  value: { fontSize: 20, fontWeight: '700', letterSpacing: -0.4 },
-  label: { fontSize: 11, fontWeight: '500', marginTop: 2 },
-  sub:   { fontSize: 10, marginTop: 1 },
-});
 
 // ─── Check-in Card ────────────────────────────────────────────────────────────
-function CheckInCard({ foto, colors, onPress }: {
+function CheckInCard({ foto, colors, size, onPress }: {
   foto: { url: string; fecha: string } | null;
-  colors: any;
-  onPress: () => void;
+  colors: any; size: number; onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        ciStyles.card,
-        { backgroundColor: colors.backgroundPrimary, width: SQUARE, height: SQUARE, opacity: pressed ? 0.85 : 1 },
+        { width: size, height: size, borderRadius: 16, overflow: 'hidden', justifyContent: 'flex-end', backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.85 : 1 },
+        SHADOW,
       ]}
     >
       {foto ? (
         <>
           <Image source={{ uri: foto.url }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-          <View style={ciStyles.overlay}>
-            <Text style={ciStyles.date}>{formatFecha(foto.fecha)}</Text>
+          <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.45)', padding: 8 }}>
+            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>{formatFecha(foto.fecha)}</Text>
           </View>
         </>
       ) : (
-        <View style={ciStyles.empty}>
-          <View style={[ciStyles.iconWrap, { backgroundColor: colors.primary + '22' }]}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.primary + '22', alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="camera-outline" size={24} color={colors.primary} />
           </View>
-          <Text style={[ciStyles.label, { color: colors.textPrimary }]}>Check In</Text>
-          <Text style={[ciStyles.sub, { color: colors.textSecondary }]}>Añadir foto</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary }}>Check In</Text>
+          <Text style={{ fontSize: 10, color: colors.textSecondary }}>Añadir foto</Text>
         </View>
       )}
     </Pressable>
   );
 }
-const ciStyles = StyleSheet.create({
-  card:    { borderRadius: 16, overflow: 'hidden', justifyContent: 'flex-end' },
-  overlay: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.45)', padding: 8 },
-  date:    { color: '#fff', fontSize: 11, fontWeight: '600' },
-  empty:   { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  iconWrap:{ width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  label:   { fontSize: 13, fontWeight: '600' },
-  sub:     { fontSize: 10 },
-});
 
-// ─── Weight Chart (Cal AI style, primary color) ───────────────────────────────
-function WeightChart({ data, colors, onEdit }: {
-  data: PesoPoint[]; colors: any; onEdit: () => void;
+// ─── Weight Chart ─────────────────────────────────────────────────────────────
+function WeightChart({ data, colors, onEdit, containerWidth }: {
+  data: PesoPoint[]; colors: any; onEdit: () => void; containerWidth: number;
 }) {
-  const [range,   setRange]   = useState<Range>('6M');
+  const [range, setRange] = useState<Range>('6M');
   const [tooltip, setTooltip] = useState<{ x: number; y: number; val: number; fecha: string } | null>(null);
 
-  const chartW = SCREEN_WIDTH - H_PAD * 2 - 32; // card padding x2
+  // Chart dimensions based on actual container width
+  const chartW = containerWidth > 0 ? containerWidth - 32 : 300; // 32 = card padding (16*2)
   const chartH = 140;
-  const PAD    = { top: 16, bottom: 24, left: 32, right: 12 };
+  const PAD = { top: 16, bottom: 24, left: 32, right: 12 };
 
-  const now    = new Date();
+  const now = new Date();
   const cutoff = new Date(now);
-  if      (range === '90D') cutoff.setDate(now.getDate() - 90);
-  else if (range === '6M')  cutoff.setMonth(now.getMonth() - 6);
-  else if (range === '1Y')  cutoff.setFullYear(now.getFullYear() - 1);
-  else                      cutoff.setFullYear(2000);
+  if (range === '90D') cutoff.setDate(now.getDate() - 90);
+  else if (range === '6M') cutoff.setMonth(now.getMonth() - 6);
+  else if (range === '1Y') cutoff.setFullYear(now.getFullYear() - 1);
+  else cutoff.setFullYear(2000);
 
   const pts = data.filter(p => new Date(p.fecha) >= cutoff);
-
   const pesoActual = data.length > 0 ? data[data.length - 1].valor : null;
 
+  // Empty state
   if (pts.length < 2) {
     return (
-      <View style={[wc.card, { backgroundColor: colors.backgroundPrimary }]}>
+      <View style={[{ borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
         <WeightHeader peso={pesoActual} colors={colors} onEdit={onEdit} />
-        <View style={wc.empty}>
+        <View style={{ alignItems: 'center', paddingVertical: 24, gap: 10 }}>
           <Ionicons name="scale-outline" size={30} color={colors.iconInactive} />
-          <Text style={[wc.emptyTxt, { color: colors.textSecondary }]}>Registra tu peso para ver el progreso</Text>
-          <Pressable onPress={onEdit} style={[wc.logBtn, { backgroundColor: colors.primary }]}>
-            <Text style={wc.logBtnTxt}>Registrar peso →</Text>
+          <Text style={{ fontSize: 12, textAlign: 'center', color: colors.textSecondary }}>
+            Registra tu peso para ver el progreso
+          </Text>
+          <Pressable onPress={onEdit} style={{ backgroundColor: colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20 }}>
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Registrar peso →</Text>
           </Pressable>
         </View>
         <RangeBar range={range} setRange={setRange} colors={colors} />
@@ -213,29 +201,24 @@ function WeightChart({ data, colors, onEdit }: {
     );
   }
 
-  const vals   = pts.map(p => p.valor);
-  const minV   = Math.min(...vals);
-  const maxV   = Math.max(...vals);
+  const vals = pts.map(p => p.valor);
+  const minV = Math.min(...vals);
+  const maxV = Math.max(...vals);
   const rangeV = maxV - minV || 1;
 
   const toX = (i: number) => PAD.left + (i / (pts.length - 1)) * (chartW - PAD.left - PAD.right);
-  const toY = (v: number) => PAD.top  + (1 - (v - minV) / rangeV) * (chartH - PAD.top - PAD.bottom);
+  const toY = (v: number) => PAD.top + (1 - (v - minV) / rangeV) * (chartH - PAD.top - PAD.bottom);
 
   const polyPts = pts.map((p, i) => `${toX(i)},${toY(p.valor)}`).join(' ');
-  const areaPath = [
-    `M${toX(0)},${chartH - PAD.bottom}`,
-    `L${toX(0)},${toY(pts[0].valor)}`,
-    ...pts.map((p, i) => `L${toX(i)},${toY(p.valor)}`),
-    `L${toX(pts.length - 1)},${chartH - PAD.bottom}`,
-    'Z',
-  ].join(' ');
+  const areaPath = [`M${toX(0)},${chartH - PAD.bottom}`, `L${toX(0)},${toY(pts[0].valor)}`,
+  ...pts.map((p, i) => `L${toX(i)},${toY(p.valor)}`),
+  `L${toX(pts.length - 1)},${chartH - PAD.bottom}`, 'Z'].join(' ');
 
   const yLabels = [minV, (minV + maxV) / 2, maxV];
-  const step    = Math.max(1, Math.floor(pts.length / 4));
-  const xIdxs   = [...new Set([0, ...Array.from({ length: 3 }, (_, i) => Math.round((i + 1) * (pts.length - 1) / 4)), pts.length - 1])];
+  const xIdxs = [...new Set([0, Math.round((pts.length - 1) / 3), Math.round(2 * (pts.length - 1) / 3), pts.length - 1])];
 
   return (
-    <View style={[wc.card, { backgroundColor: colors.backgroundPrimary }]}>
+    <View style={[{ borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
       <WeightHeader peso={pesoActual} colors={colors} onEdit={onEdit} />
 
       <Pressable
@@ -255,36 +238,24 @@ function WeightChart({ data, colors, onEdit }: {
             </LinearGradient>
           </Defs>
 
-          {/* Grid */}
           {yLabels.map((v, i) => (
             <Line key={i} x1={PAD.left} y1={toY(v)} x2={chartW - PAD.right} y2={toY(v)}
               stroke={colors.border} strokeWidth="1" strokeDasharray="3,4" />
           ))}
-
-          {/* Y labels */}
           {yLabels.map((v, i) => (
-            <SvgText key={i} x={PAD.left - 4} y={toY(v) + 4}
-              fontSize="8" fill={colors.textSecondary} textAnchor="end">
+            <SvgText key={i} x={PAD.left - 4} y={toY(v) + 4} fontSize="8" fill={colors.textSecondary} textAnchor="end">
               {Math.round(v)}
             </SvgText>
           ))}
-
-          {/* X labels */}
-          {xIdxs.map(idx => (
-            <SvgText key={idx} x={toX(idx)} y={chartH - 4}
-              fontSize="8" fill={colors.textSecondary} textAnchor="middle">
+          {xIdxs.filter(i => i < pts.length).map(idx => (
+            <SvgText key={idx} x={toX(idx)} y={chartH - 4} fontSize="8" fill={colors.textSecondary} textAnchor="middle">
               {formatFecha(pts[idx].fecha)}
             </SvgText>
           ))}
 
-          {/* Area */}
           <Path d={areaPath} fill="url(#gr)" />
+          <Polyline points={polyPts} fill="none" stroke={colors.primary} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
 
-          {/* Line */}
-          <Polyline points={polyPts} fill="none"
-            stroke={colors.primary} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-
-          {/* Tooltip */}
           {tooltip && (() => {
             const bx = Math.min(Math.max(tooltip.x - 44, PAD.left), chartW - PAD.right - 88);
             const by = Math.max(tooltip.y - 46, PAD.top);
@@ -295,12 +266,10 @@ function WeightChart({ data, colors, onEdit }: {
                 <Circle cx={tooltip.x} cy={tooltip.y} r={5} fill={colors.primary} />
                 <Path d={`M${bx},${by} h88 a4,4 0 0 1 4,4 v24 a4,4 0 0 1 -4,4 h-88 a4,4 0 0 1 -4,-4 v-24 a4,4 0 0 1 4,-4 Z`}
                   fill={colors.backgroundSecondary} />
-                <SvgText x={bx + 44} y={by + 15} fontSize="11" fontWeight="bold"
-                  fill={colors.textPrimary} textAnchor="middle">
+                <SvgText x={bx + 44} y={by + 15} fontSize="11" fontWeight="bold" fill={colors.textPrimary} textAnchor="middle">
                   {tooltip.val} kg
                 </SvgText>
-                <SvgText x={bx + 44} y={by + 28} fontSize="9"
-                  fill={colors.textSecondary} textAnchor="middle">
+                <SvgText x={bx + 44} y={by + 28} fontSize="9" fill={colors.textSecondary} textAnchor="middle">
                   {formatFecha(tooltip.fecha)}
                 </SvgText>
               </>
@@ -310,7 +279,7 @@ function WeightChart({ data, colors, onEdit }: {
       </Pressable>
 
       <RangeBar range={range} setRange={setRange} colors={colors} />
-      <Text style={[wc.motiv, { color: colors.primary }]}>
+      <Text style={{ fontSize: 11, fontWeight: '500', marginTop: 8, textAlign: 'center', color: colors.primary }}>
         ¡Sigue así! La consistencia es la clave 🎯
       </Text>
     </View>
@@ -319,16 +288,16 @@ function WeightChart({ data, colors, onEdit }: {
 
 function WeightHeader({ peso, colors, onEdit }: { peso: number | null; colors: any; onEdit: () => void }) {
   return (
-    <View style={wc.header}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
       <View>
-        <Text style={[wc.wLabel, { color: colors.textSecondary }]}>Tu peso</Text>
-        <Text style={[wc.wVal, { color: colors.textPrimary }]}>
+        <Text style={{ fontSize: 11, marginBottom: 2, color: colors.textSecondary }}>Tu peso</Text>
+        <Text style={{ fontSize: 26, fontWeight: '700', letterSpacing: -0.8, color: colors.textPrimary }}>
           {peso ?? '––'}{' '}
-          <Text style={[wc.wUnit, { color: colors.textSecondary }]}>kg</Text>
+          <Text style={{ fontSize: 15, fontWeight: '400', color: colors.textSecondary }}>kg</Text>
         </Text>
       </View>
       <Pressable onPress={onEdit}
-        style={({ pressed }) => [wc.editBtn, { backgroundColor: colors.backgroundTertiary, opacity: pressed ? 0.6 : 1 }]}>
+        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.backgroundTertiary, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}>
         <Text style={{ fontSize: 15 }}>✏️</Text>
       </Pressable>
     </View>
@@ -337,33 +306,16 @@ function WeightHeader({ peso, colors, onEdit }: { peso: number | null; colors: a
 
 function RangeBar({ range, setRange, colors }: { range: Range; setRange: (r: Range) => void; colors: any }) {
   return (
-    <View style={wc.rangeRow}>
-      {(['90D','6M','1Y','ALL'] as Range[]).map(r => (
+    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 4, marginTop: 10 }}>
+      {(['90D', '6M', '1Y', 'ALL'] as Range[]).map(r => (
         <Pressable key={r} onPress={() => setRange(r)}
-          style={[wc.rangeBtn, r === range && { backgroundColor: colors.backgroundTertiary }]}>
-          <Text style={[wc.rangeTxt, { color: r === range ? colors.textPrimary : colors.textSecondary }]}>{r}</Text>
+          style={[{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20 }, r === range && { backgroundColor: colors.backgroundTertiary }]}>
+          <Text style={{ fontSize: 12, fontWeight: '600', color: r === range ? colors.textPrimary : colors.textSecondary }}>{r}</Text>
         </Pressable>
       ))}
     </View>
   );
 }
-
-const wc = StyleSheet.create({
-  card:     { borderRadius: 16, padding: 16 },
-  header:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  wLabel:   { fontSize: 11, marginBottom: 2 },
-  wVal:     { fontSize: 26, fontWeight: '700', letterSpacing: -0.8 },
-  wUnit:    { fontSize: 15, fontWeight: '400' },
-  editBtn:  { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  empty:    { alignItems: 'center', paddingVertical: 24, gap: 8 },
-  emptyTxt: { fontSize: 12, textAlign: 'center' },
-  logBtn:   { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20, marginTop: 2 },
-  logBtnTxt:{ color: '#fff', fontSize: 13, fontWeight: '600' },
-  rangeRow: { flexDirection: 'row', justifyContent: 'center', gap: 4, marginTop: 10 },
-  rangeBtn: { paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20 },
-  rangeTxt: { fontSize: 12, fontWeight: '600' },
-  motiv:    { fontSize: 11, fontWeight: '500', marginTop: 8, textAlign: 'center' },
-});
 
 // ─── Add Weight Modal ─────────────────────────────────────────────────────────
 function AddWeightModal({ visible, onClose, onSave, colors }: {
@@ -372,13 +324,13 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
   colors: any;
 }) {
   const [pesoStr, setPesoStr] = useState('');
-  const [fase,    setFase]    = useState<Fase>(null);
-  const [saving,  setSaving]  = useState(false);
+  const [fase, setFase] = useState<Fase>(null);
+  const [saving, setSaving] = useState(false);
 
   const fases: { key: Fase; label: string; emoji: string }[] = [
-    { key: 'volumen',        label: 'Volumen',       emoji: '💪' },
-    { key: 'definicion',     label: 'Definición',    emoji: '🔥' },
-    { key: 'mantenimiento',  label: 'Mantenim.',     emoji: '⚖️' },
+    { key: 'volumen', label: 'Volumen', emoji: '💪' },
+    { key: 'definicion', label: 'Definición', emoji: '🔥' },
+    { key: 'mantenimiento', label: 'Mantenim.', emoji: '⚖️' },
   ];
 
   async function handleSave() {
@@ -392,45 +344,43 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={m.overlay} onPress={onClose}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={onClose}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
           <Pressable onPress={e => e.stopPropagation()}>
-            <View style={[m.card, { backgroundColor: colors.backgroundPrimary }]}>
-              <View style={[m.handle, { backgroundColor: colors.border }]} />
-              <Text style={[m.title, { color: colors.textPrimary }]}>Registrar peso</Text>
+            <View style={{ backgroundColor: colors.backgroundPrimary, borderRadius: 24, padding: 24, alignItems: 'center' }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 16 }} />
+              <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>Registrar peso</Text>
 
-              <View style={[m.inputWrap, { backgroundColor: colors.backgroundTertiary }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingHorizontal: 20, width: '100%', marginBottom: 20, backgroundColor: colors.backgroundTertiary }}>
                 <TextInput
-                  style={[m.input, { color: colors.textPrimary }] as any}
+                  style={[{ flex: 1, fontSize: 38, fontWeight: '700', textAlign: 'center', paddingVertical: 10, color: colors.textPrimary }, { outlineWidth: 0 } as any]}
                   value={pesoStr} onChangeText={setPesoStr}
                   placeholder="0.0" placeholderTextColor={colors.iconInactive}
                   keyboardType="decimal-pad" autoFocus
                 />
-                <Text style={[m.unit, { color: colors.textSecondary }]}>kg</Text>
+                <Text style={{ fontSize: 18, fontWeight: '500', color: colors.textSecondary }}>kg</Text>
               </View>
 
-              <Text style={[m.faseTitle, { color: colors.textSecondary }]}>Fase actual</Text>
-              <View style={m.faseRow}>
+              <Text style={{ fontSize: 12, fontWeight: '600', marginBottom: 10, alignSelf: 'flex-start', color: colors.textSecondary }}>Fase actual</Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 24, width: '100%' }}>
                 {fases.map(f => (
                   <Pressable key={f.key!} onPress={() => setFase(f.key)}
-                    style={[m.chip,
-                      { borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
+                    style={[
+                      { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, gap: 4, borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
                       fase === f.key && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
                     ]}>
-                    <Text style={m.chipEmoji}>{f.emoji}</Text>
-                    <Text style={[m.chipLabel, { color: fase === f.key ? colors.primary : colors.textSecondary }]}>
-                      {f.label}
-                    </Text>
+                    <Text style={{ fontSize: 18 }}>{f.emoji}</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '600', textAlign: 'center', color: fase === f.key ? colors.primary : colors.textSecondary }}>{f.label}</Text>
                   </Pressable>
                 ))}
               </View>
 
               <Pressable onPress={handleSave} disabled={saving}
-                style={({ pressed }) => [m.save, { backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 }]}>
-                {saving ? <ActivityIndicator color="#fff" /> : <Text style={m.saveTxt}>Guardar</Text>}
+                style={({ pressed }) => ({ width: '100%', paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10, backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 })}>
+                {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Guardar</Text>}
               </Pressable>
-              <Pressable onPress={onClose} style={m.cancel}>
-                <Text style={[m.cancelTxt, { color: colors.textSecondary }]}>Cancelar</Text>
+              <Pressable onPress={onClose} style={{ paddingVertical: 8 }}>
+                <Text style={{ fontSize: 14, color: colors.textSecondary }}>Cancelar</Text>
               </Pressable>
             </View>
           </Pressable>
@@ -439,33 +389,19 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
     </Modal>
   );
 }
-const m = StyleSheet.create({
-  overlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  card:      { width: '100%', borderRadius: 24, padding: 24, alignItems: 'center' },
-  handle:    { width: 36, height: 4, borderRadius: 2, marginBottom: 16 },
-  title:     { fontSize: 18, fontWeight: '700', marginBottom: 20 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingHorizontal: 20, width: '100%', marginBottom: 20 },
-  input:     { flex: 1, fontSize: 38, fontWeight: '700', textAlign: 'center', paddingVertical: 10, outlineWidth: 0 },
-  unit:      { fontSize: 18, fontWeight: '500' },
-  faseTitle: { fontSize: 12, fontWeight: '600', marginBottom: 10, alignSelf: 'flex-start' },
-  faseRow:   { flexDirection: 'row', gap: 8, marginBottom: 24, width: '100%' },
-  chip:      { flex: 1, flexDirection: 'column', alignItems: 'center', paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, gap: 4 },
-  chipEmoji: { fontSize: 18 },
-  chipLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  save:      { width: '100%', paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
-  saveTxt:   { color: '#fff', fontSize: 16, fontWeight: '700' },
-  cancel:    { paddingVertical: 8 },
-  cancelTxt: { fontSize: 14 },
-});
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { colors } = useTheme();
-  const router     = useRouter();
-  const fadeAnim   = useRef(new Animated.Value(0)).current;
+  const router = useRouter();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const [loading,        setLoading]        = useState(true);
-  const [showAddWeight,  setShowAddWeight]  = useState(false);
+  // Measure actual container width for responsive sizing
+  const [containerWidth, setContainerWidth] = useState(0);
+  const cardSize = containerWidth > 0 ? (containerWidth - H_PAD * 2 - GAP) / 2 : 150;
+
+  const [loading, setLoading] = useState(true);
+  const [showAddWeight, setShowAddWeight] = useState(false);
   const [data, setData] = useState<DashboardData>({
     idUsuario: null, nombre: '', racha: 0,
     ultimoEntreno: null, mejorMarca: null,
@@ -477,6 +413,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!loading) Animated.timing(fadeAnim, { toValue: 1, duration: 450, useNativeDriver: true }).start();
   }, [loading]);
+
+  function onLayout(e: LayoutChangeEvent) {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0) setContainerWidth(w);
+  }
 
   async function getIdUsuario(email: string): Promise<number | null> {
     const { data: u } = await supabase.from('usuario').select('id_usuario').eq('email', email).single();
@@ -539,12 +480,12 @@ export default function Dashboard() {
       setData({
         idUsuario, nombre: usuario?.nombre ?? '', racha: usuario?.racha_actual ?? 0,
         ultimoEntreno, mejorMarca,
-        pesoActual:    pesos?.length ? pesos[pesos.length - 1].peso_kg : null,
-        fase:          pesos?.length ? pesos[pesos.length - 1].fase as Fase : null,
-        pesosGrafico:  (pesos ?? []).map(p => ({ fecha: p.fecha, valor: p.peso_kg })),
+        pesoActual: pesos?.length ? pesos[pesos.length - 1].peso_kg : null,
+        fase: pesos?.length ? pesos[pesos.length - 1].fase as Fase : null,
+        pesosGrafico: (pesos ?? []).map(p => ({ fecha: p.fecha, valor: p.peso_kg })),
         entrenosSemana: semana?.length ?? 0,
-        volumenSemana:  Math.round(volumen),
-        fotoProgreso:   fotos?.[0] ?? null,
+        volumenSemana: Math.round(volumen),
+        fotoProgreso: fotos?.[0] ?? null,
       });
     } catch (e) { console.error('Dashboard:', e); }
     finally { setLoading(false); }
@@ -552,19 +493,12 @@ export default function Dashboard() {
 
   async function handleSavePeso(peso: number, fase: Fase) {
     if (!data.idUsuario) return;
-    await supabase.from('peso').insert({
-      id_usuario: data.idUsuario,
-      peso_kg: peso,
-      fecha: new Date().toISOString().split('T')[0],
-      fase,
-    });
-    const { data: pesos } = await supabase
-      .from('peso').select('peso_kg, fecha, fase')
-      .eq('id_usuario', data.idUsuario).order('fecha', { ascending: true });
+    await supabase.from('peso').insert({ id_usuario: data.idUsuario, peso_kg: peso, fecha: new Date().toISOString().split('T')[0], fase });
+    const { data: pesos } = await supabase.from('peso').select('peso_kg, fecha, fase').eq('id_usuario', data.idUsuario).order('fecha', { ascending: true });
     setData(prev => ({
       ...prev,
-      pesoActual:   pesos?.length ? pesos[pesos.length - 1].peso_kg : prev.pesoActual,
-      fase:         pesos?.length ? pesos[pesos.length - 1].fase as Fase : prev.fase,
+      pesoActual: pesos?.length ? pesos[pesos.length - 1].peso_kg : prev.pesoActual,
+      fase: pesos?.length ? pesos[pesos.length - 1].fase as Fase : prev.fase,
       pesosGrafico: (pesos ?? []).map(p => ({ fecha: p.fecha, valor: p.peso_kg })),
     }));
   }
@@ -572,158 +506,131 @@ export default function Dashboard() {
   async function handleCheckIn() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) { Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería.'); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, aspect: [1, 1], quality: 0.8,
-    });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
     if (result.canceled || !data.idUsuario) return;
     const uri = result.assets[0].uri;
     try {
       const fileName = `checkin_${data.idUsuario}_${Date.now()}.jpg`;
-      const resp     = await fetch(uri);
-      const blob     = await resp.blob();
+      const resp = await fetch(uri);
+      const blob = await resp.blob();
       const { error: upErr } = await supabase.storage.from('avatars').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      const { error: insErr } = await supabase.from('foto_progreso').insert({
-        id_usuario: data.idUsuario,
-        url: urlData.publicUrl,
-        fecha: new Date().toISOString().split('T')[0],
-      });
-      if (insErr) throw insErr;
+      await supabase.from('foto_progreso').insert({ id_usuario: data.idUsuario, url: urlData.publicUrl, fecha: new Date().toISOString().split('T')[0] });
       setData(prev => ({ ...prev, fotoProgreso: { url: urlData.publicUrl, fecha: new Date().toISOString().split('T')[0] } }));
-    } catch (e) { Alert.alert('Error', 'No se pudo guardar la foto.'); }
+    } catch { Alert.alert('Error', 'No se pudo guardar la foto.'); }
   }
 
-  const today    = new Date();
+  const today = new Date();
   const todayStr = `${DIAS[today.getDay()]}, ${today.getDate()} ${MESES[today.getMonth()]}`;
 
   if (loading) return (
-    <View style={[s.centered, { backgroundColor: colors.backgroundSecondary }]}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.backgroundSecondary }}>
       <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 
-  const shadow = Platform.select({
-    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 },
-    android: { elevation: 2 },
-    default: {},
-  });
-
   return (
     <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-      <ScrollView
-        style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
-        contentContainerStyle={s.container}
-        showsVerticalScrollIndicator={false}
-      >
+      {/* onLayout on the root view captures the real available width */}
+      <View style={{ flex: 1 }} onLayout={onLayout}>
+        <ScrollView
+          style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
+          contentContainerStyle={{ paddingBottom: 36 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ paddingHorizontal: H_PAD, paddingTop: 16, paddingBottom: 16, backgroundColor: colors.backgroundSecondary }}>
 
-        {/* Week */}
-        <View style={[s.weekCard, shadow]}>
-          <WeekSelector colors={colors} />
-        </View>
-
-        {/* Welcome */}
-        <View style={s.welcome}>
-          <View>
-            <Text style={[s.greeting, { color: colors.textSecondary }]}>{getSaludo()}</Text>
-            <Text style={[s.userName, { color: colors.textPrimary }]}>{data.nombre || 'Atleta'} 👋</Text>
+            {/* Week row: día encima del círculo */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              {Array.from({ length: 7 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - 3 + i);
+                const isToday = d.toDateString() === new Date().toDateString();
+                const isPast = d < new Date() && !isToday;
+                const dayName = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()];
+                return (
+                  <View key={i} style={{ alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 11, color: isToday ? colors.textPrimary : colors.textSecondary, fontWeight: isToday ? '600' : '400' }}>
+                      {dayName}
+                    </Text>
+                    <View style={[
+                      { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+                      isToday && { backgroundColor: colors.textPrimary },
+                      !isToday && isPast && { borderColor: colors.primary, borderWidth: 1.5 },
+                      !isToday && !isPast && { backgroundColor: colors.backgroundPrimary },
+                    ]}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: isToday ? colors.backgroundSecondary : isPast ? colors.primary : colors.textSecondary }}>
+                        {d.getDate()}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
           </View>
-          <View style={[s.rachaBadge, { backgroundColor: colors.primary }]}>
-            <Text style={s.rachaFire}>🔥</Text>
-            <Text style={s.rachaNum}>{data.racha}</Text>
+
+          {/* Weight chart */}
+          <View style={{ marginHorizontal: H_PAD, marginBottom: 12 }}>
+            <WeightChart data={data.pesosGrafico} colors={colors} onEdit={() => setShowAddWeight(true)} containerWidth={containerWidth} />
           </View>
-        </View>
 
-        {/* 2x2 Square grid */}
-        <View style={s.grid}>
-          <SquareCard
-            isStreak label="Racha" value={`${data.racha} días`}
-            accent={colors.primary} colors={colors}
-          />
-          <SquareCard
-            label="Último entreno"
-            value={data.ultimoEntreno ? `${data.ultimoEntreno.duracion} min` : '–'}
-            sub={data.ultimoEntreno?.nombre}
-            colors={colors}
-          />
-          <SquareCard
-            label="Mejor marca"
-            value={data.mejorMarca ? `${data.mejorMarca.peso} kg` : '–'}
-            sub={data.mejorMarca?.ejercicio}
-            colors={colors}
-          />
-          <CheckInCard foto={data.fotoProgreso} colors={colors} onPress={handleCheckIn} />
-        </View>
+          {/* 2×2 grid — uses measured cardSize */}
+          {cardSize > 0 && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, paddingHorizontal: H_PAD, marginBottom: 12 }}>
+              <SquareCard isStreak label="Racha" value={`${data.racha} días`} accent={colors.primary} colors={colors} size={cardSize} />
+              <SquareCard
+                label="Último entreno"
+                value={data.ultimoEntreno ? `${data.ultimoEntreno.duracion} min` : '–'}
+                sub={data.ultimoEntreno?.nombre}
+                colors={colors} size={cardSize}
+              />
+              <SquareCard
+                label="Mejor marca"
+                value={data.mejorMarca ? `${data.mejorMarca.peso} kg` : '–'}
+                sub={data.mejorMarca?.ejercicio}
+                colors={colors} size={cardSize}
+              />
+              <CheckInCard foto={data.fotoProgreso} colors={colors} size={cardSize} onPress={handleCheckIn} />
+            </View>
+          )}
 
-        {/* Weight graph */}
-        <View style={[s.section, shadow]}>
-          <WeightChart data={data.pesosGrafico} colors={colors} onEdit={() => setShowAddWeight(true)} />
-        </View>
-
-        {/* Stats row */}
-        <View style={s.statsRow}>
-          <View style={[s.statCard, { backgroundColor: colors.backgroundPrimary }, shadow]}>
-            <Text style={[s.statVal, { color: colors.textPrimary }]}>{data.entrenosSemana}</Text>
-            <Text style={[s.statLbl, { color: colors.textSecondary }]}>Entrenos esta semana</Text>
+          {/* Stats */}
+          <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD, marginBottom: 12 }}>
+            <View style={[{ flex: 1, borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
+              <Text style={{ fontSize: 22, fontWeight: '700', letterSpacing: -0.5, color: colors.textPrimary, marginBottom: 4 }}>{data.entrenosSemana}</Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary }}>Entrenos esta semana</Text>
+            </View>
+            <View style={[{ flex: 1, borderRadius: 16, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
+              <Text style={{ fontSize: 22, fontWeight: '700', letterSpacing: -0.5, color: colors.textPrimary, marginBottom: 4 }}>
+                {data.volumenSemana > 0 ? `${(data.volumenSemana / 1000).toFixed(1)}t` : '–'}
+              </Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary }}>Volumen semanal</Text>
+            </View>
           </View>
-          <View style={[s.statCard, { backgroundColor: colors.backgroundPrimary }, shadow]}>
-            <Text style={[s.statVal, { color: colors.textPrimary }]}>
-              {data.volumenSemana > 0 ? `${(data.volumenSemana / 1000).toFixed(1)}t` : '–'}
-            </Text>
-            <Text style={[s.statLbl, { color: colors.textSecondary }]}>Volumen semanal</Text>
+
+          {/* Actions */}
+          <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD }}>
+            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
+              onPress={() => router.push('/(tabs)/train')}>
+              <Ionicons name="time-outline" size={18} color={colors.textPrimary} />
+              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textPrimary }}>Historial</Text>
+            </Pressable>
+            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
+              onPress={() => router.push('/(tabs)/exercises')}>
+              <Ionicons name="search-outline" size={18} color={colors.textPrimary} />
+              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textPrimary }}>Ejercicios</Text>
+            </Pressable>
+            <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}
+              onPress={() => router.push('/(tabs)/train')}>
+              <Ionicons name="play-outline" size={18} color="#fff" />
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#fff' }}>Entrenar</Text>
+            </Pressable>
           </View>
-        </View>
+        </ScrollView>
+      </View>
 
-        {/* Quick actions */}
-        <View style={s.actions}>
-          <Pressable style={({ pressed }) => [s.actionBtn, { backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, shadow]}
-            onPress={() => router.push('/(tabs)/train')}>
-            <Ionicons name="time-outline" size={18} color={colors.textPrimary} />
-            <Text style={[s.actionTxt, { color: colors.textPrimary }]}>Historial</Text>
-          </Pressable>
-          <Pressable style={({ pressed }) => [s.actionBtn, { backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, shadow]}
-            onPress={() => router.push('/(tabs)/exercises')}>
-            <Ionicons name="search-outline" size={18} color={colors.textPrimary} />
-            <Text style={[s.actionTxt, { color: colors.textPrimary }]}>Ejercicios</Text>
-          </Pressable>
-          <Pressable style={({ pressed }) => [s.actionBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}
-            onPress={() => router.push('/(tabs)/train')}>
-            <Ionicons name="play-outline" size={18} color="#fff" />
-            <Text style={[s.actionTxt, { color: '#fff' }]}>Entrenar</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-
-      <AddWeightModal
-        visible={showAddWeight}
-        onClose={() => setShowAddWeight(false)}
-        onSave={handleSavePeso}
-        colors={colors}
-      />
+      <AddWeightModal visible={showAddWeight} onClose={() => setShowAddWeight(false)} onSave={handleSavePeso} colors={colors} />
     </Animated.View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-const s = StyleSheet.create({
-  centered:   { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  container:  { paddingBottom: 36 },
-  welcome:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: H_PAD, paddingBottom: 10 },
-  greeting:   { fontSize: 12, marginBottom: 1 },
-  userName:   { fontSize: 20, fontWeight: '700', letterSpacing: -0.4 },
-  date:       { fontSize: 11, marginTop: 1 },
-  rachaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  rachaFire:  { fontSize: 13 },
-  rachaNum:   { color: '#fff', fontWeight: '700', fontSize: 14 },
-  weekCard:   { marginHorizontal: H_PAD, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 4, marginBottom: 12 },
-  grid:       { flexDirection: 'row', flexWrap: 'wrap', gap: CARD_GAP, paddingHorizontal: H_PAD, marginBottom: 12 },
-  section:    { marginHorizontal: H_PAD, borderRadius: 16, marginBottom: 12, overflow: 'hidden' },
-  statsRow:   { flexDirection: 'row', gap: CARD_GAP, paddingHorizontal: H_PAD, marginBottom: 12 },
-  statCard:   { flex: 1, borderRadius: 16, padding: 16 },
-  statVal:    { fontSize: 22, fontWeight: '700', letterSpacing: -0.5, marginBottom: 4 },
-  statLbl:    { fontSize: 11 },
-  actions:    { flexDirection: 'row', gap: CARD_GAP, paddingHorizontal: H_PAD },
-  actionBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 14 },
-  actionTxt:  { fontSize: 12, fontWeight: '600' },
-});
