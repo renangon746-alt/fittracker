@@ -8,7 +8,7 @@ import { globalStyles } from "@/styles/global-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, SafeAreaView, Text, View } from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 
@@ -25,25 +25,35 @@ export default function OwnProfile(){
     const [loading, setLoading] = useState(true);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
+    const [authUserId, setAuthUserId] = useState<string>('');
 
-    // HookStreak
+    // Hook to manage user streak
     const { streak, loading: streakLoading } = useStreak(userProfile?.id_usuario ?? null);
 
     useEffect(() => {
         async function loadUserProfile() {
             try {
+                // Get current authenticated user
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
                 
+                console.log('Auth user email:', user?.email);
+                
                 if (userError || !user) {
-                    console.error('Error obteniendo usuario:', userError);
+                    console.error('Error getting user:', userError);
                     router.replace('/auth/login');
                     return;
                 }
 
+                // Store auth UUID for avatar URL
+                setAuthUserId(user.id);
+
+                // Fetch user profile from usuario table
                 const { data: profiles, error } = await supabase
                     .from('usuario')
                     .select('*')
                     .eq('email', user.email);
+
+                console.log('Number of profiles found:', profiles?.length);
 
                 if (error) {
                     console.error('Error loading profile:', error);
@@ -54,7 +64,7 @@ export default function OwnProfile(){
                     setErrorMsg('No se encontró ningún perfil con el email: ' + user.email);
                 }
             } catch (error) {
-                console.error('Error general:', error);
+                console.error('General error:', error);
                 setErrorMsg('Error inesperado: ' + String(error));
             } finally {
                 setLoading(false);
@@ -88,11 +98,12 @@ export default function OwnProfile(){
         );
     }
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(`${userProfile.id_usuario}/avatar.jpg`);
+    // Get avatar URL using auth UUID
+    const { data } = supabase.storage.from('avatars').getPublicUrl(`${authUserId}/avatar.jpg`);
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
-        <ScrollView>
+            {/* Back button */}
             <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
                 <Pressable 
                     onPress={() => router.back()}
@@ -108,7 +119,7 @@ export default function OwnProfile(){
             </View>
 
             <View style={{flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                {/* Profile and Image */}
+                {/* Profile header with image and username */}
                 <View style={{ flexDirection: 'row' , alignItems: 'center',gap: 45,  justifyContent: 'space-between'}}>
                     <Image
                         source={imgError ? defaultAvatar : { uri: data.publicUrl }}
@@ -118,10 +129,8 @@ export default function OwnProfile(){
                     <Text style={styles.tittleText}>{userProfile.nombre}</Text>
                     <StreakBadge count={streak} />
                 </View>
-                {/* Separator */}
-                <View style={{height: 1,backgroundColor: colors.textSecondary, width: '90%', marginVertical: 10,}}/>
 
-                {/* Profile Stats */}
+                {/* Profile statistics */}
                 <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 15}}>
                     <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
                         <Text style={styles.principalText}>Trainings</Text>
@@ -139,24 +148,24 @@ export default function OwnProfile(){
                     </View>
                 </View>
 
-                {/* Short Bio */}
+                {/* User bio */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, marginTop: 20 }}>
-                    <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
-                        Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
-                    </Text>
-
-                    <Pressable style={[styles.tertiaryButton, { width: 100, height: 35 }]} onPress={() => router.push("/settings/editProfile")}>
-                        <Text style={{color: colors.backgroundPrimary}}>Edit</Text>
-                    </Pressable>
+                    <View style={{ flex: 1 }}>
+                        <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
+                            Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
+                        </Text>
+                    </View>
                 </View>
                 
                 <View style={{padding:5}}>
+                    {/* Graph component */}
                     <Graph/>
+
+                    {/* Calendar component */}
                     <Cal/>
                 </View>
                 
             </View>
-        </ScrollView>
         </SafeAreaView>
     );
 }
