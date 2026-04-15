@@ -1,11 +1,19 @@
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 
+interface UserProfile {
+    id_usuario: number;
+    nombre: string;
+    email: string;
+}
+
 export function useStreak(userId: number | null) {
     const [streak, setStreak] = useState<number>(0);
     const [loading, setLoading] = useState(true);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
     useEffect(() => {
+        
         if (!userId) {
             setLoading(false);
             return;
@@ -16,7 +24,7 @@ export function useStreak(userId: number | null) {
                 // Get user data
                 const { data: usuario, error } = await supabase
                     .from('usuario')
-                    .select('racha_actual, ultima_conexion, completedstreak')
+                    .select('racha_actual, ultima_conexion')
                     .eq('id_usuario', userId)
                     .single();
 
@@ -30,30 +38,6 @@ export function useStreak(userId: number | null) {
                 hoy.setHours(0, 0, 0, 0); // Reset to midnight
 
                 let nuevaRacha = usuario.racha_actual || 0;
-
-                if (usuario.ultima_conexion) {
-                    const ultimaConexion = new Date(usuario.ultima_conexion);
-                    ultimaConexion.setHours(0, 0, 0, 0);
-                    const completedToday= new Boolean(usuario.completedstreak);
-                    const diffDias = Math.floor((hoy.getTime() - ultimaConexion.getTime()) / (1000 * 60 * 60 * 24));
-
-                    if (!completedToday){
-                        if (diffDias === 0) {
-                            // Same day - do anything
-                            nuevaRacha = usuario.racha_actual;
-                        } else if (diffDias === 1) {
-                            // Consecutive day - increment streak
-                            nuevaRacha = usuario.racha_actual + 1;
-                            
-                        }else {
-                            // More than one day without connecting - reset streak
-                            nuevaRacha = 1;
-                        }
-                    }
-                } else {
-                    // First time connecting - start streak
-                    nuevaRacha = 1;
-                }
 
                 const { error: updateError } = await supabase
                     .from('usuario')

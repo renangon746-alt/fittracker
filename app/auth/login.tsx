@@ -10,6 +10,7 @@ export default function Login(){
     const styles = globalStyles(colors);
     const { email, setEmail, password, setPassword, errorMsg, handleLogin } = useLogin();
 
+
     return (
         <View style={{flex: 1, backgroundColor: colors.backgroundPrimary, flexDirection: 'column',
             alignItems: 'center', paddingTop: 100}}>

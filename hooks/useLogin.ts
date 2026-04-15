@@ -17,6 +17,60 @@ export function useLogin() {
         return message;
     }
 
+    // Update user streak based on last connection date
+    async function updateStreak(userId: number) {
+        try {
+            // Get user data from database
+            const { data: usuario, error } = await supabase
+                .from('usuario')
+                .select('racha_actual, ultima_conexion, completedStreak')
+                .eq('id_usuario', userId)
+                .single();
+
+            if (error || !usuario) {
+                console.error('Error getting streak:', error);
+                return;
+            }
+
+            const today = new Date();
+
+            let newStreak = usuario.racha_actual || 0;
+
+            if (usuario.ultima_conexion) {
+                const lastConnection = new Date(usuario.ultima_conexion);
+
+                const diffDays = Math.floor((today.getDate() - lastConnection.getDate()));
+
+                if (diffDays === 0) {
+                    // Same day - no change
+                    newStreak = usuario.racha_actual;
+                } else if (diffDays === 1) {
+                    // Consecutive day - increment streak
+                    newStreak = usuario.racha_actual + 1;
+                } else {
+                    // More than one day without login - reset streak
+                    newStreak = 1;
+                }
+                
+            } else {
+                // First login
+                newStreak = 1;
+            }
+
+            // Update database
+            await supabase
+                .from('usuario')
+                .update({
+                    racha_actual: newStreak,
+                    ultima_conexion: today.toISOString().split('T')[0] // Format YYYY-MM-DD
+                })
+                .eq('id_usuario', userId);
+
+        } catch (error) {
+            console.error('Error in updateStreak:', error);
+        }
+    }
+
     async function handleLogin() {
         setErrorMsg(null);
 
@@ -28,6 +82,17 @@ export function useLogin() {
         if (error) {
             setErrorMsg(parseError(error.message));
         } else {
+            // Get user profile from database
+            const { data: profiles } = await supabase
+                .from('usuario')
+                .select('id_usuario')
+                .eq('email', email);
+
+            if (profiles && profiles.length > 0) {
+                // Update streak on successful login
+                await updateStreak(profiles[0].id_usuario);
+            }
+
             router.replace('/(tabs)');
         }
     }
