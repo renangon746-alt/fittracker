@@ -16,7 +16,7 @@ export function useStreak(userId: number | null) {
                 // Get user data
                 const { data: usuario, error } = await supabase
                     .from('usuario')
-                    .select('racha_actual, ultima_conexion, completedstreak')
+                    .select('racha_actual, ultima_conexion')
                     .eq('id_usuario', userId)
                     .single();
 
@@ -34,11 +34,9 @@ export function useStreak(userId: number | null) {
                 if (usuario.ultima_conexion) {
                     const ultimaConexion = new Date(usuario.ultima_conexion);
                     ultimaConexion.setHours(0, 0, 0, 0);
-                    const completedToday= new Boolean(usuario.completedstreak);
                     const diffDias = Math.floor((hoy.getTime() - ultimaConexion.getTime()) / (1000 * 60 * 60 * 24));
-
-                    if (!completedToday){
-                        if (diffDias === 0) {
+                        
+                    if (diffDias === 0) {
                             // Same day - do anything
                             nuevaRacha = usuario.racha_actual;
                         } else if (diffDias === 1) {
@@ -49,7 +47,7 @@ export function useStreak(userId: number | null) {
                             // More than one day without connecting - reset streak
                             nuevaRacha = 1;
                         }
-                    }
+                    
                 } else {
                     // First time connecting - start streak
                     nuevaRacha = 1;

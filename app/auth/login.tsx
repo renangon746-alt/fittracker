@@ -1,14 +1,30 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useLogin } from '@/hooks/useLogin';
+import { useStreak } from '@/hooks/useStreak';
 import { globalStyles } from "@/styles/global-styles";
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Image, Pressable, Text, TextInput, View } from "react-native";
 
+interface UserProfile {
+    id_usuario: number;
+    nombre: string;
+    email: string;
+}
 
 export default function Login(){
     const {colors} = useTheme();
     const styles = globalStyles(colors);
     const { email, setEmail, password, setPassword, errorMsg, handleLogin } = useLogin();
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+
+    //Streak
+    const { streak, loading: streakLoading } = useStreak(userProfile?.id_usuario ?? null);
+
+    if (streakLoading){
+        console.log("Hi from StreakLoading method")
+    }
 
     return (
         <View style={{flex: 1, backgroundColor: colors.backgroundPrimary, flexDirection: 'column',
