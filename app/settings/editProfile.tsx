@@ -30,8 +30,9 @@ export default function EditProfile() {
   const [enlace, setEnlace] = useState('');
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
   const [idUsuario, setIdUsuario] = useState<number | null>(null);
+  const [authUserId, setAuthUserId] = useState<string>('');
 
-  // ── Cargar datos actuales ─────────────────────────────────────────────────
+  // Load current user data
   useEffect(() => {
     async function fetchProfile() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -40,6 +41,9 @@ export default function EditProfile() {
         setLoading(false);
         return;
       }
+
+      // Store auth UUID for avatar
+      setAuthUserId(user.id);
 
       const { data, error } = await supabase
         .from('usuario')
@@ -54,7 +58,15 @@ export default function EditProfile() {
         setNombre(data.nombre ?? '');
         setBio(data.bio ?? '');
         setEnlace(data.enlace ?? '');
-        setFotoPerfil(data.foto_perfil ?? null);
+        
+        // Get avatar URL using auth UUID
+        if (user.id) {
+          const { data: avatarData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(`${user.id}/avatar.jpg`);
+          
+          setFotoPerfil(avatarData.publicUrl);
+        }
       }
 
       setLoading(false);
@@ -63,7 +75,7 @@ export default function EditProfile() {
     fetchProfile();
   }, []);
 
-  // ── Seleccionar foto ──────────────────────────────────────────────────────
+  // Pick image from gallery
   async function handlePickImage() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -83,7 +95,7 @@ export default function EditProfile() {
     }
   }
 
-  // ── Guardar cambios ───────────────────────────────────────────────────────
+  // Save changes
   async function handleSave() {
     setSaving(true);
 
@@ -93,9 +105,10 @@ export default function EditProfile() {
 
       let fotoUrl = fotoPerfil;
 
-      // Subir imagen si es una URI local (no una URL de Supabase)
+      // Upload image if it's a local URI (not a Supabase URL)
       if (fotoPerfil && fotoPerfil.startsWith('file://')) {
-        const fileName = `${idUsuario}/avatar.jpg`;
+        // Use auth UUID for folder name
+        const fileName = `${user.id}/avatar.jpg`;
         const response = await fetch(fotoPerfil);
         const blob = await response.blob();
 
@@ -129,7 +142,7 @@ export default function EditProfile() {
     }
   }
 
-  // ── Loading state ─────────────────────────────────────────────────────────
+  // Loading state
   if (loading) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.backgroundSecondary }]}>
@@ -149,7 +162,7 @@ export default function EditProfile() {
         keyboardShouldPersistTaps="handled"
       >
 
-        {/* ── Avatar ── */}
+        {/* Avatar */}
         <Pressable onPress={handlePickImage} style={styles.avatarWrap}>
           {fotoPerfil ? (
             <Image source={{ uri: fotoPerfil }} style={styles.avatar} />
@@ -163,7 +176,7 @@ export default function EditProfile() {
           </View>
         </Pressable>
 
-        {/* ── Nombre ── */}
+        {/* Name */}
         <Section title="NOMBRE" colors={colors}>
           <TextInput
             style={[styles.input, { color: colors.textPrimary }]}
@@ -175,7 +188,7 @@ export default function EditProfile() {
           />
         </Section>
 
-        {/* ── Bio ── */}
+        {/* Bio */}
         <Section title="BIO" colors={colors}>
           <TextInput
             style={[styles.input, styles.inputMultiline, { color: colors.textPrimary }]}
@@ -191,7 +204,7 @@ export default function EditProfile() {
           </Text>
         </Section>
 
-        {/* ── Enlace ── */}
+        {/* Link */}
         <Section title="ENLACE" colors={colors}>
           <View style={styles.inputRow}>
             <Ionicons name="link-outline" size={18} color={colors.iconInactive} />
@@ -207,7 +220,7 @@ export default function EditProfile() {
           </View>
         </Section>
 
-        {/* ── Botón guardar ── */}
+        {/* Save button */}
         <Pressable
           onPress={handleSave}
           disabled={saving}
@@ -228,8 +241,7 @@ export default function EditProfile() {
   );
 }
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-
+// Section wrapper component
 function Section({
   title,
   children,
@@ -257,8 +269,7 @@ function Section({
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
+// Styles
 const styles = StyleSheet.create({
   centered: {
     flex: 1,

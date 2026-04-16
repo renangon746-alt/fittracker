@@ -134,11 +134,11 @@ export function useRegister() {
             const dbUserId = newUser.id_usuario;
             console.log('User created in table with ID:', dbUserId);
 
-            // Upload image if exists (using auth UUID, not database id_usuario)
+            // Upload image if exists (using auth UUID)
             let avatarUrl: string | null = null;
             if (imageBase64) {
                 console.log('Uploading avatar...');
-                // IMPORTANT: Use auth userId (UUID), not dbUserId (number)
+                // Use auth userId (UUID), not dbUserId (number)
                 avatarUrl = await uploadImage(userId);
                 
                 if (avatarUrl) {
