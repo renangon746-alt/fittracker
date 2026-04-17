@@ -26,16 +26,14 @@ export function useStreak(userId: number | null) {
                     return;
                 }
 
-                const hoy = new Date();
-                hoy.setHours(0, 0, 0, 0); // Reset to midnight
+                const today = new Date();
 
                 let nuevaRacha = usuario.racha_actual || 0;
 
                 if (usuario.ultima_conexion) {
                     const ultimaConexion = new Date(usuario.ultima_conexion);
-                    ultimaConexion.setHours(0, 0, 0, 0);
                     const completedToday= new Boolean(usuario.completedstreak);
-                    const diffDias = Math.floor((hoy.getTime() - ultimaConexion.getTime()) / (1000 * 60 * 60 * 24));
+                    const diffDias = Math.floor((today.getDay()- ultimaConexion.getDay()));
 
                     if (!completedToday){
                         if (diffDias === 0) {
@@ -59,7 +57,7 @@ export function useStreak(userId: number | null) {
                     .from('usuario')
                     .update({
                         racha_actual: nuevaRacha,
-                        ultima_conexion: hoy.toISOString().split('T')[0] // Format YYYY-MM-DD
+                        ultima_conexion: today.toISOString().split('T')[0] // Format YYYY-MM-DD
                     })
                     .eq('id_usuario', userId);
 
