@@ -2,20 +2,21 @@ import Cal from "@/components/Cal";
 import Graph from "@/components/Graph";
 import StreakBadge from "@/components/StreakBadge";
 import { useTheme } from "@/context/ThemeContext";
-import { useStreak } from "@/hooks/useStreak";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, SafeAreaView, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
+const screenWidth = Dimensions.get('window').width;
 
 interface UserProfile {
     id_usuario: number;
     nombre: string;
     email: string;
+    racha_actual?: number;
 }
 
 export default function OwnProfile(){
@@ -27,16 +28,10 @@ export default function OwnProfile(){
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [authUserId, setAuthUserId] = useState<string>('');
 
-    // Hook to manage user streak
-    const { streak, loading: streakLoading } = useStreak(userProfile?.id_usuario ?? null);
-
     useEffect(() => {
         async function loadUserProfile() {
             try {
-                // Get current authenticated user
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
-                
-                console.log('Auth user email:', user?.email);
                 
                 if (userError || !user) {
                     console.error('Error getting user:', userError);
@@ -44,16 +39,12 @@ export default function OwnProfile(){
                     return;
                 }
 
-                // Store auth UUID for avatar URL
                 setAuthUserId(user.id);
 
-                // Fetch user profile from usuario table
                 const { data: profiles, error } = await supabase
                     .from('usuario')
                     .select('*')
                     .eq('email', user.email);
-
-                console.log('Number of profiles found:', profiles?.length);
 
                 if (error) {
                     console.error('Error loading profile:', error);
@@ -74,7 +65,7 @@ export default function OwnProfile(){
         loadUserProfile();
     }, []);
 
-    if (loading || streakLoading) {
+    if (loading) {
         return (
             <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
                 <ActivityIndicator size="large" color={colors.textPrimary} />
@@ -98,74 +89,75 @@ export default function OwnProfile(){
         );
     }
 
-    // Get avatar URL using auth UUID
     const { data } = supabase.storage.from('avatars').getPublicUrl(`${authUserId}/avatar.jpg`);
+    const avatarUrl = `${data.publicUrl}?t=${new Date().getTime()}`;
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
-            {/* Back button */}
-            <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
-                <Pressable 
-                    onPress={() => router.back()}
-                    style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        padding: 8,
-                        width: 40
-                    }}
-                >
-                    <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-                </Pressable>
-            </View>
-
-            <View style={{flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                {/* Profile header with image and username */}
-                <View style={{ flexDirection: 'row' , alignItems: 'center',gap: 45,  justifyContent: 'space-between'}}>
-                    <Image
-                        source={imgError ? defaultAvatar : { uri: data.publicUrl }}
-                        onError={() => setImgError(true)}
-                        style={styles.profileImage}
-                    />
-                    <Text style={styles.tittleText}>{userProfile.nombre}</Text>
-                    <StreakBadge count={streak} />
+            <ScrollView contentContainerStyle={{paddingBottom: 20}}>
+                {/* Back button */}
+                <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
+                    <Pressable 
+                        onPress={() => router.back()}
+                        style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center',
+                            padding: 8,
+                            width: 40
+                        }}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+                    </Pressable>
                 </View>
 
-                {/* Profile statistics */}
-                <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 15}}>
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Trainings</Text>
-                        <Text style={styles.principalText}>103</Text>
+                {/* Profile header */}
+                <View style={{alignItems: 'center', paddingHorizontal: 20, marginTop: 10}}>
+                    {/* Avatar and username row */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: screenWidth < 350 ? 15 : 30, marginBottom: 10}}>
+                        <Image
+                            source={imgError ? defaultAvatar : { uri: avatarUrl }}
+                            onError={() => setImgError(true)}
+                            style={styles.profileImage}
+                        />
+                        <Text style={[styles.tittleText, {fontSize: screenWidth < 350 ? 18 : 24}]} numberOfLines={1}>
+                            {userProfile.nombre}
+                        </Text>
+                        <StreakBadge count={userProfile.racha_actual || 0} />
                     </View>
 
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Followers</Text>
-                        <Text style={styles.principalText}>100</Text>
+                    {/* Profile statistics */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: screenWidth < 350 ? 10 : 20, marginTop: 15}}>
+                        <View style={{flexDirection: 'column', alignItems: 'center', gap: 5}}>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 12 : 14}]}>Trainings</Text>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 16 : 18}]}>103</Text>
+                        </View>
+
+                        <View style={{flexDirection: 'column', alignItems: 'center', gap: 5}}>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 12 : 14}]}>Followers</Text>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 16 : 18}]}>100</Text>
+                        </View>
+
+                        <View style={{flexDirection: 'column', alignItems: 'center', gap: 5}}>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 12 : 14}]}>Following</Text>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 16 : 18}]}>2</Text>
+                        </View>
                     </View>
 
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Following</Text>
-                        <Text style={styles.principalText}>2</Text>
-                    </View>
-                </View>
-
-                {/* User bio */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, marginTop: 20 }}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
+                    {/* User bio */}
+                    <View style={{ marginTop: 20, width: '100%'}}>
+                        <Text style={[styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14 }]}>
                             Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
                         </Text>
                     </View>
                 </View>
                 
-                <View style={{padding:5}}>
-                    {/* Graph component */}
+                {/* Charts section */}
+                <View style={{paddingHorizontal: 10, marginTop: 20}}>
                     <Graph/>
-
-                    {/* Calendar component */}
                     <Cal/>
                 </View>
                 
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
