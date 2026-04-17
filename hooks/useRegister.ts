@@ -11,7 +11,6 @@ export function useRegister() {
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [imageBase64, setImageBase64] = useState<string | null>(null);
 
-    // Request gallery permissions and let user pick an image
     async function pickImage() {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -33,18 +32,15 @@ export function useRegister() {
         }
     }
 
-    // Upload image to Supabase Storage using auth UUID
     async function uploadImage(userId: string): Promise<string | null> {
         if (!imageBase64) return null;
 
-        // Convert base64 to ArrayBuffer
         const binary = atob(imageBase64);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) {
             bytes[i] = binary.charCodeAt(i);
         }
 
-        // Use auth UUID for folder name
         const fileName = `${userId}/avatar.jpg`;
 
         const { error } = await supabase.storage
@@ -56,12 +52,10 @@ export function useRegister() {
             return null;
         }
 
-        // Get public URL
         const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
         return data.publicUrl;
     }
 
-    // Parse Supabase error messages to user-friendly Spanish
     function parseError(message: string): string {
         if (message.includes('User already registered'))
             return 'Ya existe una cuenta con este email.';
@@ -74,7 +68,6 @@ export function useRegister() {
         return message;
     }
 
-    // Register user in Auth and create database record
     async function handleRegister() {
         setErrorMsg(null);
 
@@ -83,7 +76,6 @@ export function useRegister() {
         if (!password) { setErrorMsg('La contraseña es obligatoria.'); return; }
 
         try {
-            // Create user in Supabase Auth
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -104,62 +96,48 @@ export function useRegister() {
                 return;
             }
 
-            console.log('User created in Auth:', userId);
-
-            // Create record in usuario table
-            console.log('Attempting to insert into usuario table...');
             const { data: newUser, error: dbError } = await supabase
                 .from('usuario')
                 .insert({
                     email: email,
+                    contrasena: password,
                     nombre: nombre,
                 })
                 .select('id_usuario')
                 .single();
 
-            console.log('Insert result:', { newUser, dbError });
+            console.log('Resultado inserción:', { newUser, dbError });
 
             if (dbError) {
-                console.error('Error creating user in DB:', dbError);
                 setErrorMsg('Error guardando perfil: ' + dbError.message + ' (Code: ' + dbError.code + ')');
+                
                 return;
             }
 
             if (!newUser) {
-                console.error('No user returned from insert');
                 setErrorMsg('Error: no se pudo crear el perfil en la base de datos');
                 return;
             }
 
             const dbUserId = newUser.id_usuario;
-            console.log('User created in table with ID:', dbUserId);
 
-            // Upload image if exists (using auth UUID)
             let avatarUrl: string | null = null;
             if (imageBase64) {
-                console.log('Uploading avatar...');
-                // Use auth userId (UUID), not dbUserId (number)
-                avatarUrl = await uploadImage(userId);
+                console.log('Subiendo avatar...');
+                avatarUrl = await uploadImage(dbUserId.toString());
                 
                 if (avatarUrl) {
-                    console.log('Avatar uploaded:', avatarUrl);
-                    
-                    // Update foto_perfil in usuario table
                     await supabase
                         .from('usuario')
                         .update({ foto_perfil: avatarUrl })
                         .eq('id_usuario', dbUserId);
                     
-                    // Also update auth metadata
                     await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
                 }
             }
-
-            console.log('Registration completed successfully');
             router.push('/auth/login');
             
         } catch (error) {
-            console.error('Error in handleRegister:', error);
             setErrorMsg('Error inesperado: ' + String(error));
         }
     }
