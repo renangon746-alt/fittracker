@@ -30,8 +30,9 @@ export default function EditProfile() {
   const [enlace, setEnlace] = useState('');
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
   const [idUsuario, setIdUsuario] = useState<number | null>(null);
+  const [authUserId, setAuthUserId] = useState<string>('');
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
 
-  // ── Cargar datos actuales ─────────────────────────────────────────────────
   useEffect(() => {
     async function fetchProfile() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -40,6 +41,8 @@ export default function EditProfile() {
         setLoading(false);
         return;
       }
+
+      setAuthUserId(user.id);
 
       const { data, error } = await supabase
         .from('usuario')
@@ -54,7 +57,13 @@ export default function EditProfile() {
         setNombre(data.nombre ?? '');
         setBio(data.bio ?? '');
         setEnlace(data.enlace ?? '');
-        setFotoPerfil(data.foto_perfil ?? null);
+        
+        // Get avatar URL using auth UUID
+        const { data: avatarData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(`${user.id}/avatar.jpg`);
+        
+        setFotoPerfil(avatarData.publicUrl);
       }
 
       setLoading(false);
@@ -63,7 +72,6 @@ export default function EditProfile() {
     fetchProfile();
   }, []);
 
-  // ── Seleccionar foto ──────────────────────────────────────────────────────
   async function handlePickImage() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -79,11 +87,11 @@ export default function EditProfile() {
     });
 
     if (!result.canceled) {
-      setFotoPerfil(result.assets[0].uri);
+      // Store local URI for immediate preview
+      setLocalImageUri(result.assets[0].uri);
     }
   }
 
-  // ── Guardar cambios ───────────────────────────────────────────────────────
   async function handleSave() {
     setSaving(true);
 
@@ -93,10 +101,10 @@ export default function EditProfile() {
 
       let fotoUrl = fotoPerfil;
 
-      // Subir imagen si es una URI local (no una URL de Supabase)
-      if (fotoPerfil && fotoPerfil.startsWith('file://')) {
-        const fileName = `${idUsuario}/avatar.jpg`;
-        const response = await fetch(fotoPerfil);
+      // Upload image if a new one was selected
+      if (localImageUri) {
+        const fileName = `${user.id}/avatar.jpg`;
+        const response = await fetch(localImageUri);
         const blob = await response.blob();
 
         const { error: uploadError } = await supabase.storage
@@ -105,11 +113,12 @@ export default function EditProfile() {
 
         if (uploadError) throw uploadError;
 
+        // Add timestamp to force cache refresh
         const { data: urlData } = supabase.storage
           .from('avatars')
           .getPublicUrl(fileName);
 
-        fotoUrl = urlData.publicUrl;
+        fotoUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`;
       }
 
       const { error } = await supabase
@@ -123,13 +132,13 @@ export default function EditProfile() {
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (error) {
+      console.error('Save error:', error);
       Alert.alert('Error', 'No se pudieron guardar los cambios.');
     } finally {
       setSaving(false);
     }
   }
 
-  // ── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.backgroundSecondary }]}>
@@ -137,6 +146,9 @@ export default function EditProfile() {
       </View>
     );
   }
+
+  // Show local image if selected, otherwise show current profile photo
+  const displayImage = localImageUri || fotoPerfil;
 
   return (
     <KeyboardAvoidingView
@@ -149,10 +161,9 @@ export default function EditProfile() {
         keyboardShouldPersistTaps="handled"
       >
 
-        {/* ── Avatar ── */}
         <Pressable onPress={handlePickImage} style={styles.avatarWrap}>
-          {fotoPerfil ? (
-            <Image source={{ uri: fotoPerfil }} style={styles.avatar} />
+          {displayImage ? (
+            <Image source={{ uri: displayImage }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
               <Ionicons name="person-outline" size={40} color={colors.iconInactive} />
@@ -163,7 +174,6 @@ export default function EditProfile() {
           </View>
         </Pressable>
 
-        {/* ── Nombre ── */}
         <Section title="NOMBRE" colors={colors}>
           <TextInput
             style={[styles.input, { color: colors.textPrimary }]}
@@ -175,7 +185,6 @@ export default function EditProfile() {
           />
         </Section>
 
-        {/* ── Bio ── */}
         <Section title="BIO" colors={colors}>
           <TextInput
             style={[styles.input, styles.inputMultiline, { color: colors.textPrimary }]}
@@ -191,7 +200,6 @@ export default function EditProfile() {
           </Text>
         </Section>
 
-        {/* ── Enlace ── */}
         <Section title="ENLACE" colors={colors}>
           <View style={styles.inputRow}>
             <Ionicons name="link-outline" size={18} color={colors.iconInactive} />
@@ -207,7 +215,6 @@ export default function EditProfile() {
           </View>
         </Section>
 
-        {/* ── Botón guardar ── */}
         <Pressable
           onPress={handleSave}
           disabled={saving}
@@ -227,8 +234,6 @@ export default function EditProfile() {
     </KeyboardAvoidingView>
   );
 }
-
-// ─── Section wrapper ──────────────────────────────────────────────────────────
 
 function Section({
   title,
@@ -257,8 +262,6 @@ function Section({
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
@@ -270,8 +273,6 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     alignItems: 'center',
   },
-
-  // Avatar
   avatarWrap: {
     marginBottom: 32,
     position: 'relative',
@@ -295,8 +296,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // Section
   section: {
     width: '100%',
     marginBottom: 24,
@@ -319,8 +318,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-
-  // Input
   input: {
     fontSize: 16,
     paddingVertical: 13,
@@ -344,8 +341,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     paddingBottom: 8,
   },
-
-  // Save button
   saveBtn: {
     marginHorizontal: 16,
     width: '90%',

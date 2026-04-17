@@ -2,20 +2,21 @@ import Cal from "@/components/Cal";
 import Graph from "@/components/Graph";
 import StreakBadge from "@/components/StreakBadge";
 import { useTheme } from "@/context/ThemeContext";
-import { useStreak } from "@/hooks/useStreak";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
+const screenWidth = Dimensions.get('window').width;
 
 interface UserProfile {
     id_usuario: number;
     nombre: string;
     email: string;
+    racha_actual?: number;
 }
 
 export default function OwnProfile(){
@@ -25,9 +26,7 @@ export default function OwnProfile(){
     const [loading, setLoading] = useState(true);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
-
-    // HookStreak
-    const { streak, loading: streakLoading } = useStreak(userProfile?.id_usuario ?? null);
+    const [authUserId, setAuthUserId] = useState<string>('');
 
     useEffect(() => {
         async function loadUserProfile() {
@@ -35,10 +34,12 @@ export default function OwnProfile(){
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
                 
                 if (userError || !user) {
-                    console.error('Error obteniendo usuario:', userError);
+                    console.error('Error getting user:', userError);
                     router.replace('/auth/login');
                     return;
                 }
+
+                setAuthUserId(user.id);
 
                 const { data: profiles, error } = await supabase
                     .from('usuario')
@@ -54,7 +55,7 @@ export default function OwnProfile(){
                     setErrorMsg('No se encontró ningún perfil con el email: ' + user.email);
                 }
             } catch (error) {
-                console.error('Error general:', error);
+                console.error('General error:', error);
                 setErrorMsg('Error inesperado: ' + String(error));
             } finally {
                 setLoading(false);
@@ -64,7 +65,7 @@ export default function OwnProfile(){
         loadUserProfile();
     }, []);
 
-    if (loading || streakLoading) {
+    if (loading) {
         return (
             <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
                 <ActivityIndicator size="large" color={colors.textPrimary} />
@@ -88,75 +89,75 @@ export default function OwnProfile(){
         );
     }
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(`${userProfile.id_usuario}/avatar.jpg`);
+    const { data } = supabase.storage.from('avatars').getPublicUrl(`${authUserId}/avatar.jpg`);
+    const avatarUrl = `${data.publicUrl}?t=${new Date().getTime()}`;
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
-        <ScrollView>
-            <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
-                <Pressable 
-                    onPress={() => router.back()}
-                    style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        padding: 8,
-                        width: 40
-                    }}
-                >
-                    <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-                </Pressable>
-            </View>
-
-            <View style={{flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                {/* Profile and Image */}
-                <View style={{ flexDirection: 'row' , alignItems: 'center',gap: 45,  justifyContent: 'space-between'}}>
-                    <Image
-                        source={imgError ? defaultAvatar : { uri: data.publicUrl }}
-                        onError={() => setImgError(true)}
-                        style={styles.profileImage}
-                    />
-                    <Text style={styles.tittleText}>{userProfile.nombre}</Text>
-                    <StreakBadge count={streak} />
-                </View>
-                {/* Separator */}
-                <View style={{height: 1,backgroundColor: colors.textSecondary, width: '90%', marginVertical: 10,}}/>
-
-                {/* Profile Stats */}
-                <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 15}}>
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Trainings</Text>
-                        <Text style={styles.principalText}>103</Text>
-                    </View>
-
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Followers</Text>
-                        <Text style={styles.principalText}>100</Text>
-                    </View>
-
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Following</Text>
-                        <Text style={styles.principalText}>2</Text>
-                    </View>
-                </View>
-
-                {/* Short Bio */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, marginTop: 20 }}>
-                    <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
-                        Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
-                    </Text>
-
-                    <Pressable style={[styles.tertiaryButton, { width: 100, height: 35 }]} onPress={() => router.push("../settings/editProfile")}>
-                        <Text style={{color: colors.backgroundPrimary}}>Edit</Text>
+            <ScrollView contentContainerStyle={{paddingBottom: 20}}>
+                {/* Back button */}
+                <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
+                    <Pressable 
+                        onPress={() => router.back()}
+                        style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center',
+                            padding: 8,
+                            width: 40
+                        }}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                     </Pressable>
                 </View>
+
+                {/* Profile header */}
+                <View style={{alignItems: 'center', paddingHorizontal: 20, marginTop: 10}}>
+                    {/* Avatar and username row */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: screenWidth < 350 ? 15 : 30, marginBottom: 10}}>
+                        <Image
+                            source={imgError ? defaultAvatar : { uri: avatarUrl }}
+                            onError={() => setImgError(true)}
+                            style={styles.profileImage}
+                        />
+                        <Text style={[styles.tittleText, {fontSize: screenWidth < 350 ? 18 : 24}]} numberOfLines={1}>
+                            {userProfile.nombre}
+                        </Text>
+                        <StreakBadge count={userProfile.racha_actual || 0} />
+                    </View>
+
+                    {/* Profile statistics */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: screenWidth < 350 ? 10 : 20, marginTop: 15}}>
+                        <View style={{flexDirection: 'column', alignItems: 'center', gap: 5}}>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 12 : 14}]}>Trainings</Text>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 16 : 18}]}>103</Text>
+                        </View>
+
+                        <View style={{flexDirection: 'column', alignItems: 'center', gap: 5}}>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 12 : 14}]}>Followers</Text>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 16 : 18}]}>100</Text>
+                        </View>
+
+                        <View style={{flexDirection: 'column', alignItems: 'center', gap: 5}}>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 12 : 14}]}>Following</Text>
+                            <Text style={[styles.principalText, {fontSize: screenWidth < 350 ? 16 : 18}]}>2</Text>
+                        </View>
+                    </View>
+
+                    {/* User bio */}
+                    <View style={{ marginTop: 20, width: '100%'}}>
+                        <Text style={[styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14 }]}>
+                            Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
+                        </Text>
+                    </View>
+                </View>
                 
-                <View style={{padding:5}}>
+                {/* Charts section */}
+                <View style={{paddingHorizontal: 10, marginTop: 20}}>
                     <Graph/>
                     <Cal/>
                 </View>
                 
-            </View>
-        </ScrollView>
+            </ScrollView>
         </SafeAreaView>
     );
 }
