@@ -58,12 +58,12 @@ export default function EditProfile() {
         setBio(data.bio ?? '');
         setEnlace(data.enlace ?? '');
         
-        // Get avatar URL using auth UUID
+        // Get avatar URL using auth UUID with cache-busting timestamp
         const { data: avatarData } = supabase.storage
           .from('avatars')
           .getPublicUrl(`${user.id}/avatar.jpg`);
         
-        setFotoPerfil(avatarData.publicUrl);
+        setFotoPerfil(`${avatarData.publicUrl}?t=${Date.now()}`);
       }
 
       setLoading(false);
@@ -87,7 +87,6 @@ export default function EditProfile() {
     });
 
     if (!result.canceled) {
-      // Store local URI for immediate preview
       setLocalImageUri(result.assets[0].uri);
     }
   }
@@ -101,7 +100,6 @@ export default function EditProfile() {
 
       let fotoUrl = fotoPerfil;
 
-      // Upload image if a new one was selected
       if (localImageUri) {
         const fileName = `${user.id}/avatar.jpg`;
         const response = await fetch(localImageUri);
@@ -113,12 +111,11 @@ export default function EditProfile() {
 
         if (uploadError) throw uploadError;
 
-        // Add timestamp to force cache refresh
         const { data: urlData } = supabase.storage
           .from('avatars')
           .getPublicUrl(fileName);
 
-        fotoUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`;
+        fotoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       }
 
       const { error } = await supabase
@@ -127,6 +124,10 @@ export default function EditProfile() {
         .eq('email', user.email);
 
       if (error) throw error;
+
+      // Update local state with new URL
+      setFotoPerfil(fotoUrl);
+      setLocalImageUri(null);
 
       Alert.alert('¡Listo!', 'Perfil actualizado correctamente.', [
         { text: 'OK', onPress: () => router.back() },
@@ -147,7 +148,6 @@ export default function EditProfile() {
     );
   }
 
-  // Show local image if selected, otherwise show current profile photo
   const displayImage = localImageUri || fotoPerfil;
 
   return (
@@ -163,7 +163,11 @@ export default function EditProfile() {
 
         <Pressable onPress={handlePickImage} style={styles.avatarWrap}>
           {displayImage ? (
-            <Image source={{ uri: displayImage }} style={styles.avatar} />
+            <Image 
+              source={{ uri: displayImage }} 
+              style={styles.avatar}
+              key={displayImage}
+            />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
               <Ionicons name="person-outline" size={40} color={colors.iconInactive} />
