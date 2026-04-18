@@ -30,7 +30,7 @@ export default function RootLayout() {
         <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
         <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
         <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
-        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="train/routine" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

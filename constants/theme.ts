@@ -26,6 +26,13 @@ export const darkColors = {
     selectedDot: '#FFFFFF',
     arrow: '#FF6B00',             
     monthText: '#FFFFFF',
+  },
+
+  routineCard: {
+    background: '#1E2923',
+    title: '#FFFFFF',
+    day: '#B5B5B5',
+    border: '#988f8f'
   }
 };
 
@@ -57,6 +64,12 @@ export const lightColors = {
     selectedDot: '#FFFFFF',
     arrow: '#FF6B00',
     monthText: '#121212',
+  },
+  routineCard: {
+    background: '#FFFFFF',
+    title: '#121212',
+    day: '#555555',
+    border: '#988f8f'
   }
 };
 
