@@ -26,7 +26,7 @@ export default function Login(){
                 <View style={{ paddingTop: 20}}>
                     <Text style={[styles.principalText, {paddingLeft:10}]}>Contrasena</Text>
                     <TextInput style={styles.inputs} value={password} onChangeText={setPassword} secureTextEntry />
-                    <Pressable onPress={() => router.push('/auth/forgotPassword')}>
+                    <Pressable onPress={() => router.push('../../auth/forgotPassword')}>
                         <Text style={[styles.underlineText, {paddingLeft:10}]}>Olvide mi contrasena</Text>
                     </Pressable>
                 </View>
@@ -43,7 +43,7 @@ export default function Login(){
                 </Pressable>
             </View>
 
-            <Pressable onPress={() => router.push('/auth/register')}>
+            <Pressable onPress={() => router.push('../../auth/register')}>
                 <Text style={[styles.underlineText]}>No tengo cuenta</Text>
             </Pressable>
         </View>

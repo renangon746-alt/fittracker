@@ -118,7 +118,7 @@ export default function Settings() {
           colors={colors}
           icon={<Ionicons name="globe-outline" size={20} color={colors.textPrimary} />}
           label="Idioma"
-          onPress={() => router.push('/settings/language')}
+          onPress={() => router.push('../../settings/language')}
           isLast
         />
       </Section>
@@ -129,7 +129,7 @@ export default function Settings() {
           colors={colors}
           icon={<FontAwesome5 name="user" size={18} color={colors.textPrimary} />}
           label="Mi perfil"
-          onPress={() => router.push('/profile/ownProfile')}
+          onPress={() => router.push('../../profile/ownProfile')}
         />
         <SettingsRow
           colors={colors}

@@ -35,7 +35,7 @@ export default function OwnProfile(){
                 
                 if (userError || !user) {
                     console.error('Error getting user:', userError);
-                    router.replace('/auth/login');
+                    router.replace('../../auth/login');
                     return;
                 }
 

@@ -36,7 +36,7 @@ export default function ForgotPassword() {
                 </Pressable>
             </View>
 
-            <Pressable onPress={() => from === 'settings' ? router.back() : router.replace('/auth/login')}>
+            <Pressable onPress={() => from === 'settings' ? router.back() : router.replace('../../auth/login')}>
                 <Text style={styles.underlineText}>
                     Volver
                 </Text>
