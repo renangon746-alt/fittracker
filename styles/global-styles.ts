@@ -118,6 +118,14 @@ export const globalStyles = (colors: any) =>
         height:40,
         alignItems: 'center' as const,
         justifyContent: 'center' as const
+    },
+
+    separator:{
+        width: '90%', 
+        height: 1, 
+        backgroundColor: colors.textPrimary, 
+        marginTop: 15, 
+        alignSelf: 'center'
     }
 
 
