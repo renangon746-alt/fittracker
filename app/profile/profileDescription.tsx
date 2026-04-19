@@ -27,7 +27,7 @@ export default function ProfileDescription(){
     const [loading, setLoading] = useState(true);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
-    const [authUserId, setAuthUserId] = useState<string>('');
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadUserProfile() {
@@ -38,9 +38,6 @@ export default function ProfileDescription(){
                     setErrorMsg('ID de usuario no valido.');
                     return;
                 }
-
-                // Get auth user ID for avatar
-                const { data: authUsers } = await supabase.auth.admin.listUsers();
                 
                 // Get profile data
                 const { data: profile, error } = await supabase
@@ -55,13 +52,24 @@ export default function ProfileDescription(){
                 } else if (profile) {
                     setUserProfile(profile);
                     
-                    // Find matching auth user by email to get UUID
-                    const { data: { user } } = await supabase.auth.getUser();
+                    // Find auth user UUID by email
                     if (profile.email) {
-                        // Query auth users to find UUID by email
-                        const { data: authData } = await supabase.auth.admin.getUserByEmail(profile.email);
-                        if (authData?.user) {
-                            setAuthUserId(authData.user.id);
+                        try {
+                            const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
+                            
+                            if (!authError && authUsers) {
+                                const authUser = authUsers.find(u => u.email === profile.email);
+                                
+                                if (authUser) {
+                                    const { data } = supabase.storage
+                                        .from('avatars')
+                                        .getPublicUrl(`${authUser.id}/avatar.jpg`);
+                                    
+                                    setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
+                                }
+                            }
+                        } catch (authError) {
+                            console.error('Error fetching auth user:', authError);
                         }
                     }
                 } else {
@@ -102,11 +110,6 @@ export default function ProfileDescription(){
         );
     }
 
-    // Use auth UUID if available, otherwise fallback to id_usuario
-    const avatarPath = authUserId ? `${authUserId}/avatar.jpg` : `${userProfile.id_usuario}/avatar.jpg`;
-    const { data } = supabase.storage.from('avatars').getPublicUrl(avatarPath);
-    const avatarUrl = `${data.publicUrl}?t=${Date.now()}`;
-
     return(
         <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
         <ScrollView contentContainerStyle={{paddingBottom: 20}}>
@@ -129,7 +132,7 @@ export default function ProfileDescription(){
                 {/* Profile header */}
                 <View style={{ flexDirection: 'row' , alignItems: 'center', gap: screenWidth < 350 ? 15 : 30, marginBottom: 10}}>
                     <Image
-                        source={imgError ? defaultAvatar : { uri: avatarUrl }}
+                        source={imgError || !avatarUrl ? defaultAvatar : { uri: avatarUrl }}
                         onError={() => setImgError(true)}
                         style={styles.profileImage}
                     />
