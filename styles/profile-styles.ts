@@ -12,6 +12,39 @@ export const profileStyles = (colors: any) =>
             paddingTop: 100
         },
 
+        loadProfileContainer:{
+            flex: 1, 
+            backgroundColor: colors.backgroundPrimary, 
+            justifyContent: 'center', 
+            alignItems: 'center' 
+        },
+
+        loadProfileLabel:{
+            marginTop: 10
+        },
+
+        loadProfileErrorContainer:{
+            flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center', padding: 20
+        },
+
+        loadProfileErrorLabel:{
+            color: 'red', 
+            marginBottom: 10
+        },
+
+        loadProfileErrorMessage:{
+            textAlign: 'center' 
+        },
+
+        loadProfileErrorReturn:{
+            marginTop: 20
+        },
+
+        loadProfileSuccesMessage:{
+            color: 'green', 
+            paddingTop: 10
+        },
+ 
         p_headerContainer:{
             alignItems: 'center', 
             paddingHorizontal: 20, 
@@ -37,6 +70,20 @@ export const profileStyles = (colors: any) =>
             gap: 5
         },
 
+        p_charts:{
+            paddingHorizontal: 10, 
+            marginTop: 20
+        },
+        
+        p_bio:{
+            textAlign: 'center'
+        },
+
+        p_link:{
+            textAlign: 'center',
+            color: colors.primary
+        },
+
         op_bio:{
             marginTop: 20, 
             width: '100%'
@@ -49,8 +96,28 @@ export const profileStyles = (colors: any) =>
             marginTop: 20 
         },
 
-        p_charts:{
-            paddingHorizontal: 10, 
-            marginTop: 20
+        pd_followPressable:{
+            width: 100, 
+            height: 35
+        },
+
+        auth_inputContainer:{
+            paddingTop: 20
+        },
+
+        auth_inputLabel:{
+            paddingLeft: 10
+        },
+
+        auth_registerButtonContainer:{
+            padding: 10
+        },
+
+        l_passwordContainer:{
+            paddingTop: 20
+        },
+
+        buttonContainer:{
+            padding:10
         }
     });

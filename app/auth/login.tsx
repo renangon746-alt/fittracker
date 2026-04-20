@@ -16,30 +16,30 @@ export default function Login(){
 
     return (
         <SafeAreaView style={global_styles.defaultContainer}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            <ScrollView contentContainerStyle={global_styles.defaultScroll}>
                 <View style={profile_styles.auth_container}>
 
                     <Image source={require('../../assets/images/Icon__dumbell_fitTracker.png')} style={global_styles.principalLogoImage}/>
 
-                    <Text style={global_styles.tittleText}>Iniciar Sesion</Text>
+                    <Text style={global_styles.tittleText}>Login</Text>
 
-                    <View style={{paddingTop: 20}}>
-                        <Text style={[global_styles.principalText, {paddingLeft:10}]}>E-mail</Text>
+                    <View style={profile_styles.auth_inputContainer}>
+                        <Text style={[global_styles.principalText, profile_styles.auth_inputLabel]}>E-mail</Text>
                         <TextInput style={global_styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
 
-                        <View style={{ paddingTop: 20}}>
-                            <Text style={[global_styles.principalText, {paddingLeft:10}]}>Contrasena</Text>
+                        <View style={profile_styles.l_passwordContainer}>
+                            <Text style={[global_styles.principalText, profile_styles.auth_inputLabel]}>Password</Text>
                             <TextInput style={global_styles.inputs} value={password} onChangeText={setPassword} secureTextEntry />
                             <Pressable onPress={() => router.push('../../auth/forgotPassword')}>
-                                <Text style={[global_styles.underlineText, {paddingLeft:10}]}>Olvide mi contrasena</Text>
+                                <Text style={[global_styles.underlineText, profile_styles.auth_inputLabel]}>Forgot password</Text>
                             </Pressable>
                         </View>
 
                     </View>
 
-                    {errorMsg && <Text style={[global_styles.secondaryText, { color: 'red', paddingTop: 10 }]}>{errorMsg}</Text>}
+                    {errorMsg && <Text style={[global_styles.secondaryText, profile_styles.loadProfileErrorMessage]}>{errorMsg}</Text>}
 
-                    <View style={{padding:10}}>
+                    <View style={profile_styles.buttonContainer}>
                         <Pressable style={global_styles.principalButton} onPress={handleLogin}>
                             <Text style={global_styles.principalText}>
                                 Iniciar Sesion
@@ -48,7 +48,7 @@ export default function Login(){
                     </View>
 
                     <Pressable onPress={() => router.push('../../auth/register')}>
-                        <Text style={[global_styles.underlineText]}>No tengo cuenta</Text>
+                        <Text style={[global_styles.underlineText]}>I don't have account</Text>
                     </Pressable>
                 </View>
                 </ScrollView>

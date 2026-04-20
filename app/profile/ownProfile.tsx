@@ -32,19 +32,19 @@ export default function OwnProfile() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center' }}>
+      <SafeAreaView style={profile_styles.loadProfileContainer}>
         <ActivityIndicator size="large" color={colors.textPrimary} />
-        <Text style={[global_styles.secondaryText, { marginTop: 10 }]}>Cargando perfil...</Text>
+        <Text style={[global_styles.secondaryText, profile_styles.loadProfileLabel]}>Cargando perfil...</Text>
       </SafeAreaView>
     );
   }
 
   if (!userProfile) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={[global_styles.principalText, { color: 'red', marginBottom: 10 }]}>No se pudo cargar el perfil</Text>
-        <Text style={[global_styles.secondaryText, { textAlign: 'center' }]}>{errorMsg}</Text>
-        <Pressable style={[global_styles.principalButton, { marginTop: 20 }]} onPress={() => router.back()}>
+      <SafeAreaView style={profile_styles.loadProfileErrorContainer}>
+        <Text style={[global_styles.principalText, profile_styles.loadProfileErrorLabel]}>No se pudo cargar el perfil</Text>
+        <Text style={[global_styles.secondaryText, profile_styles.loadProfileErrorMessage]}>{errorMsg}</Text>
+        <Pressable style={[global_styles.principalButton, profile_styles.loadProfileErrorReturn]} onPress={() => router.back()}>
           <Text style={global_styles.principalText}>Volver</Text>
         </Pressable>
       </SafeAreaView>
@@ -53,7 +53,7 @@ export default function OwnProfile() {
 
   return (
     <SafeAreaView style={global_styles.defaultContainer}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+      <ScrollView contentContainerStyle={global_styles.defaultScroll}>
 
         {/* Back button */}
         <View style={global_styles.backArrowContainer}>
@@ -97,12 +97,12 @@ export default function OwnProfile() {
           {/* Bio + link */}
           <View style={profile_styles.op_bio}>
             {userProfile.bio ? (
-              <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14 }]}>
+                <Text style={[global_styles.secondaryText, profile_styles.p_bio, {fontSize: screenWidth < 350 ? 12 : 14 }]}>
                 {userProfile.bio}
               </Text>
             ) : null}
             {userProfile.enlace ? (
-              <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14, color: colors.primary, marginTop: userProfile.bio ? 4 : 0 }]}>
+                <Text style={[global_styles.secondaryText, profile_styles.p_link,{fontSize: screenWidth < 350 ? 12 : 14, marginTop: userProfile.bio ? 4 : 0 }]}>
                 {userProfile.enlace}
               </Text>
             ) : null}
