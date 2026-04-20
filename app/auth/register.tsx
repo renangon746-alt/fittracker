@@ -46,7 +46,7 @@ export default function Register() {
                     <View style={profile_styles.auth_registerButtonContainer}>
                         <Pressable style={global_styles.principalButton} onPress={handleRegister}>
                             <Text style={global_styles.principalText}>
-                                Registrarse
+                                Register
                             </Text>
                         </Pressable>
                     </View>

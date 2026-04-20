@@ -42,7 +42,7 @@ export default function Login(){
                     <View style={profile_styles.buttonContainer}>
                         <Pressable style={global_styles.principalButton} onPress={handleLogin}>
                             <Text style={global_styles.principalText}>
-                                Iniciar Sesion
+                                Login
                             </Text>
                         </Pressable>
                     </View>
