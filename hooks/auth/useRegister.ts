@@ -32,7 +32,7 @@ export function useRegister() {
         }
     }
 
-    async function uploadImage(userId: string): Promise<string | null> {
+    async function uploadImage(authUserId: string): Promise<string | null> {
         if (!imageBase64) return null;
 
         const binary = atob(imageBase64);
@@ -41,7 +41,7 @@ export function useRegister() {
             bytes[i] = binary.charCodeAt(i);
         }
 
-        const fileName = `${userId}/avatar.jpg`;
+        const fileName = `${authUserId}/avatar.jpg`;
 
         const { error } = await supabase.storage
             .from('avatars')
@@ -79,9 +79,7 @@ export function useRegister() {
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
-                options: {
-                    data: { nombre }
-                }
+                options: { data: { nombre } }
             });
 
             if (error) {
@@ -89,28 +87,28 @@ export function useRegister() {
                 return;
             }
 
-            const userId = data.user?.id;
-            
-            if (!userId) {
+            const authUserId = data.user?.id;
+
+            if (!authUserId) {
                 setErrorMsg('Error al crear el usuario.');
                 return;
             }
 
+            // Save auth_uuid alongside the profile so we can build avatar URLs
+            // from the client without needing admin permissions
             const { data: newUser, error: dbError } = await supabase
                 .from('usuario')
                 .insert({
-                    email: email,
+                    email,
                     contrasena: password,
-                    nombre: nombre,
+                    nombre,
+                    auth_uuid: authUserId,
                 })
                 .select('id_usuario')
                 .single();
 
-            console.log('Resultado inserción:', { newUser, dbError });
-
             if (dbError) {
                 setErrorMsg('Error guardando perfil: ' + dbError.message + ' (Code: ' + dbError.code + ')');
-                
                 return;
             }
 
@@ -119,24 +117,23 @@ export function useRegister() {
                 return;
             }
 
-            const dbUserId = newUser.id_usuario;
-
+            // Upload avatar using the auth UUID as folder name
             let avatarUrl: string | null = null;
             if (imageBase64) {
-                console.log('Subiendo avatar...');
-                avatarUrl = await uploadImage(dbUserId.toString());
-                
+                avatarUrl = await uploadImage(authUserId);
+
                 if (avatarUrl) {
                     await supabase
                         .from('usuario')
                         .update({ foto_perfil: avatarUrl })
-                        .eq('id_usuario', dbUserId);
-                    
+                        .eq('id_usuario', newUser.id_usuario);
+
                     await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
                 }
             }
+
             router.push('/auth/login');
-            
+
         } catch (error) {
             setErrorMsg('Error inesperado: ' + String(error));
         }

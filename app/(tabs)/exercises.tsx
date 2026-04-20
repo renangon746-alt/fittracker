@@ -1,5 +1,5 @@
 import { exercises } from "@/assets/data/exercises";
-import MuscleList from '@/components/MuscleList';
+import MuscleList from "@/components/exercises/MuscleList";
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';

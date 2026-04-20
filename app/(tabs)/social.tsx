@@ -1,4 +1,4 @@
-import UserList from '@/components/UserList';
+import UserList from '@/components/social/UserList';
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ interface SocialUser {
   id: number;
   userName: string;
   fullName: string;
+  email: string;
 }
 
 export default function Social() {
@@ -53,7 +54,7 @@ export default function Social() {
 
         const { data, error } = await supabase
           .from('usuario')
-          .select('id_usuario, nombre, nickname')
+          .select('id_usuario, nombre, nickname, email')
           .order('nombre', { ascending: true });
 
         if (error) {
@@ -69,6 +70,7 @@ export default function Social() {
               ? user.nickname
               : `user${user.id_usuario}`,
             fullName: user.nombre,
+            email: user.email || '',
           }));
 
         setUsers(mappedUsers);

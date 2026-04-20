@@ -3,6 +3,11 @@ import { StyleSheet } from "react-native";
 export const globalStyles = (colors: any) =>
     StyleSheet.create({
 
+    defaultContainer:{
+        flex: 1, 
+        backgroundColor: colors.backgroundPrimary
+    },
+
     tittleText:{
         fontSize: 28,
         fontFamily: 'Inter',
@@ -120,12 +125,28 @@ export const globalStyles = (colors: any) =>
         justifyContent: 'center' as const
     },
 
+    backArrowContainer:{
+        paddingHorizontal: 20, 
+        paddingTop: 10
+    },
+
+    backArrowPressable:{
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        padding: 8,
+        width: 40
+    },
+
     separator:{
-        width: '90%', 
-        height: 1, 
-        backgroundColor: colors.textPrimary, 
-        marginTop: 15, 
-        alignSelf: 'center'
+        height: 1, // Grosor de la línea
+        width: '100%', // Ancho total
+        backgroundColor: colors.textSecondary, // Color de la línea
+        marginVertical: 10, 
+        
+    },
+
+    defaultScroll:{
+        paddingBottom: 100
     }
 
 

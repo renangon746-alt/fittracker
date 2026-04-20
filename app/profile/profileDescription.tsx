@@ -1,169 +1,184 @@
-import Cal from "@/components/Cal";
-import Graph from "@/components/Graph";
-import StreakBadge from "@/components/StreakBadge";
+import Cal from "@/components/global/Cal";
+import Graph from "@/components/global/Graph";
+import StreakBadge from "@/components/global/StreakBadge";
 import { useTheme } from "@/context/ThemeContext";
-import { useStreak } from "@/hooks/useStreak";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
+import { profileStyles } from "@/styles/profile-styles";
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    Dimensions,
+    Image,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
+const screenWidth = Dimensions.get('window').width;
 
 interface UserProfile {
-    id_usuario: number;
-    nombre: string;
-    email: string;
+  id_usuario: number;
+  nombre: string;
+  email: string;
+  auth_uuid?: string;
+  racha_actual?: number;
+  bio?: string;
+  enlace?: string;
 }
 
-export default function ProfileDescription(){
-    const {colors} = useTheme();
-    const styles = globalStyles(colors);
-    const { id } = useLocalSearchParams<{ id?: string }>();
-    const [imgError, setImgError] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [errorMsg, setErrorMsg] = useState<string>('');
+export default function ProfileDescription() {
+  const { colors } = useTheme();
+  const global_styles = globalStyles(colors);
+  const profile_styles = profileStyles(colors);
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const [imgError, setImgError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-    // HookStreak
-    const { streak, loading: streakLoading } = useStreak(userProfile?.id_usuario ?? null);
+  useEffect(() => {
+    async function loadUserProfile() {
+      try {
+        const selectedUserId = Number(id);
 
-    useEffect(() => {
-        async function loadUserProfile() {
-            try {
-                const selectedUserId = Number(id);
-
-                if (!id || Number.isNaN(selectedUserId)) {
-                    setErrorMsg('ID de usuario no valido.');
-                    return;
-                }
-
-                const { data: profile, error } = await supabase
-                    .from('usuario')
-                    .select('*')
-                    .eq('id_usuario', selectedUserId)
-                    .single();
-
-                if (error) {
-                    console.error('Error loading profile:', error);
-                    setErrorMsg('Error cargando perfil: ' + error.message);
-                } else if (profile) {
-                    setUserProfile(profile);
-                } else {
-                    setErrorMsg('No se encontro ningun perfil para ese usuario.');
-                }
-            } catch (error) {
-                console.error('Error general:', error);
-                setErrorMsg('Error inesperado: ' + String(error));
-            } finally {
-                setLoading(false);
-            }
+        if (!id || Number.isNaN(selectedUserId)) {
+          setErrorMsg('ID de usuario no valido.');
+          return;
         }
 
-        loadUserProfile();
-    }, [id]);
+        // Fetch profile including auth_uuid — no admin call needed
+        const { data: profile, error } = await supabase
+          .from('usuario')
+          .select('id_usuario, nombre, email, auth_uuid, racha_actual, bio, enlace')
+          .eq('id_usuario', selectedUserId)
+          .single();
 
-    if (loading || streakLoading) {
-        return (
-            <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center'}}>
-                <ActivityIndicator size="large" color={colors.textPrimary} />
-                <Text style={[styles.secondaryText, {marginTop: 10}]}>Cargando perfil...</Text>
-            </SafeAreaView>
-        );
+        if (error) {
+          setErrorMsg('Error cargando perfil: ' + error.message);
+        } else if (profile) {
+          setUserProfile(profile);
+
+          // Build avatar URL directly from auth_uuid stored in the table
+          if (profile.auth_uuid) {
+            const { data } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(`${profile.auth_uuid}/avatar.jpg`);
+
+            setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
+          }
+        } else {
+          setErrorMsg('No se encontro ningun perfil para ese usuario.');
+        }
+      } catch (error) {
+        setErrorMsg('Error inesperado: ' + String(error));
+      } finally {
+        setLoading(false);
+      }
     }
 
-    if (!userProfile) {
-        return (
-            <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center', padding: 20}}>
-                <Text style={[styles.principalText, {color: 'red', marginBottom: 10}]}>No se pudo cargar el perfil</Text>
-                <Text style={[styles.secondaryText, {textAlign: 'center'}]}>{errorMsg}</Text>
-                <Pressable 
-                    style={[styles.principalButton, {marginTop: 20}]} 
-                    onPress={() => router.back()}
-                >
-                    <Text style={styles.principalText}>Volver</Text>
-                </Pressable>
-            </SafeAreaView>
-        );
-    }
+    loadUserProfile();
+  }, [id]);
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(`${userProfile.id_usuario}/avatar.jpg`);
-
-    return(
-        <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
-        <ScrollView>
-            {/* Botón de volver atrás */}
-            <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
-                <Pressable 
-                    onPress={() => router.back()}
-                    style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        padding: 8,
-                        width: 40
-                    }}
-                >
-                    <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-                </Pressable>
-            </View>
-
-            <View style={{flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                {/* Profile and Image */}
-                <View style={{ flexDirection: 'row' , alignItems: 'center',gap: 45,  justifyContent: 'space-between'}}>
-                    <Image
-                        source={imgError ? defaultAvatar : { uri: data.publicUrl }}
-                        onError={() => setImgError(true)}
-                        style={styles.profileImage}
-                    />
-                    <Text style={styles.tittleText}>{userProfile.nombre}</Text>
-                    <StreakBadge count={streak} />
-                </View>
-                {/* Separator */}
-                <View style={{height: 1,backgroundColor: colors.textSecondary, width: '90%', marginVertical: 10,}}/>
-
-                {/* Profile Stats */}
-                <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 15}}>
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Trainings</Text>
-                        <Text style={styles.principalText}>103</Text>
-                    </View>
-
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Followers</Text>
-                        <Text style={styles.principalText}>100</Text>
-                    </View>
-
-                    <View style={{flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 10}}>
-                        <Text style={styles.principalText}>Following</Text>
-                        <Text style={styles.principalText}>2</Text>
-                    </View>
-                </View>
-
-                {/* Short Bio and Follow Button */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, marginTop: 20 }}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={[styles.secondaryText, { textAlign: 'left' }]}>
-                        Fitness enthusiast and nutrition expert. Passionate about helping others achieve their health goals.
-                        </Text>
-                    </View>
-
-                    <Pressable style={[styles.principalButton, { width: 100, height: 35 }]}>
-                        <Text style={styles.principalText}>Follow</Text>
-                    </Pressable>
-                </View>
-                
-                <View style={{padding:5}}>
-                    {/* Graph */}
-                    <Graph/>
-
-                    {/* Calendar */}
-                    <Cal/>
-                </View>
-                
-            </View>
-        </ScrollView>
-        </SafeAreaView>
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.textPrimary} />
+        <Text style={[global_styles.secondaryText, { marginTop: 10 }]}>Cargando perfil...</Text>
+      </SafeAreaView>
     );
+  }
+
+  if (!userProfile) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={[global_styles.principalText, { color: 'red', marginBottom: 10 }]}>No se pudo cargar el perfil</Text>
+        <Text style={[global_styles.secondaryText, { textAlign: 'center' }]}>{errorMsg}</Text>
+        <Pressable style={[global_styles.principalButton, { marginTop: 20 }]} onPress={() => router.back()}>
+          <Text style={global_styles.principalText}>Volver</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={global_styles.defaultContainer}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+
+        {/* Back button */}
+        <View style={global_styles.backArrowContainer}>
+          <Pressable onPress={() => router.back()} style={global_styles.backArrowPressable}>
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          </Pressable>
+        </View>
+
+        {/* Profile header */}
+        <View style={profile_styles.p_headerContainer}>
+
+          {/* Avatar and username row */}
+          <View style={profile_styles.p_avatarUsernameContainer}>
+            <Image
+              source={imgError || !avatarUrl ? defaultAvatar : { uri: avatarUrl }}
+              onError={() => setImgError(true)}
+              style={global_styles.profileImage}
+            />
+            <Text style={[global_styles.tittleText, { fontSize: screenWidth < 350 ? 18 : 24 }]} numberOfLines={1}>
+              {userProfile.nombre}
+            </Text>
+            <StreakBadge count={userProfile.racha_actual || 0} />
+          </View>
+
+          {/* Profile statistics */}
+          <View style={profile_styles.p_profileStatsContainer}>
+            <View style={profile_styles.p_stat}>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>Trainings</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
+            </View>
+            <View style={profile_styles.p_stat}>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>Followers</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>100</Text>
+            </View>
+            <View style={profile_styles.p_stat}>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>Following</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>2</Text>
+            </View>
+          </View>
+
+          {/* Bio + link + Follow button */}
+          <View style={profile_styles.pd_bioFollowButton}>
+            <View style={{ flex: 1 }}>
+              {userProfile.bio ? (
+                <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14 }]}>
+                  {userProfile.bio}
+                </Text>
+              ) : null}
+              {userProfile.enlace ? (
+                <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14, color: colors.primary, marginTop: userProfile.bio ? 4 : 0 }]}>
+                  {userProfile.enlace}
+                </Text>
+              ) : null}
+            </View>
+
+            <Pressable style={[global_styles.principalButton, { width: 100, height: 35 }]}>
+              <Text style={global_styles.principalText}>Follow</Text>
+            </Pressable>
+          </View>
+
+        </View>
+
+        {/* Charts section */}
+        <View style={profile_styles.p_charts}>
+          <Graph />
+          <Cal />
+        </View>
+
+      </ScrollView>
+    </SafeAreaView>
+  );
 }

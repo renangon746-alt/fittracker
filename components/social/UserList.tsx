@@ -1,10 +1,12 @@
 import { View } from "react-native";
 import UserCard from "./UserCard";
 
+
 interface UserItem {
   id: number;
   userName: string;
   fullName: string;
+  email: string;
 }
 
 interface UserListProps {
@@ -20,6 +22,7 @@ export default function UserList({ users }: UserListProps) {
           id={user.id}
           userName={user.userName}
           fullName={user.fullName}
+          email={user.email}
         />
       ))}
     </View>

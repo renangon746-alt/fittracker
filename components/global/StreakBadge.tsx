@@ -9,11 +9,11 @@ interface StreakBadgeProps {
 
 export default function StreakBadge({ count }: StreakBadgeProps) {
   const { colors } = useTheme();
-  const styles = globalStyles(colors);
+  const global_styles = globalStyles(colors);
   return (
-    <View style={styles.streakContainer}>
+    <View style={global_styles.streakContainer}>
       <FontAwesome5 name="fire-alt" solid size={48} color={colors.primary} />
-      <Text style={styles.streakNumber}>{count}</Text>
+      <Text style={global_styles.streakNumber}>{count}</Text>
     </View>
   );
 }

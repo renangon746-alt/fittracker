@@ -1,5 +1,9 @@
-import RoutineCard from '@/components/RoutineCard';
+import CreateRoutineModal from '@/components/train/CreateRoutineModal';
+import RoutineFolder from '@/components/train/RoutineFolder';
+
 import { useTheme } from '@/context/ThemeContext';
+import { useCreateRoutine } from '@/hooks/train/useCreateRoutine';
+import { useRoutines } from '@/hooks/train/useRoutines';
 import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,63 +14,58 @@ export default function Train() {
   const global_styles = globalStyles(colors);
   const train_styles = trainStyles(colors);
 
+  const { routinesByFolder, loading, refresh } = useRoutines();
+
+  const {visible, openModal, closeModal, nombre, setNombre, carpeta, setCarpeta, saving, errorMsg, handleCreate} = useCreateRoutine(refresh);
+
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundPrimary}}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-        {/* Tittle and search */}
+    <SafeAreaView style={global_styles.defaultContainer}>
+      <ScrollView contentContainerStyle={global_styles.defaultScroll}>
+
+        {/* Title and search */}
         <View style={train_styles.t_tittleAndSearch}>
-          <Text style={global_styles.tittleText}>Fast Start</Text>     
+          <Text style={global_styles.tittleText}>Fast Start</Text>
           <Ionicons name="search" size={24} color={colors.textPrimary} />
         </View>
- 
-        {/* Button empty training */}
-        <View style={{ alignItems: 'center', gap: 20}}>
-          <Pressable style={[global_styles.principalButton, { width: '90%', height: 40}]}>
+
+        {/* Buttons*/}
+        <View style={train_styles.t_buttonContainer}>
+          <Pressable style={[global_styles.principalButton, train_styles.t_buttonPressable]} onPress={openModal}>
+            <Text style={global_styles.principalText}>Create new routine</Text>
+          </Pressable>
+
+          <Pressable style={[global_styles.secondaryButton, train_styles.t_buttonPressable]}>
             <Text style={global_styles.principalText}>Start empty training +</Text>
-          </Pressable>   
+          </Pressable>
         </View>
 
-        {/* Routines */}
+        {/* Routines title */}
         <View style={train_styles.t_routinesTittle}>
-          <Text style={global_styles.tittleText}>Routines</Text>     
-          <Ionicons name="folder-open" size={24} color={colors.textPrimary}/>
+          <Text style={global_styles.tittleText}>Routines</Text>
+          <Ionicons name="folder-open" size={24} color={colors.textPrimary} />
         </View>
-          
-        {/* List of routines folders*/}
+
+        {/* Collapsible folders */}
         <View style={train_styles.t_routinesFoldersList}>
-            <View style={train_styles.t_routineFolder}>
-              <View style={train_styles.t_routineFolderTextIcon}>
-                <Text style={global_styles.principalText}>Other Folders</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.textPrimary}/>  
-              </View>
-              <Text style={global_styles.principalText}>...</Text> 
-            </View>
-
-            <View style={train_styles.t_routineFolder}>
-              <View style={train_styles.t_routineFolderTextIcon}>
-                <Text style={global_styles.principalText}>Other Folders</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.textPrimary}/>  
-              </View>
-              <Text style={global_styles.principalText}>...</Text> 
-            </View>
-
-            <View style={train_styles.t_routineFolder}>
-              <View style={train_styles.t_routineFolderTextIcon}>
-                <Text style={global_styles.principalText}>Other Folders</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.textPrimary}/>  
-              </View>
-              <Text style={global_styles.principalText}>...</Text> 
-            </View>
+          <RoutineFolder title="My Routines" routines={routinesByFolder.my_routines} loading={loading} />
+          <RoutineFolder title="Routines Saved" routines={routinesByFolder.saved} loading={loading} />
+          <RoutineFolder title="Other Folders" routines={routinesByFolder.other} loading={loading} />
         </View>
-          
-        {/* Routines*/}
-        <View style={train_styles.t_routinesList}>
-          <RoutineCard id="1" title="Chest Day" day="Monday" />
-          <RoutineCard id="2" title="Back Day" day="Tuesday" />
-          <RoutineCard id="3" title="Arm Day" day="Thursday" />
-        </View>
+
       </ScrollView>
+
+      {/* Create routine modal */}
+      <CreateRoutineModal
+        visible={visible}
+        nombre={nombre}
+        setNombre={setNombre}
+        carpeta={carpeta}
+        setCarpeta={setCarpeta}
+        saving={saving}
+        errorMsg={errorMsg}
+        onConfirm={handleCreate}
+        onCancel={closeModal}
+      />
     </SafeAreaView>
   );
 }
-

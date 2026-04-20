@@ -185,7 +185,7 @@ export default function EditAccount() {
         {/* ── Olvidé mi contraseña ── */}
         <Pressable
           onPress={() => router.push({
-            pathname: '/auth/forgotPassword',
+            pathname: '../../auth/forgotPassword',
             params: { from: 'settings' }
           })}
           style={styles.forgotWrap}
