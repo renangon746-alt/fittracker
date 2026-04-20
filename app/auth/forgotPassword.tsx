@@ -1,46 +1,50 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useForgotPassword } from '@/hooks/useForgotPassword';
 import { globalStyles } from "@/styles/global-styles";
+import { profileStyles } from '@/styles/profile-styles';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForgotPassword() {
     const { colors } = useTheme();
-    const styles = globalStyles(colors);
+    const global_styles = globalStyles(colors);
+    const profile_styles = profileStyles(colors);
     const { email, setEmail, errorMsg, successMsg, handleForgotPassword } = useForgotPassword();
     const { from } = useLocalSearchParams();
     
     return (
-        <View style={{
-            flex: 1, backgroundColor: colors.backgroundPrimary, flexDirection: 'column',
-            alignItems: 'center', paddingTop: 100
-        }}>
+        <SafeAreaView style={global_styles.defaultContainer}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+                <View style={profile_styles.auth_container}>
 
-            <Image source={require('../../assets/images/Icon__dumbell_fitTracker.png')} style={styles.principalLogoImage} />
+                    <Image source={require('../../assets/images/Icon__dumbell_fitTracker.png')} style={global_styles.principalLogoImage} />
 
-            <Text style={styles.tittleText}>Recuperar contrasena</Text>
+                    <Text style={global_styles.tittleText}>Recuperar contrasena</Text>
 
-            <View style={{ paddingTop: 20 }}>
-                <Text style={[styles.principalText, { paddingLeft: 10 }]}>E-mail</Text>
-                <TextInput style={styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-            </View>
+                    <View style={{ paddingTop: 20 }}>
+                        <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>E-mail</Text>
+                        <TextInput style={global_styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                    </View>
 
-            {errorMsg && <Text style={[styles.secondaryText, { color: 'red', paddingTop: 10 }]}>{errorMsg}</Text>}
-            {successMsg && <Text style={[styles.secondaryText, { color: 'green', paddingTop: 10 }]}>{successMsg}</Text>}
+                    {errorMsg && <Text style={[global_styles.secondaryText, { color: 'red', paddingTop: 10 }]}>{errorMsg}</Text>}
+                    {successMsg && <Text style={[global_styles.secondaryText, { color: 'green', paddingTop: 10 }]}>{successMsg}</Text>}
 
-            <View style={{ padding: 10 }}>
-                <Pressable style={styles.principalButton} onPress={handleForgotPassword}>
-                    <Text style={styles.principalText}>
-                        Enviar e-mail
-                    </Text>
-                </Pressable>
-            </View>
+                    <View style={{ padding: 10 }}>
+                        <Pressable style={global_styles.principalButton} onPress={handleForgotPassword}>
+                            <Text style={global_styles.principalText}>
+                                Enviar e-mail
+                            </Text>
+                        </Pressable>
+                    </View>
 
-            <Pressable onPress={() => from === 'settings' ? router.back() : router.replace('../../auth/login')}>
-                <Text style={styles.underlineText}>
-                    Volver
-                </Text>
-            </Pressable>
-        </View>
+                    <Pressable onPress={() => from === 'settings' ? router.back() : router.replace('../../auth/login')}>
+                        <Text style={global_styles.underlineText}>
+                            Volver
+                        </Text>
+                    </Pressable>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }

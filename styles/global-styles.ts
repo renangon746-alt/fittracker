@@ -3,6 +3,11 @@ import { StyleSheet } from "react-native";
 export const globalStyles = (colors: any) =>
     StyleSheet.create({
 
+    defaultContainer:{
+        flex: 1, 
+        backgroundColor: colors.backgroundPrimary
+    },
+
     tittleText:{
         fontSize: 28,
         fontFamily: 'Inter',
@@ -118,6 +123,18 @@ export const globalStyles = (colors: any) =>
         height:40,
         alignItems: 'center' as const,
         justifyContent: 'center' as const
+    },
+
+    backArrowContainer:{
+        paddingHorizontal: 20, 
+        paddingTop: 10
+    },
+
+    backArrowPressable:{
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        padding: 8,
+        width: 40
     }
 
 
