@@ -1,13 +1,15 @@
 import { exerciseImageMap } from '@/assets/data/exerciseImageMap';
 import { useTheme } from '@/context/ThemeContext';
-import { Exercise } from '@/hooks/useExercises';
+
 import { globalStyles } from '@/styles/global-styles';
+import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import {
     ActivityIndicator, FlatList, Image, Modal,
-    Pressable, StyleSheet, Text, TextInput, View,
+    Pressable, Text, TextInput, View,
 } from 'react-native';
+import { Exercise } from './useExercises';
 
 interface AddExerciseModalProps {
     visible: boolean;
@@ -22,6 +24,7 @@ export default function AddExerciseModal({
 }: AddExerciseModalProps) {
     const { colors } = useTheme();
     const global_styles = globalStyles(colors);
+    const train_styles = trainStyles(colors);
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState<number | null>(null);
 
@@ -45,12 +48,12 @@ export default function AddExerciseModal({
 
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={handleCancel}>
-            <View style={styles.overlay}>
-                <View style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}>
+            <View style={train_styles.aem_overlay}>
+                <View style={[train_styles.aem_card, { backgroundColor: colors.backgroundSecondary }]}>
                     <Text style={[global_styles.tittleText, { marginBottom: 12 }]}>Add Exercise</Text>
 
                     {/* Search bar */}
-                    <View style={[styles.searchRow, { backgroundColor: colors.backgroundPrimary }]}>
+                    <View style={[train_styles.aem_searchRow, { backgroundColor: colors.backgroundPrimary }]}>
                         <Ionicons name="search" size={18} color={colors.textSecondary} />
                         <TextInput
                             style={[global_styles.principalText, { flex: 1, marginLeft: 8 }]}
@@ -68,7 +71,7 @@ export default function AddExerciseModal({
                         <FlatList
                             data={filtered}
                             keyExtractor={item => String(item.id_ejercicio)}
-                            style={styles.list}
+                            style={train_styles.aem_list}
                             renderItem={({ item }) => {
                                 const isSelected = selected === item.id_ejercicio;
                                 const imgSource = item.image_key ? exerciseImageMap[item.image_key] : null;
@@ -76,18 +79,17 @@ export default function AddExerciseModal({
                                     <Pressable
                                         onPress={() => setSelected(item.id_ejercicio)}
                                         style={[
-                                            styles.row,
+                                            train_styles.aem_row,
                                             {
                                                 backgroundColor: isSelected ? colors.primary + '22' : 'transparent',
                                                 borderColor: isSelected ? colors.primary : 'transparent',
                                             },
                                         ]}
                                     >
-                                        {imgSource ? (
-                                            <Image source={imgSource} style={styles.rowImage} />
-                                        ) : (
-                                            <View style={[styles.rowImage, { backgroundColor: colors.backgroundPrimary }]} />
-                                        )}
+                                        {imgSource
+                                            ? <Image source={imgSource} style={train_styles.aem_rowImage} />
+                                            : <View style={[train_styles.aem_rowImage, { backgroundColor: colors.backgroundPrimary }]} />
+                                        }
                                         <Text style={[global_styles.principalText, { flex: 1 }]}>{item.nombre}</Text>
                                         {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
                                     </Pressable>
@@ -97,12 +99,12 @@ export default function AddExerciseModal({
                     )}
 
                     {/* Actions */}
-                    <View style={styles.actions}>
-                        <Pressable style={[global_styles.secondaryButton, styles.actionBtn]} onPress={handleCancel}>
+                    <View style={train_styles.aem_actions}>
+                        <Pressable style={[global_styles.secondaryButton, train_styles.aem_actionBtn]} onPress={handleCancel}>
                             <Text style={global_styles.principalText}>Cancel</Text>
                         </Pressable>
                         <Pressable
-                            style={[global_styles.principalButton, styles.actionBtn, { opacity: selected === null ? 0.5 : 1 }]}
+                            style={[global_styles.principalButton, train_styles.aem_actionBtn, { opacity: selected === null ? 0.5 : 1 }]}
                             onPress={handleConfirm}
                             disabled={selected === null}
                         >
@@ -111,55 +113,6 @@ export default function AddExerciseModal({
                     </View>
                 </View>
             </View>
-        </Modal>
+        </Modal> 
     );
 }
-
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.55)',
-        justifyContent: 'flex-end',
-    },
-    card: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 24,
-        maxHeight: '85%',
-    },
-    searchRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        marginBottom: 12,
-    },
-    list: {
-        maxHeight: 340,
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 8,
-        borderRadius: 10,
-        borderWidth: 1.5,
-        marginBottom: 4,
-        gap: 12,
-    },
-    rowImage: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-    },
-    actions: {
-        flexDirection: 'row',
-        gap: 12,
-        marginTop: 16,
-    },
-    actionBtn: {
-        flex: 1,
-        height: 44,
-    },
-});
