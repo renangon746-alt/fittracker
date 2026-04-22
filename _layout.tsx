@@ -4,35 +4,35 @@ import { trainStyles } from '@/styles/train-styles';
 import { useFonts } from 'expo-font';
 import { Stack, router } from "expo-router";
 import Head from 'expo-router/head';
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
-// Types
+// ── Types ────────────────────────────────────────────────────────────────────
 export type SetsMap = Record<number, SetRow[]>;
 
 export interface ActiveRoutine {
     id: string;
     nombre: string;
-    seconds: number;
-    setsMap: SetsMap;
+    seconds: number;       // persisted elapsed seconds
+    setsMap: SetsMap;      // all set data
     newRecordCount: number;
-    restSeconds: number;
-    restActive: boolean;
 }
 
 interface ActiveRoutineCtx {
     active: ActiveRoutine | null;
+    // Called when routine screen mounts — starts a new session or resumes existing
     startOrResume: (id: string, nombre: string) => void;
+    // Called every second from routine screen to keep seconds in sync
     tickSeconds: () => void;
+    // Update sets from routine screen
     updateSetsMap: (setsMap: SetsMap) => void;
     updateRecordCount: (n: number) => void;
+    // Clear everything on finish/discard
     clearActive: () => void;
+    // Whether the routine is minimized (screen navigated away but still active)
     minimized: boolean;
     setMinimized: (v: boolean) => void;
-    startRest: (seconds: number) => void;
-    addRestTime: (delta: number) => void;
-    stopRest: () => void;
 }
 
 export const ActiveRoutineContext = createContext<ActiveRoutineCtx>({
@@ -44,16 +44,13 @@ export const ActiveRoutineContext = createContext<ActiveRoutineCtx>({
     clearActive: () => {},
     minimized: false,
     setMinimized: () => {},
-    startRest: () => {},
-    addRestTime: () => {},
-    stopRest: () => {},
 });
 
 export function useActiveRoutine() {
     return useContext(ActiveRoutineContext);
 }
 
-// MinimizedBar
+// ── Minimized bar ────────────────────────────────────────────────────────────
 function MinimizedRoutineBar() {
     const { active, minimized, setMinimized } = useActiveRoutine();
     const { colors } = useTheme();
@@ -69,106 +66,75 @@ function MinimizedRoutineBar() {
         ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
         : `${m}:${String(sec).padStart(2, '0')}`;
 
-    // Show rest countdown in bar if rest is active
-    const restLabel = active.restActive && active.restSeconds > 0
-        ? ` · Rest ${Math.floor(active.restSeconds / 60)}:${String(active.restSeconds % 60).padStart(2, '0')}`
-        : '';
-
     return (
         <Pressable
             style={[train_styles.mb_bar, { backgroundColor: colors.primary }]}
             onPress={() => {
                 setMinimized(false);
-                router.push({ pathname: '/train/routine', params: { id: active.id, nombre: active.nombre } });
+                router.push({
+                    pathname: '/train/routine',
+                    params: { id: active.id, nombre: active.nombre },
+                });
             }}
         >
             <View style={train_styles.mb_left}>
-                <Text style={train_styles.mb_title} numberOfLines={1}>{active.nombre}{restLabel}</Text>
+                <Text style={train_styles.mb_title} numberOfLines={1}>{active.nombre}</Text>
                 <Text style={train_styles.mb_sub}>Tap to resume</Text>
             </View>
             <Text style={train_styles.mb_timer}>{formatted}</Text>
+            <Pressable style={train_styles.mb_close} onPress={() => {/* discard handled in routine screen */}}>
+                <Text style={train_styles.mb_closeText}>✕</Text>
+            </Pressable>
         </Pressable>
     );
 }
 
+// ── Provider ─────────────────────────────────────────────────────────────────
 function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     const [active, setActive] = useState<ActiveRoutine | null>(null);
     const [minimized, setMinimized] = useState(false);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Single interval drives BOTH the main timer and the rest countdown
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    // When minimized, the provider drives all timers
+    // Timer runs here in the provider — never stops when screen unmounts
     useEffect(() => {
-        if (active && minimized) {
-            intervalRef.current = setInterval(() => {
-                setActive(prev => {
-                    if (!prev) return prev;
-                    const newRest = prev.restActive && prev.restSeconds > 0
-                        ? prev.restSeconds - 1
-                        : prev.restSeconds;
-                    const restStillActive = newRest > 0 && prev.restActive;
-                    return {
-                        ...prev,
-                        seconds: prev.seconds + 1,
-                        restSeconds: newRest,
-                        restActive: restStillActive,
-                    };
-                });
+        if (active && !minimized) {
+            // Screen is open — let the screen drive ticks via tickSeconds()
+            if (timerRef.current) clearInterval(timerRef.current);
+        } else if (active && minimized) {
+            // Screen is minimized — provider drives the timer
+            timerRef.current = setInterval(() => {
+                setActive(prev => prev ? { ...prev, seconds: prev.seconds + 1 } : prev);
             }, 1000);
         } else {
-            if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+            if (timerRef.current) clearInterval(timerRef.current);
         }
-        return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+        return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }, [minimized, active?.id]);
 
     function startOrResume(id: string, nombre: string) {
         setActive(prev => {
-            if (prev && prev.id === id) return prev; // resume — keep everything
-            return { id, nombre, seconds: 0, setsMap: {}, newRecordCount: 0, restSeconds: 0, restActive: false };
+            // If same routine already active, resume it — don't reset
+            if (prev && prev.id === id) return prev;
+            // New routine
+            return { id, nombre, seconds: 0, setsMap: {}, newRecordCount: 0 };
         });
         setMinimized(false);
     }
 
-    const tickSeconds = useCallback(() => {
+    function tickSeconds() {
         setActive(prev => prev ? { ...prev, seconds: prev.seconds + 1 } : prev);
-    }, []);
+    }
 
-    // Rest countdown tick 
-    const tickRest = useCallback(() => {
-        setActive(prev => {
-            if (!prev || !prev.restActive || prev.restSeconds <= 0) return prev;
-            const next = prev.restSeconds - 1;
-            return { ...prev, restSeconds: next, restActive: next > 0 };
-        });
-    }, []);
-
-    const updateSetsMap = useCallback((setsMap: SetsMap) => {
+    function updateSetsMap(setsMap: SetsMap) {
         setActive(prev => prev ? { ...prev, setsMap } : prev);
-    }, []);
+    }
 
-    const updateRecordCount = useCallback((n: number) => {
+    function updateRecordCount(n: number) {
         setActive(prev => prev ? { ...prev, newRecordCount: n } : prev);
-    }, []);
-
-    const startRest = useCallback((seconds: number) => {
-        setActive(prev => prev ? { ...prev, restSeconds: seconds, restActive: true } : prev);
-    }, []);
-
-    const addRestTime = useCallback((delta: number) => {
-        setActive(prev => {
-            if (!prev) return prev;
-            const next = Math.max(0, prev.restSeconds + delta);
-            return { ...prev, restSeconds: next, restActive: next > 0 };
-        });
-    }, []);
-
-    const stopRest = useCallback(() => {
-        setActive(prev => prev ? { ...prev, restSeconds: 0, restActive: false } : prev);
-    }, []);
+    }
 
     function clearActive() {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (timerRef.current) clearInterval(timerRef.current);
         setActive(null);
         setMinimized(false);
     }
@@ -178,14 +144,13 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
             active, startOrResume, tickSeconds,
             updateSetsMap, updateRecordCount, clearActive,
             minimized, setMinimized,
-            startRest, addRestTime, stopRest,
         }}>
             {children}
         </ActiveRoutineContext.Provider>
     );
 }
 
-//RootLayaut
+// ── Root layout ──────────────────────────────────────────────────────────────
 export default function RootLayout() {
     const [loaded] = useFonts({
         Inter: require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),

@@ -11,6 +11,8 @@ export const darkColors = {
   border: '#1A1A1A',
   iconActive: '#FF6B00',
   iconInactive: '#6F6F6F',
+  white: 'white',
+  black: 'black',
   
   // Colores del calendario
   calendar: {
@@ -49,6 +51,8 @@ export const lightColors = {
   border: '#CCCCCC',
   iconActive: '#FF6B00',
   iconInactive: '#A0A0A0',
+  white: 'white',
+  black: 'black',
   
   // Colores del calendario para modo claro
   calendar: {

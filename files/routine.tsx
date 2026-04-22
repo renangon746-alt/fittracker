@@ -1,18 +1,20 @@
 import AddExerciseModal from '@/components/train/AddExerciseModal';
 import ExerciseCard from '@/components/train/ExerciseCard';
 import NewRecordOverlay from '@/components/train/NewRecordOverlay';
-import { useExercises } from '@/components/train/useExercises';
 import { useTheme } from '@/context/ThemeContext';
+import { useExercises } from '@/hooks/train/useExercises';
 import { useRecords } from '@/hooks/train/useRecords';
-import { SetRow, useRoutineDetail } from '@/hooks/train/useRoutineDetail';
+import { useRestTimer } from '@/hooks/train/useRestTimer';
+import { SetsMap, useRoutineDetail } from '@/hooks/train/useRoutineDetail';
+import { useTimer } from '@/hooks/train/useTimer';
 import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SetsMap, useActiveRoutine } from '../_layout';
+import { useMinimizedRoutine } from '../_layout';
 
 const screenWidth = Dimensions.get('window').width;
 const BOTTOM_BAR_HEIGHT = 110;
@@ -21,110 +23,35 @@ export default function Routine() {
     const { colors } = useTheme();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
+    const { openMinimized, minimized, currentSeconds, tickSeconds, closeMinimized } = useMinimizedRoutine();
 
     const { id, nombre } = useLocalSearchParams<{ id: string; nombre: string }>();
     const routineId = Number(id);
-
-    const {
-        active, startOrResume, tickSeconds,
-        updateSetsMap, updateRecordCount, clearActive, setMinimized,
-        startRest, addRestTime, stopRest,
-    } = useActiveRoutine();
-
-    // On mount: start new or resume existing
-    useEffect(() => {
-        startOrResume(id, nombre ?? 'Routine');
-    }, [id]);
-
-    // Local timer interval — syncs to context each tick
-    const [localSeconds, setLocalSeconds] = useState(() =>
-        active?.id === id ? active.seconds : 0
-    );
-    const [running, setRunning] = useState(true);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    // Sync local seconds from context on mount (resume case)
-    useEffect(() => {
-        if (active?.id === id) setLocalSeconds(active.seconds);
-    }, []); // only on mount
-
-    // Main timer interval
-    useEffect(() => {
-        if (running) {
-            intervalRef.current = setInterval(() => {
-                setLocalSeconds(s => { tickSeconds(); return s + 1; });
-                // Also tick the rest countdown while screen is open
-                tickRestFromScreen();
-            }, 1000);
-        } else {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-        }
-        return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-    }, [running]);
-
-    // Tick rest from screen (avoids double-counting with provider interval)
-    function tickRestFromScreen() {
-        // The provider only ticks when minimized, so when screen is open we drive rest here
-    }
-
-    // Read rest state from context
-    const restActive = active?.id === id ? (active.restActive ?? false) : false;
-    const restSeconds = active?.id === id ? (active.restSeconds ?? 0) : 0;
-    const restFormatted = (() => {
-        const m = Math.floor(restSeconds / 60);
-        const s = restSeconds % 60;
-        return `${m}:${String(s).padStart(2, '0')}`;
-    })();
-
-    // When screen is open, drive rest countdown ourselves
-    useEffect(() => {
-        if (!restActive || !running) return;
-        const id_ = setInterval(() => {
-            // addRestTime(-1) would trigger a re-render loop, so we call stopRest if 0
-            // Instead, we use a dedicated tick via addRestTime
-        }, 1000);
-        return () => clearInterval(id_);
-    }, [restActive, running]);
-
-    // Simpler approach: piggyback on main interval via a ref
-    const restActiveRef = useRef(restActive);
-    restActiveRef.current = restActive;
-    useEffect(() => {
-        if (!running) return;
-        const id_ = setInterval(() => {
-            if (restActiveRef.current) addRestTime(-1);
-        }, 1000);
-        return () => clearInterval(id_);
-    }, [running]);
-
-    // setsMap from context
-    const setsMap: SetsMap = active?.id === id ? (active.setsMap ?? {}) : {};
-
-    function getSets(idRutinaEjercicio: number): SetRow[] {
-        return setsMap[idRutinaEjercicio] ?? [{ num: 1, kg: '', reps: '', done: false }];
-    }
-
-    function handleSetsChange(idRutinaEjercicio: number, sets: SetRow[]) {
-        updateSetsMap({ ...setsMap, [idRutinaEjercicio]: sets });
-    }
 
     const { exercises, addExercise, updateRestTime, finishRoutine } = useRoutineDetail(routineId);
     const { exercises: allExercises, loading: loadingAll } = useExercises();
     const exerciseIds = exercises.map(e => e.id_ejercicio);
     const records = useRecords(exerciseIds);
 
+    const resumeFrom = minimized?.id === id ? currentSeconds : 0;
+    const { seconds, running, formatted, toggle } = useTimer(true, resumeFrom);
+
+    useEffect(() => { if (running) tickSeconds(); }, [seconds]);
+
+    const { active: restActive, formatted: restFormatted, startRest, addTime, stopRest } = useRestTimer();
+
+    const [setsMap, setSetsMap] = useState<SetsMap>({});
     const [modalVisible, setModalVisible] = useState(false);
     const [recordVisible, setRecordVisible] = useState(false);
-    const newRecordCount = active?.id === id ? (active.newRecordCount ?? 0) : 0;
+    const [newRecordCount, setNewRecordCount] = useState(0);
 
-    const formatted = (() => {
-        const s = localSeconds;
-        const h = Math.floor(s / 3600);
-        const m = Math.floor((s % 3600) / 60);
-        const sec = s % 60;
-        if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-        return `${m}:${String(sec).padStart(2, '0')}`;
-    })();
+    function getSets(idRutinaEjercicio: number) {
+        return setsMap[idRutinaEjercicio] ?? [{ num: 1, kg: '', reps: '', done: false }];
+    }
+
+    function updateSets(idRutinaEjercicio: number, sets: SetsMap[number]) {
+        setSetsMap(prev => ({ ...prev, [idRutinaEjercicio]: sets }));
+    }
 
     async function handleAddExercise(idEjercicio: number) {
         setModalVisible(false);
@@ -132,7 +59,7 @@ export default function Routine() {
     }
 
     function handleNewRecord() {
-        updateRecordCount(newRecordCount + 1);
+        setNewRecordCount(c => c + 1);
         setRecordVisible(true);
         setTimeout(() => setRecordVisible(false), 2500);
     }
@@ -155,9 +82,8 @@ export default function Routine() {
                     text: 'Finish',
                     style: pendingSets ? 'destructive' : 'default',
                     onPress: async () => {
-                        if (intervalRef.current) clearInterval(intervalRef.current);
-                        await finishRoutine(localSeconds, setsMap);
-                        clearActive();
+                        await finishRoutine(seconds, setsMap);
+                        closeMinimized();
                         router.back();
                     },
                 },
@@ -168,23 +94,16 @@ export default function Routine() {
     function handleDiscard() {
         Alert.alert('Discard Workout', 'This workout will not be saved. Discard?', [
             { text: 'Keep going', style: 'cancel' },
-            {
-                text: 'Discard', style: 'destructive', onPress: () => {
-                    if (intervalRef.current) clearInterval(intervalRef.current);
-                    clearActive();
-                    router.back();
-                },
-            },
+            { text: 'Discard', style: 'destructive', onPress: () => { closeMinimized(); router.back(); } },
         ]);
     }
 
     function handleMinimize() {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        setMinimized(true);
+        openMinimized(id, nombre ?? 'Routine', seconds);
         router.back();
     }
 
-    const completedSets = Object.values(setsMap).flat().filter((s: SetRow) => s.done).length;
+    const completedSets = Object.values(setsMap).flat().filter(s => s.done).length;
 
     return (
         <SafeAreaView style={[global_styles.defaultContainer, { flex: 1 }]}>
@@ -222,9 +141,9 @@ export default function Routine() {
                         key={ex.id_rutina_ejercicio}
                         exercise={ex}
                         sets={getSets(ex.id_rutina_ejercicio)}
-                        onSetsChange={sets => handleSetsChange(ex.id_rutina_ejercicio, sets)}
+                        onSetsChange={sets => updateSets(ex.id_rutina_ejercicio, sets)}
                         record={records[ex.id_ejercicio] ?? null}
-                        onSetDone={secs => startRest(secs)}
+                        onSetDone={restSecs => startRest(restSecs)}
                         onRestTimeChanged={secs => updateRestTime(ex.id_rutina_ejercicio, secs)}
                         onNewRecord={handleNewRecord}
                     />
@@ -246,7 +165,7 @@ export default function Routine() {
                 {restActive ? (
                     <>
                         <View style={train_styles.r_restRow}>
-                            <Pressable style={train_styles.r_adjustBtn} onPress={() => addRestTime(-15)}>
+                            <Pressable style={train_styles.r_adjustBtn} onPress={() => addTime(-15)}>
                                 <Text style={[global_styles.principalText, { fontSize: 14 }]}>-15s</Text>
                             </Pressable>
                             <View style={train_styles.r_restCenter}>
@@ -256,7 +175,7 @@ export default function Routine() {
                                     <Text style={[global_styles.secondaryText, { color: colors.textSecondary, fontSize: 12 }]}>Skip</Text>
                                 </Pressable>
                             </View>
-                            <Pressable style={train_styles.r_adjustBtn} onPress={() => addRestTime(15)}>
+                            <Pressable style={train_styles.r_adjustBtn} onPress={() => addTime(15)}>
                                 <Text style={[global_styles.principalText, { fontSize: 14 }]}>+15s</Text>
                             </Pressable>
                         </View>
@@ -269,14 +188,12 @@ export default function Routine() {
                     </>
                 ) : (
                     <View style={train_styles.r_normalRow}>
-                        <View style={train_styles.r_pauseButtonTimer}>
-                            <Pressable onPress={() => setRunning(r => !r)} style={train_styles.r_playPauseButton}>
-                                <Ionicons name={running ? 'pause' : 'play'} size={24} color="#000" />
-                            </Pressable>
-                            <Text style={[global_styles.principalText, { fontSize: 18, fontWeight: '600' }]}>{formatted}</Text>
-                        </View>
+                        <Text style={[global_styles.principalText, { fontSize: 18, fontWeight: '600' }]}>{formatted}</Text>
+                        <Pressable onPress={toggle} style={train_styles.r_playPauseButton}>
+                            <Ionicons name={running ? 'pause' : 'play'} size={24} color="#000" />
+                        </Pressable>
                         <Pressable
-                            style={[global_styles.principalButton, { width: 120, height: 36 }]}
+                            style={[global_styles.principalButton, { paddingHorizontal: 18, height: 36 }]}
                             onPress={handleFinish}
                         >
                             <Text style={[global_styles.principalText, { fontSize: 13 }]}>Finish</Text>
