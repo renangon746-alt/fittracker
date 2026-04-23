@@ -1,12 +1,13 @@
 import { useTheme } from "@/context/ThemeContext";
 import { useTranslation } from "@/context/LanguageContext";
+import { globalStyles } from "@/styles/global-styles";
 import {
   getExerciseTranslationKey,
   getMuscleTranslationKey,
 } from "@/constants/translationMaps";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 
 interface MuscleCardProps {
   id: number;
@@ -18,6 +19,7 @@ interface MuscleCardProps {
 export default function MuscleCard({ id, image, exerciseName, principalMuscleName }: MuscleCardProps){
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
 
   const exerciseKey = getExerciseTranslationKey(exerciseName);
   const muscleKey = getMuscleTranslationKey(principalMuscleName);
@@ -25,19 +27,19 @@ export default function MuscleCard({ id, image, exerciseName, principalMuscleNam
   const translatedMuscle = t(muscleKey, { defaultValue: principalMuscleName });
   
   return(
-        <Pressable style={[styles.container, 
+        <Pressable style={[styles.muscleCardContainer, 
           { borderBottomColor: colors.border }]} 
           accessible
           accessibilityRole="button"
           accessibilityLabel={translatedExercise}
           accessibilityHint={t('opens_exercise_details')}
           onPress={() => router.push({ pathname: "/exercise/[id]", params: { id: id.toString() }})}>
-            <Image style={styles.image} source={image} alt={translatedExercise} />
-            <View style={styles.textContainer}>
-                <Text style={[styles.exerciseName, { color: colors.textPrimary }]}> 
+            <Image style={styles.muscleCardImage} source={image} alt={translatedExercise} />
+            <View style={styles.muscleCardTextContainer}>
+                <Text style={[styles.muscleCardExerciseName, { color: colors.textPrimary }]}> 
                     {translatedExercise}
                 </Text>
-                <Text style={[styles.muscleName, { color: colors.textSecondary }]}>
+                <Text style={[styles.muscleCardMuscleName, { color: colors.textSecondary }]}>
                     {translatedMuscle}
                 </Text>
             </View>
@@ -49,31 +51,3 @@ export default function MuscleCard({ id, image, exerciseName, principalMuscleNam
         </Pressable>
     );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 12,
-    marginHorizontal: 16,
-    gap: 16,
-    borderBottomWidth: 1,
-  },
-  image: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  exerciseName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  muscleName: {
-    marginTop: 4,
-    fontSize: 14,
-  },
-});

@@ -2,6 +2,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useUser } from '@/context/UserContext';
 import { useEditProfile } from '@/hooks/useEditProfile';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
@@ -10,7 +11,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -19,6 +19,7 @@ import {
 export default function EditProfile() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
   const { loading } = useUser();
   const {
     saving,
@@ -32,7 +33,7 @@ export default function EditProfile() {
 
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}> 
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -45,29 +46,29 @@ export default function EditProfile() {
     >
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.editProfileContainer}
         keyboardShouldPersistTaps="handled"
       >
-        <Pressable onPress={handlePickImage} style={styles.avatarWrap}>
+        <Pressable onPress={handlePickImage} style={styles.editProfileAvatarWrap}>
           {displayImage ? (
             <Image
               source={{ uri: displayImage }}
-              style={styles.avatar}
+              style={styles.editProfileAvatar}
               key={displayImage}
             />
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
+            <View style={[styles.editProfileAvatar, styles.editProfileAvatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}> 
               <Ionicons name="person-outline" size={40} color={colors.iconInactive} />
             </View>
           )}
-          <View style={[styles.avatarBadge, { backgroundColor: colors.primary }]}>
+          <View style={[styles.editProfileAvatarBadge, { backgroundColor: colors.primary }]}> 
             <Ionicons name="camera-outline" size={14} color="#fff" />
           </View>
         </Pressable>
 
         <Section title={t('name_section')} colors={colors}>
           <TextInput
-            style={[styles.input, { color: colors.textPrimary }]}
+            style={[styles.editProfileInput, { color: colors.textPrimary }]}
             value={nombre}
             onChangeText={setNombre}
             placeholder={t('your_name')}
@@ -78,7 +79,7 @@ export default function EditProfile() {
 
         <Section title={t('bio_section')} colors={colors}>
           <TextInput
-            style={[styles.input, styles.inputMultiline, { color: colors.textPrimary }]}
+            style={[styles.editProfileInput, styles.editProfileInputMultiline, { color: colors.textPrimary }]}
             value={bio}
             onChangeText={setBio}
             placeholder={t('tell_about_you')}
@@ -86,16 +87,16 @@ export default function EditProfile() {
             multiline
             maxLength={150}
           />
-          <Text style={[styles.charCount, { color: colors.textSecondary }]}>
+          <Text style={[styles.editProfileCharCount, { color: colors.textSecondary }]}> 
             {bio.length}/150
           </Text>
         </Section>
 
         <Section title={t('link_section')} colors={colors}>
-          <View style={styles.inputRow}>
+          <View style={styles.editProfileInputRow}>
             <Ionicons name="link-outline" size={18} color={colors.iconInactive} />
             <TextInput
-              style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
+              style={[styles.editProfileInput, styles.editProfileInputFlex, { color: colors.textPrimary }]}
               value={enlace}
               onChangeText={setEnlace}
               placeholder={t('your_website')}
@@ -110,14 +111,14 @@ export default function EditProfile() {
           onPress={handleSave}
           disabled={saving}
           style={({ pressed }) => [
-            styles.saveBtn,
+            styles.editProfileSaveBtn,
             { backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 },
           ]}
         >
           {saving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveBtnText}>{t('save_changes')}</Text>
+            <Text style={styles.editProfileSaveBtnText}>{t('save_changes')}</Text>
           )}
         </Pressable>
 
@@ -135,12 +136,13 @@ function Section({
   children: React.ReactNode;
   colors: any;
 }) {
+  const styles = globalStyles(colors);
   return (
-    <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
+    <View style={styles.editProfileSection}>
+      <Text style={[styles.editProfileSectionTitle, { color: colors.textSecondary }]}>{title}</Text>
       <View
         style={[
-          styles.sectionCard,
+          styles.editProfileSectionCard,
           {
             backgroundColor: colors.backgroundPrimary,
             shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
@@ -152,36 +154,3 @@ function Section({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  container: { paddingVertical: 24, paddingBottom: 48, alignItems: 'center' },
-  avatarWrap: { marginBottom: 32, position: 'relative' },
-  avatar: { width: 90, height: 90, borderRadius: 45 },
-  avatarPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  avatarBadge: {
-    position: 'absolute', bottom: 0, right: 0,
-    width: 26, height: 26, borderRadius: 13,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  section: { width: '100%', marginBottom: 24 },
-  sectionTitle: {
-    fontSize: 11, fontWeight: '600', letterSpacing: 0.6,
-    textTransform: 'uppercase', marginHorizontal: 20, marginBottom: 8,
-  },
-  sectionCard: {
-    marginHorizontal: 16, borderRadius: 32, overflow: 'hidden',
-    paddingHorizontal: 16, shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07, shadowRadius: 4, elevation: 2,
-  },
-  input: { fontSize: 16, paddingVertical: 13, minHeight: 50 },
-  inputMultiline: { minHeight: 80, textAlignVertical: 'top', paddingTop: 13 },
-  inputFlex: { flex: 1 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  charCount: { fontSize: 12, textAlign: 'right', paddingBottom: 8 },
-  saveBtn: {
-    marginHorizontal: 16, width: '90%', borderRadius: 32,
-    paddingVertical: 15, alignItems: 'center', marginTop: 8,
-  },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

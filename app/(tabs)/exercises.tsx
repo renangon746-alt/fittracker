@@ -2,9 +2,10 @@ import { exercises } from "@/assets/data/exercises";
 import MuscleList from '@/components/MuscleList';
 import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 
 export default function Exercises() { 
 
@@ -23,12 +24,13 @@ export default function Exercises() {
   }
 
   const { colors } = useTheme();
+  const styles = globalStyles(colors);
 
   return (
     <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
-      <View style={styles.search_container}>
+      <View style={styles.exercisesSearchContainer}>
         <TextInput
-          style={[styles.input, { 
+          style={[styles.exercisesInput, { 
             backgroundColor: colors.backgroundTertiary, 
             borderColor: colors.border,
             color: colors.textPrimary
@@ -41,7 +43,7 @@ export default function Exercises() {
           accessibilityHint={t('search')}
         />
         <Ionicons
-          style={styles.icon}
+          style={styles.exercisesSearchIcon}
           name="search"
           size={20}
           color={colors.iconInactive}
@@ -58,22 +60,3 @@ export default function Exercises() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  search_container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 16,
-  },
-  input: {
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingLeft: 16,
-    paddingRight: 44,
-    borderWidth: 1,
-  },
-  icon: {
-    position: "absolute",
-    right: 24,
-  },
-});

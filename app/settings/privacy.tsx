@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
@@ -8,7 +9,6 @@ import {
   Alert,
   Platform,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   View,
@@ -17,6 +17,7 @@ import {
 export default function Privacy() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
 
   const [publicProfile, setPublicProfile] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
@@ -73,7 +74,7 @@ export default function Privacy() {
   // ── Loading state ─────────────────────────────────────────────────────────
   if (publicProfile === null) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}> 
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -82,26 +83,26 @@ export default function Privacy() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={styles.settingsContainer}
     >
       {/* ── Card ── */}
       <View
         style={[
-          styles.card,
+          styles.settingsCard,
           {
             backgroundColor: colors.backgroundPrimary,
             shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
           },
         ]}
       >
-        <View style={styles.row}>
-          <View style={styles.rowLeft}>
+        <View style={styles.settingsRow}>
+          <View style={styles.settingsRowLeft}>
             <Ionicons
               name="lock-closed-outline"
               size={20}
               color={colors.textPrimary}
             />
-            <Text style={[styles.rowLabel, { color: colors.textPrimary }]}> 
+            <Text style={[styles.settingsRowLabel, { color: colors.textPrimary }]}> 
               {t('public_account')}
             </Text>
           </View>
@@ -110,7 +111,7 @@ export default function Privacy() {
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <Switch
-              value={publicProfile}
+              value={publicProfile ?? false}
               onValueChange={handleToggle}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor="#fff"
@@ -120,7 +121,7 @@ export default function Privacy() {
       </View>
 
       {/* ── Descripción dinámica ── */}
-      <Text style={[styles.description, { color: colors.textSecondary }]}>
+      <Text style={[styles.settingsDescription, { color: colors.textSecondary }]}> 
         {publicProfile
           ? t('public_account_description')
           : t('private_account_description')}
@@ -128,48 +129,3 @@ export default function Privacy() {
     </ScrollView>
   );
 }
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  container: {
-    paddingVertical: 24,
-    paddingBottom: 48,
-  },
-  card: {
-    marginHorizontal: 16,
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 13,
-    paddingHorizontal: 16,
-    minHeight: 50,
-  },
-  rowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  rowLabel: {
-    fontSize: 16,
-  },
-  description: {
-    fontSize: 13,
-    marginHorizontal: 20,
-    marginTop: 10,
-    lineHeight: 18,
-  },
-});

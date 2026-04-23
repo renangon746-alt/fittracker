@@ -6,12 +6,14 @@ import {
 } from "@/constants/translationMaps";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { globalStyles } from "@/styles/global-styles";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 
 export default function ExerciseDetail(){
     const { colors } = useTheme();
     const { t } = useTranslation();
+    const styles = globalStyles(colors);
 
     const { id } = useLocalSearchParams();
     //Lo paso a String porque id del router es en string
@@ -36,7 +38,7 @@ export default function ExerciseDetail(){
         <ScrollView
             style={{ backgroundColor: colors.backgroundPrimary }}
             //Para que funcione en web Scroll view y los estilos
-            contentContainerStyle={styles.container} 
+            contentContainerStyle={styles.exerciseDetailContainer} 
         >
             <Stack.Screen
                     options={{
@@ -49,15 +51,15 @@ export default function ExerciseDetail(){
             />
 
             {/* Title */}
-            <Text style={[styles.title, { color: colors.textPrimary }]}> 
+            <Text style={[styles.exerciseDetailTitle, { color: colors.textPrimary }]}> 
             {translatedExercise}
             </Text>
             {/* Contenedor blanco para fondo de la imagen en modo oscuro */}
-            <View style={styles.imageContainer}>
+            <View style={styles.exerciseDetailImageContainer}>
                 {/* Image */}
                 <Image
                 source={exercise.image}
-                style={styles.image}
+                style={styles.exerciseDetailImage}
                 resizeMode="contain"
                 accessible
                 accessibilityLabel={translatedExercise}
@@ -66,26 +68,26 @@ export default function ExerciseDetail(){
             {/* Info */}
             <View
                 style={[
-                    styles.infoContainer,
+                    styles.exerciseDetailInfoContainer,
                     { backgroundColor: colors.backgroundSecondary }
                 ]}
             >
 
-                <Text style={[styles.label, { color: colors.textSecondary }]}> 
+                <Text style={[styles.exerciseDetailLabel, { color: colors.textSecondary }]}> 
                     {t('main_muscle')}
                 </Text>
 
-                <Text style={[styles.value, { color: colors.textPrimary }]}> 
+                <Text style={[styles.exerciseDetailValue, { color: colors.textPrimary }]}> 
                     {translatedMuscle}
                 </Text>
 
                 {!!translatedDescription && (
                   <>
-                    <Text style={[styles.label, { color: colors.textSecondary, marginTop: 14 }]}> 
+                    <Text style={[styles.exerciseDetailLabel, { color: colors.textSecondary, marginTop: 14 }]}> 
                       {t('description')}
                     </Text>
 
-                    <Text style={[styles.descriptionValue, { color: colors.textPrimary }]}> 
+                    <Text style={[styles.exerciseDetailDescriptionValue, { color: colors.textPrimary }]}> 
                       {translatedDescription}
                     </Text>
                   </>
@@ -95,53 +97,3 @@ export default function ExerciseDetail(){
         </ScrollView>
     );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 20,
-  },
-
-  title: {
-    fontSize: 26,
-    fontFamily: "Poppins",
-    marginBottom: 16,
-  },
-
-  imageContainer: {
-    width: "100%",
-    backgroundColor: "#fff",
-    alignItems: "center",
-    paddingVertical: 16,
-    marginBottom: 20,
-    },
-
-  image: {
-    width: "100%",
-    height: 220,
-  },
-
-  infoContainer: {
-    width: "90%",
-    padding: 16,
-    borderRadius: 12,
-  },
-
-  label: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-
-  value: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  descriptionValue: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 4,
-  },
-});

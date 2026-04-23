@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
@@ -8,7 +9,6 @@ import {
   Alert,
   Platform,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   View,
@@ -19,6 +19,7 @@ import {
 export default function Notifications() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
 
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -76,7 +77,7 @@ export default function Notifications() {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}> 
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -85,26 +86,26 @@ export default function Notifications() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={styles.settingsContainer}
     >
       {/* ── Card principal ── */}
       <View
         style={[
-          styles.card,
+          styles.settingsCard,
           {
             backgroundColor: colors.backgroundPrimary,
             shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
           },
         ]}
       >
-        <View style={styles.row}>
-          <View style={styles.rowLeft}>
+        <View style={styles.settingsRow}>
+          <View style={styles.settingsRowLeft}>
             <Ionicons
               name="notifications-outline"
               size={20}
               color={colors.textPrimary}
             />
-            <Text style={[styles.rowLabel, { color: colors.textPrimary }]}> 
+            <Text style={[styles.settingsRowLabel, { color: colors.textPrimary }]}> 
               {t('notifications')}
             </Text>
           </View>
@@ -123,7 +124,7 @@ export default function Notifications() {
       </View>
 
       {/* ── Descripción ── */}
-      <Text style={[styles.description, { color: colors.textSecondary }]}>
+      <Text style={[styles.settingsDescription, { color: colors.textSecondary }]}> 
         {enabled
           ? t('notifications_enabled_description')
           : t('notifications_disabled_description')}
@@ -131,54 +132,3 @@ export default function Notifications() {
     </ScrollView>
   );
 }
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  container: {
-    paddingVertical: 24,
-    paddingBottom: 48,
-  },
-
-  // Card
-  card: {
-    marginHorizontal: 16,
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-
-  // Row
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 13,
-    paddingHorizontal: 16,
-    minHeight: 50,
-  },
-  rowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  rowLabel: {
-    fontSize: 16,
-  },
-
-  // Description
-  description: {
-    fontSize: 13,
-    marginHorizontal: 20,
-    marginTop: 10,
-    lineHeight: 18,
-  },
-});

@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -11,7 +12,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -20,6 +20,7 @@ import {
 export default function EditAccount() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -105,7 +106,7 @@ export default function EditAccount() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}> 
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -118,16 +119,16 @@ export default function EditAccount() {
     >
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.settingsContainer}
         keyboardShouldPersistTaps="handled"
       >
 
         {/* ── Correo ── */}
         <Section title={t('email_section')} colors={colors}>
-          <View style={styles.inputRow}>
+          <View style={styles.editAccountInputRow}>
             <Ionicons name="mail-outline" size={18} color={colors.iconInactive} />
             <TextInput
-              style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
+              style={[styles.editAccountInput, styles.editAccountInputFlex, { color: colors.textPrimary }]}
               value={email}
               onChangeText={setEmail}
               placeholder={t('email_placeholder_account')}
@@ -141,13 +142,13 @@ export default function EditAccount() {
         {/* ── Contraseña ── */}
         <Section title={t('password_section')} colors={colors}>
           {/* Contraseña actual */}
-          <View style={[styles.inputRow, {
-            borderBottomWidth: StyleSheet.hairlineWidth,
+          <View style={[styles.editAccountInputRow, {
+            borderBottomWidth: 0.5,
             borderBottomColor: colors.border,
-          }]}>
+          }]}> 
             <Ionicons name="key-outline" size={18} color={colors.iconInactive} />
             <TextInput
-              style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
+              style={[styles.editAccountInput, styles.editAccountInputFlex, { color: colors.textPrimary }]}
               value={currentPassword}
               onChangeText={setCurrentPassword}
               placeholder={t('current_password')}
@@ -164,10 +165,10 @@ export default function EditAccount() {
           </View>
 
           {/* Contraseña nueva */}
-          <View style={styles.inputRow}>
+          <View style={styles.editAccountInputRow}>
             <Ionicons name="lock-closed-outline" size={18} color={colors.iconInactive} />
             <TextInput
-              style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
+              style={[styles.editAccountInput, styles.editAccountInputFlex, { color: colors.textPrimary }]}
               value={newPassword}
               onChangeText={setNewPassword}
               placeholder={t('new_password')}
@@ -190,9 +191,9 @@ export default function EditAccount() {
             pathname: '../../auth/forgotPassword',
             params: { from: 'settings' }
           })}
-          style={styles.forgotWrap}
+          style={styles.editAccountForgotWrap}
         >
-          <Text style={[styles.forgotText, { color: colors.primary }]}> 
+          <Text style={[styles.editAccountForgotText, { color: colors.primary }]}> 
             {t('forgot_password_link')}
           </Text>
         </Pressable>
@@ -201,10 +202,10 @@ export default function EditAccount() {
         <Section colors={colors}>
           <Pressable
             onPress={handleDeleteAccount}
-            style={({ pressed }) => [styles.deleteRow, { opacity: pressed ? 0.6 : 1 }]}
+            style={({ pressed }) => [styles.editAccountDeleteRow, { opacity: pressed ? 0.6 : 1 }]}
           >
             <Ionicons name="heart-dislike-outline" size={20} color="#FF3B30" />
-            <Text style={styles.deleteText}>{t('delete_account')}</Text>
+            <Text style={styles.editAccountDeleteText}>{t('delete_account')}</Text>
           </Pressable>
         </Section>
 
@@ -213,14 +214,14 @@ export default function EditAccount() {
           onPress={handleSave}
           disabled={saving}
           style={({ pressed }) => [
-            styles.saveBtn,
+            styles.editAccountSaveBtn,
             { backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 },
           ]}
         >
           {saving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveBtnText}>{t('save_changes')}</Text>
+            <Text style={styles.editAccountSaveBtnText}>{t('save_changes')}</Text>
           )}
         </Pressable>
 
@@ -240,14 +241,15 @@ function Section({
   children: React.ReactNode;
   colors: any;
 }) {
+  const styles = globalStyles(colors);
   return (
-    <View style={styles.section}>
+    <View style={styles.editAccountSection}>
       {title && (
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
+        <Text style={[styles.editAccountSectionTitle, { color: colors.textSecondary }]}>{title}</Text>
       )}
       <View
         style={[
-          styles.sectionCard,
+          styles.editAccountSectionCard,
           {
             backgroundColor: colors.backgroundPrimary,
             shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
@@ -259,89 +261,3 @@ function Section({
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  container: {
-    paddingVertical: 24,
-    paddingBottom: 48,
-  },
-
-  // Section
-  section: { marginBottom: 8 },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginHorizontal: 20,
-    marginBottom: 8,
-  },
-  sectionCard: {
-    marginHorizontal: 16,
-    borderRadius: 32,
-    overflow: 'hidden',
-    paddingHorizontal: 16,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-
-  // Input
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  input: {
-    fontSize: 16,
-    paddingVertical: 13,
-    minHeight: 50,
-    outlineWidth: 0,
-  },
-  inputFlex: { flex: 1 },
-
-  // Forgot
-  forgotWrap: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  forgotText: {
-    fontSize: 13,
-  },
-
-  // Delete
-  deleteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-  },
-  deleteText: {
-    fontSize: 16,
-    color: '#FF3B30',
-    fontWeight: '500',
-  },
-
-  // Save
-  saveBtn: {
-    marginHorizontal: 16,
-    borderRadius: 32,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

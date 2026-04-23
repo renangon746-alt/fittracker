@@ -2,9 +2,10 @@ import UserList from '@/components/UserList';
 import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TextInput, View } from 'react-native';
 
 interface DbUser {
   id_usuario: number;
@@ -27,6 +28,7 @@ export default function Social() {
   const [errorMsg, setErrorMsg] = useState('');
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
 
   useEffect(() => {
     async function loadUsers() {
@@ -102,10 +104,10 @@ export default function Social() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
-      <View style={styles.searchContainer}>
+      <View style={styles.socialSearchContainer}>
         <TextInput
           style={[
-            styles.input,
+            styles.socialInput,
             {
               backgroundColor: colors.backgroundTertiary,
               borderColor: colors.border,
@@ -120,7 +122,7 @@ export default function Social() {
           accessibilityHint={t('search')}
         />
         <Ionicons
-          style={styles.icon}
+          style={styles.socialSearchIcon}
           name="search"
           size={20}
           color={colors.iconInactive}
@@ -128,41 +130,14 @@ export default function Social() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+        <ActivityIndicator size="large" color={colors.primary} style={styles.socialLoader} />
       ) : errorMsg ? (
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{errorMsg}</Text>
+        <Text style={[styles.socialEmptyText, { color: colors.textSecondary }]}>{errorMsg}</Text>
       ) : filteredUsers.length > 0 ? (
         <UserList users={filteredUsers} />
       ) : (
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('no_users_found')}</Text>
+        <Text style={[styles.socialEmptyText, { color: colors.textSecondary }]}>{t('no_users_found')}</Text>
       )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  searchContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-  },
-  input: {
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingLeft: 16,
-    paddingRight: 44,
-    borderWidth: 1,
-  },
-  icon: {
-    position: 'absolute',
-    right: 24,
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 16,
-    marginTop: 8,
-  },
-  loader: {
-    marginTop: 24,
-  },
-});

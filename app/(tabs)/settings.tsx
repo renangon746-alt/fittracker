@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useRouter } from 'expo-router';
@@ -8,7 +9,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   View,
@@ -24,21 +24,22 @@ type RowProps = {
 };
 
 function SettingsRow({ icon, label, onPress, right, isLast, colors }: RowProps) {
+  const styles = globalStyles(colors);
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        styles.row,
+        styles.settingsTabRow,
         { backgroundColor: colors.backgroundPrimary, opacity: pressed && onPress ? 0.5 : 1 },
         !isLast && {
-          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
         },
       ]}
     >
-      <View style={styles.iconWrap}>{icon}</View>
-      <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>{label}</Text>
-      <View style={styles.rowRight}>
+      <View style={styles.settingsTabIconWrap}>{icon}</View>
+      <Text style={[styles.settingsTabRowLabel, { color: colors.textPrimary }]}>{label}</Text>
+      <View style={styles.settingsTabRowRight}>
         {right ?? (
           onPress ? (
             <Ionicons name="chevron-forward" size={17} color={colors.iconInactive} />
@@ -58,14 +59,15 @@ function Section({
   children: React.ReactNode;
   colors: ReturnType<typeof useTheme>['colors'];
 }) {
+  const styles = globalStyles(colors);
   return (
-    <View style={styles.section}>
+    <View style={styles.settingsTabSection}>
       {title && (
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
+        <Text style={[styles.settingsTabSectionTitle, { color: colors.textSecondary }]}>{title}</Text>
       )}
       <View
         style={[
-          styles.sectionCard,
+          styles.settingsTabSectionCard,
           {
             backgroundColor: colors.backgroundPrimary,
             shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
@@ -82,12 +84,13 @@ export default function Settings() {
   const router = useRouter();
   const { colors, toggleTheme, theme } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
   const isDark = theme === 'dark';
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={styles.settingsTabContainer}
     >
       {/* ── Preferencias ── */}
       <Section title={t('preferences')} colors={colors}>
@@ -173,7 +176,7 @@ export default function Settings() {
 
       {/* ── Síguenos ── */}
       <Section title={t('follow_us')} colors={colors}>
-        <View style={styles.socialRow}>
+        <View style={styles.settingsTabSocialRow}>
           {[
             { name: 'logo-instagram', url: 'https://instagram.com/fittracker' },
             { name: 'logo-youtube',   url: 'https://youtube.com/fittracker'   },
@@ -183,7 +186,7 @@ export default function Settings() {
             <Pressable
               key={s.name}
               onPress={() => Linking.openURL(s.url)}
-              style={({ pressed }) => [styles.socialBtn, { opacity: pressed ? 0.5 : 1 }]}
+              style={({ pressed }) => [styles.settingsTabSocialBtn, { opacity: pressed ? 0.5 : 1 }]}
             >
               <Ionicons name={s.name as any} size={26} color={colors.textPrimary} />
             </Pressable>
@@ -198,7 +201,7 @@ export default function Settings() {
           icon={<Ionicons name="information-circle-outline" size={20} color={colors.textPrimary} />}
           label={t('version')}
           right={
-            <Text style={[styles.versionText, { color: colors.textSecondary }]}>1.0.0</Text>
+            <Text style={[styles.settingsTabVersionText, { color: colors.textSecondary }]}>1.0.0</Text>
           }
           isLast
         />
@@ -207,71 +210,17 @@ export default function Settings() {
       {/* ── Cerrar sesión ── */}
       <Pressable
         style={({ pressed }) => [
-          styles.logoutBtn,
+          styles.settingsTabLogoutBtn,
           { backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 },
         ]}
         onPress={() => { /* cerrar sesión */ }}
       >
-        <Text style={styles.logoutText}>{t('logout')}</Text>
+        <Text style={styles.settingsTabLogoutText}>{t('logout')}</Text>
       </Pressable>
 
-      <Text style={[styles.footer, { color: colors.textSecondary }]}>
+      <Text style={[styles.settingsTabFooter, { color: colors.textSecondary }]}> 
         {`@${t('app_name')} · ${t('all_rights')}`}
       </Text>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { paddingVertical: 24, paddingBottom: 48 },
-  section: { marginBottom: 28 },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginHorizontal: 20,
-    marginBottom: 8,
-  },
-  sectionCard: {
-    marginHorizontal: 16,
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 13,
-    paddingHorizontal: 16,
-    minHeight: 50,
-    gap: 14,
-  },
-  iconWrap: { width: 24, alignItems: 'center' },
-  rowLabel: { flex: 1, fontSize: 16 },
-  rowRight: { alignItems: 'flex-end' },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-  },
-  socialBtn: { padding: 8 },
-  versionText: { fontSize: 15 },
-  logoutBtn: {
-    marginHorizontal: 16,
-    marginTop: 4,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: 'center',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  logoutText: { color: '#FF3B30', fontSize: 16, fontWeight: '600' },
-  footer: { textAlign: 'center', fontSize: 12, marginTop: 24 },
-});

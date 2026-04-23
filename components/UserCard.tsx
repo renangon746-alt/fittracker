@@ -1,10 +1,11 @@
 import { useTheme } from "@/context/ThemeContext";
 import { useTranslation } from "@/context/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { globalStyles } from "@/styles/global-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 
 const defaultAvatar = require('../assets/images/defaultAvatar.png');
 
@@ -18,6 +19,7 @@ interface UserCardProps {
 export default function UserCard({ id, userName, fullName, email }: UserCardProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const styles = globalStyles(colors);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -61,76 +63,36 @@ export default function UserCard({ id, userName, fullName, email }: UserCardProp
 
   return (
     <Pressable
-      style={[styles.container, { borderBottomColor: colors.border }]}
+      style={[styles.userCardContainer, { borderBottomColor: colors.border }]}
       accessible
       accessibilityRole="button"
       accessibilityLabel={`User ${userName}`}
       accessibilityHint={t('opens_user_profile')}
       onPress={() => router.push({ pathname: '/profile/profileDescription', params: { id: id.toString() } })}
     >
-      <View style={styles.avatarContainer}>
+      <View style={styles.userCardAvatarContainer}>
         {loading ? (
-          <View style={[styles.avatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
+          <View style={[styles.userCardAvatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
             <Ionicons name="person" size={32} color="#4A4A4A" />
           </View>
         ) : avatarUrl && !imgError ? (
           <Image
             source={{ uri: avatarUrl }}
             onError={() => setImgError(true)}
-            style={styles.avatar}
+            style={styles.userCardAvatar}
           />
         ) : (
           <Image
             source={defaultAvatar}
-            style={styles.avatar}
+            style={styles.userCardAvatar}
           />
         )}
       </View>
-      <View style={styles.textContainer}>
-        <Text style={[styles.userName, { color: colors.textPrimary }]}>@{fullName}</Text>
-        <Text style={[styles.fullName, { color: colors.textSecondary }]}>{userName}</Text>
+      <View style={styles.userCardTextContainer}>
+        <Text style={[styles.userCardUserName, { color: colors.textPrimary }]}>@{fullName}</Text>
+        <Text style={[styles.userCardFullName, { color: colors.textSecondary }]}>{userName}</Text>
       </View>
       <Ionicons name="chevron-forward-outline" size={24} color={colors.primary} />
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 12,
-    marginHorizontal: 16,
-    gap: 16,
-    borderBottomWidth: 1,
-  },
-  avatarContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  avatarPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  fullName: {
-    marginTop: 4,
-    fontSize: 14,
-  },
-});
