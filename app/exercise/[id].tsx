@@ -1,5 +1,9 @@
 import { exercises } from "@/assets/data/exercises";
-import { exerciseTranslationKeyByName, muscleTranslationKeyByName } from "@/constants/translationMaps";
+import {
+  getExerciseDescriptionTranslationKey,
+  getExerciseTranslationKey,
+  getMuscleTranslationKey,
+} from "@/constants/translationMaps";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Stack, useLocalSearchParams } from "expo-router";
@@ -21,10 +25,12 @@ export default function ExerciseDetail(){
         );
     }
 
-    const exerciseKey = exerciseTranslationKeyByName[exercise.exerciseName];
-    const muscleKey = muscleTranslationKeyByName[exercise.principalMuscleName];
-    const translatedExercise = exerciseKey ? t(exerciseKey) : exercise.exerciseName;
-    const translatedMuscle = muscleKey ? t(muscleKey) : exercise.principalMuscleName;
+    const exerciseKey = getExerciseTranslationKey(exercise.exerciseName);
+    const muscleKey = getMuscleTranslationKey(exercise.principalMuscleName);
+    const descriptionKey = getExerciseDescriptionTranslationKey(exercise.exerciseName);
+    const translatedExercise = t(exerciseKey, { defaultValue: exercise.exerciseName });
+    const translatedMuscle = t(muscleKey, { defaultValue: exercise.principalMuscleName });
+    const translatedDescription = t(descriptionKey, { defaultValue: '' });
 
     return(
         <ScrollView
@@ -73,6 +79,18 @@ export default function ExerciseDetail(){
                     {translatedMuscle}
                 </Text>
 
+                {!!translatedDescription && (
+                  <>
+                    <Text style={[styles.label, { color: colors.textSecondary, marginTop: 14 }]}> 
+                      {t('description')}
+                    </Text>
+
+                    <Text style={[styles.descriptionValue, { color: colors.textPrimary }]}> 
+                      {translatedDescription}
+                    </Text>
+                  </>
+                )}
+
             </View>
         </ScrollView>
     );
@@ -119,5 +137,11 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 18,
     fontWeight: "600",
+  },
+
+  descriptionValue: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 4,
   },
 });

@@ -103,6 +103,8 @@ export default {
   data_sharing: "Share data",
   delete_account: "Delete account",
   delete_account_warning: "This action cannot be undone",
+  main_muscle: "Main muscle",
+  description: "Description",
   public_account: "Public account",
   notifications_enabled_description: "You will receive notifications about your activity, achievements, and workout reminders.",
   notifications_disabled_description: "Notifications are turned off. You will not receive app alerts.",

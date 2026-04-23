@@ -1,6 +1,9 @@
 import { useTheme } from "@/context/ThemeContext";
 import { useTranslation } from "@/context/LanguageContext";
-import { exerciseTranslationKeyByName, muscleTranslationKeyByName } from "@/constants/translationMaps";
+import {
+  getExerciseTranslationKey,
+  getMuscleTranslationKey,
+} from "@/constants/translationMaps";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
@@ -16,10 +19,10 @@ export default function MuscleCard({ id, image, exerciseName, principalMuscleNam
   const { colors } = useTheme();
   const { t } = useTranslation();
 
-  const exerciseKey = exerciseTranslationKeyByName[exerciseName];
-  const muscleKey = muscleTranslationKeyByName[principalMuscleName];
-  const translatedExercise = exerciseKey ? t(exerciseKey) : exerciseName;
-  const translatedMuscle = muscleKey ? t(muscleKey) : principalMuscleName;
+  const exerciseKey = getExerciseTranslationKey(exerciseName);
+  const muscleKey = getMuscleTranslationKey(principalMuscleName);
+  const translatedExercise = t(exerciseKey, { defaultValue: exerciseName });
+  const translatedMuscle = t(muscleKey, { defaultValue: principalMuscleName });
   
   return(
         <Pressable style={[styles.container, 
@@ -34,7 +37,7 @@ export default function MuscleCard({ id, image, exerciseName, principalMuscleNam
                 <Text style={[styles.exerciseName, { color: colors.textPrimary }]}> 
                     {translatedExercise}
                 </Text>
-                <Text style={[styles.muscleName, { color: colors.textSecondary }]}> 
+                <Text style={[styles.muscleName, { color: colors.textSecondary }]}>
                     {translatedMuscle}
                 </Text>
             </View>
