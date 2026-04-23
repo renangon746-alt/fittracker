@@ -1,4 +1,5 @@
 import { useUser } from '@/context/UserContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -7,6 +8,7 @@ import { Alert } from 'react-native';
 
 export function useEditProfile() {
     const router = useRouter();
+    const { t } = useTranslation();
     const { userProfile, avatarUrl: contextAvatarUrl, authUserId, refreshUser } = useUser();
 
     const [saving, setSaving] = useState(false);
@@ -31,7 +33,7 @@ export function useEditProfile() {
     async function handlePickImage() {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permission.granted) {
-            Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería para cambiar la foto.');
+            Alert.alert(t('permission_needed'), t('gallery_permission'));
             return;
         }
 
@@ -84,12 +86,12 @@ export function useEditProfile() {
             // Refresh the global context so OwnProfile reflects changes immediately
             await refreshUser();
 
-            Alert.alert('¡Listo!', 'Perfil actualizado correctamente.', [
+            Alert.alert(t('done_title'), t('profile_updated_success'), [
                 { text: 'OK', onPress: () => router.back() },
             ]);
         } catch (error) {
             console.error('Save error:', error);
-            Alert.alert('Error', 'No se pudieron guardar los cambios.');
+            Alert.alert(t('error'), t('could_not_save_changes'));
         } finally {
             setSaving(false);
         }

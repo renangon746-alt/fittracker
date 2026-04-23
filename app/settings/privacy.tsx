@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
@@ -15,6 +16,7 @@ import {
 
 export default function Privacy() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const [publicProfile, setPublicProfile] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
@@ -36,7 +38,7 @@ export default function Privacy() {
       .single();
 
     if (error) {
-      Alert.alert('Error', 'No se pudo cargar la configuración.');
+      Alert.alert(t('error'), t('could_not_load_settings'));
       setPublicProfile(false);
       return;
     }
@@ -45,7 +47,7 @@ export default function Privacy() {
   }
 
   fetchPreference();
-}, []);
+}, [t]);
 
   // ── Guardar cambio en Supabase ────────────────────────────────────────────
   async function handleToggle(value: boolean) {
@@ -62,7 +64,7 @@ export default function Privacy() {
 
     if (error) {
       setPublicProfile(!value);
-      Alert.alert('Error', 'No se pudo guardar el cambio. Inténtalo de nuevo.');
+      Alert.alert(t('error'), t('could_not_save_change_retry'));
     }
 
     setSaving(false);
@@ -99,8 +101,8 @@ export default function Privacy() {
               size={20}
               color={colors.textPrimary}
             />
-            <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>
-              Cuenta pública
+            <Text style={[styles.rowLabel, { color: colors.textPrimary }]}> 
+              {t('public_account')}
             </Text>
           </View>
 
@@ -120,8 +122,8 @@ export default function Privacy() {
       {/* ── Descripción dinámica ── */}
       <Text style={[styles.description, { color: colors.textSecondary }]}>
         {publicProfile
-          ? 'Tu cuenta es pública, todo el mundo la podrá ver y seguir.'
-          : 'Tu cuenta es privada, nadie la podrá ver a menos que los aceptes como seguidores.'}
+          ? t('public_account_description')
+          : t('private_account_description')}
       </Text>
     </ScrollView>
   );

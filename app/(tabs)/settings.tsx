@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useRouter } from 'expo-router';
@@ -80,6 +81,7 @@ function Section({
 export default function Settings() {
   const router = useRouter();
   const { colors, toggleTheme, theme } = useTheme();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   return (
@@ -88,11 +90,11 @@ export default function Settings() {
       contentContainerStyle={styles.container}
     >
       {/* ── Preferencias ── */}
-      <Section title="PREFERENCIAS" colors={colors}>
+      <Section title={t('preferences')} colors={colors}>
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="moon-outline" size={20} color={colors.textPrimary} />}
-          label="Tema oscuro"
+          label={t('dark_theme')}
           right={
             <Switch
               value={isDark}
@@ -105,72 +107,72 @@ export default function Settings() {
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />}
-          label="Notificaciones"
+          label={t('notifications')}
           onPress={() => router.push('/settings/notifications')}
         />
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="lock-closed-outline" size={20} color={colors.textPrimary} />}
-          label="Privacidad"
+          label={t('privacy')}
           onPress={() => router.push('/settings/privacy')}
         />
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="globe-outline" size={20} color={colors.textPrimary} />}
-          label="Idioma"
+          label={t('language')}
           onPress={() => router.push('../../settings/language')}
           isLast
         />
       </Section>
 
       {/* ── Cuenta ── */}
-      <Section title="CUENTA" colors={colors}>
+      <Section title={t('account')} colors={colors}>
         <SettingsRow
           colors={colors}
           icon={<FontAwesome5 name="user" size={18} color={colors.textPrimary} />}
-          label="Mi perfil"
+          label={t('my_profile')}
           onPress={() => router.push('../../profile/ownProfile')}
         />
         <SettingsRow
           colors={colors}
           icon={<FontAwesome5 name="user-edit" size={18} color={colors.textPrimary} />}
-          label="Editar perfil"
+          label={t('edit_profile')}
           onPress={() => router.push('/settings/editProfile')}
         />
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="settings-outline" size={20} color={colors.textPrimary} />}
-          label="Editar cuenta"
+          label={t('edit_account')}
           onPress={() => router.push('/settings/editAccount')}
           isLast
         />
       </Section>
 
       {/* ── Ayuda ── */}
-      <Section title="AYUDA" colors={colors}>
+      <Section title={t('help')} colors={colors}>
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="mail-outline" size={20} color={colors.textPrimary} />}
-          label="Ponte en contacto"
+          label={t('contact')}
           onPress={() => Linking.openURL('mailto:support@fittracker.app')}
         />
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="star-outline" size={20} color={colors.textPrimary} />}
-          label="Escribir reseña"
+          label={t('write_review')}
           onPress={() => Linking.openURL('https://apps.apple.com')}
         />
         <SettingsRow
           colors={colors}
           icon={<FontAwesome5 name="dumbbell" size={16} color={colors.textPrimary} />}
-          label="Acerca de nosotros"
+          label={t('about_us')}
           onPress={() => router.push('/')}
           isLast
         />
       </Section>
 
       {/* ── Síguenos ── */}
-      <Section title="SÍGUENOS" colors={colors}>
+      <Section title={t('follow_us')} colors={colors}>
         <View style={styles.socialRow}>
           {[
             { name: 'logo-instagram', url: 'https://instagram.com/fittracker' },
@@ -194,7 +196,7 @@ export default function Settings() {
         <SettingsRow
           colors={colors}
           icon={<Ionicons name="information-circle-outline" size={20} color={colors.textPrimary} />}
-          label="Versión"
+          label={t('version')}
           right={
             <Text style={[styles.versionText, { color: colors.textSecondary }]}>1.0.0</Text>
           }
@@ -210,11 +212,11 @@ export default function Settings() {
         ]}
         onPress={() => { /* cerrar sesión */ }}
       >
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
+        <Text style={styles.logoutText}>{t('logout')}</Text>
       </Pressable>
 
       <Text style={[styles.footer, { color: colors.textSecondary }]}>
-        @FitTracker · Todos los derechos reservados
+        {`@${t('app_name')} · ${t('all_rights')}`}
       </Text>
     </ScrollView>
   );

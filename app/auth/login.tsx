@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { useLogin } from '@/hooks/useLogin';
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from '@/styles/profile-styles';
@@ -9,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Login(){
     const {colors} = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const profile_styles = profileStyles(colors);
     const { email, setEmail, password, setPassword, errorMsg, handleLogin } = useLogin();
@@ -21,17 +23,17 @@ export default function Login(){
 
                     <Image source={require('../../assets/images/Icon__dumbell_fitTracker.png')} style={global_styles.principalLogoImage}/>
 
-                    <Text style={global_styles.tittleText}>Iniciar Sesion</Text>
+                    <Text style={global_styles.tittleText}>{t('login_title')}</Text>
 
                     <View style={{paddingTop: 20}}>
-                        <Text style={[global_styles.principalText, {paddingLeft:10}]}>E-mail</Text>
+                        <Text style={[global_styles.principalText, {paddingLeft:10}]}>{t('email')}</Text>
                         <TextInput style={global_styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
 
                         <View style={{ paddingTop: 20}}>
-                            <Text style={[global_styles.principalText, {paddingLeft:10}]}>Contrasena</Text>
+                            <Text style={[global_styles.principalText, {paddingLeft:10}]}>{t('password')}</Text>
                             <TextInput style={global_styles.inputs} value={password} onChangeText={setPassword} secureTextEntry />
                             <Pressable onPress={() => router.push('../../auth/forgotPassword')}>
-                                <Text style={[global_styles.underlineText, {paddingLeft:10}]}>Olvide mi contrasena</Text>
+                                <Text style={[global_styles.underlineText, {paddingLeft:10}]}>{t('forgot_password')}</Text>
                             </Pressable>
                         </View>
 
@@ -42,13 +44,13 @@ export default function Login(){
                     <View style={{padding:10}}>
                         <Pressable style={global_styles.principalButton} onPress={handleLogin}>
                             <Text style={global_styles.principalText}>
-                                Iniciar Sesion
+                                {t('login_button')}
                             </Text>
                         </Pressable>
                     </View>
 
                     <Pressable onPress={() => router.push('../../auth/register')}>
-                        <Text style={[global_styles.underlineText]}>No tengo cuenta</Text>
+                        <Text style={[global_styles.underlineText]}>{t('no_account')}</Text>
                     </Pressable>
                 </View>
                 </ScrollView>

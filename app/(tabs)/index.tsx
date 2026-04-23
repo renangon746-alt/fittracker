@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -31,7 +32,7 @@ import Svg, {
   Text as SvgText,
 } from 'react-native-svg';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Two cards per row with padding and gap
 const CARD_GAP = 10;
 const H_PAD    = 16;
@@ -56,18 +57,18 @@ interface DashboardData {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-
-function getSaludo() {
+function getSaludo(t: (key: string) => string) {
   const h = new Date().getHours();
-  if (h < 12) return 'Buenos días';
-  if (h < 19) return 'Buenas tardes';
-  return 'Buenas noches';
+  if (h < 12) return t('greeting_morning');
+  if (h < 19) return t('greeting_afternoon');
+  return t('greeting_evening');
 }
-function formatFecha(iso: string) {
+function formatFecha(iso: string, language: string) {
   const d = new Date(iso);
-  return `${d.getDate()} ${MESES[d.getMonth()]}`;
+  return new Intl.DateTimeFormat(language, {
+    day: 'numeric',
+    month: 'short',
+  }).format(d);
 }
 
 // ─── Week Selector ────────────────────────────────────────────────────────────
@@ -138,6 +139,7 @@ function CheckInCard({ foto, colors, onPress }: {
   colors: any;
   onPress: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   return (
     <Pressable
       onPress={onPress}
@@ -150,7 +152,7 @@ function CheckInCard({ foto, colors, onPress }: {
         <>
           <Image source={{ uri: foto.url }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
           <View style={ciStyles.overlay}>
-            <Text style={ciStyles.date}>{formatFecha(foto.fecha)}</Text>
+            <Text style={ciStyles.date}>{formatFecha(foto.fecha, i18n.language)}</Text>
           </View>
         </>
       ) : (
@@ -158,8 +160,8 @@ function CheckInCard({ foto, colors, onPress }: {
           <View style={[ciStyles.iconWrap, { backgroundColor: colors.primary + '22' }]}>
             <Ionicons name="camera-outline" size={24} color={colors.primary} />
           </View>
-          <Text style={[ciStyles.label, { color: colors.textPrimary }]}>Check In</Text>
-          <Text style={[ciStyles.sub, { color: colors.textSecondary }]}>Añadir foto</Text>
+          <Text style={[ciStyles.label, { color: colors.textPrimary }]}>{t('check_in')}</Text>
+          <Text style={[ciStyles.sub, { color: colors.textSecondary }]}>{t('add_photo')}</Text>
         </View>
       )}
     </Pressable>
@@ -179,6 +181,7 @@ const ciStyles = StyleSheet.create({
 function WeightChart({ data, colors, onEdit }: {
   data: PesoPoint[]; colors: any; onEdit: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   const [range,   setRange]   = useState<Range>('6M');
   const [tooltip, setTooltip] = useState<{ x: number; y: number; val: number; fecha: string } | null>(null);
 
@@ -203,9 +206,9 @@ function WeightChart({ data, colors, onEdit }: {
         <WeightHeader peso={pesoActual} colors={colors} onEdit={onEdit} />
         <View style={wc.empty}>
           <Ionicons name="scale-outline" size={30} color={colors.iconInactive} />
-          <Text style={[wc.emptyTxt, { color: colors.textSecondary }]}>Registra tu peso para ver el progreso</Text>
-          <Pressable onPress={onEdit} style={[wc.logBtn, { backgroundColor: colors.primary }]}>
-            <Text style={wc.logBtnTxt}>Registrar peso →</Text>
+          <Text style={[wc.emptyTxt, { color: colors.textSecondary }]}>{t('weight_progress_hint')}</Text>
+          <Pressable onPress={onEdit} style={[wc.logBtn, { backgroundColor: colors.primary }]}> 
+            <Text style={wc.logBtnTxt}>{t('register_weight_button')}</Text>
           </Pressable>
         </View>
         <RangeBar range={range} setRange={setRange} colors={colors} />
@@ -231,7 +234,6 @@ function WeightChart({ data, colors, onEdit }: {
   ].join(' ');
 
   const yLabels = [minV, (minV + maxV) / 2, maxV];
-  const step    = Math.max(1, Math.floor(pts.length / 4));
   const xIdxs   = [...new Set([0, ...Array.from({ length: 3 }, (_, i) => Math.round((i + 1) * (pts.length - 1) / 4)), pts.length - 1])];
 
   return (
@@ -273,7 +275,7 @@ function WeightChart({ data, colors, onEdit }: {
           {xIdxs.map(idx => (
             <SvgText key={idx} x={toX(idx)} y={chartH - 4}
               fontSize="8" fill={colors.textSecondary} textAnchor="middle">
-              {formatFecha(pts[idx].fecha)}
+              {formatFecha(pts[idx].fecha, i18n.language)}
             </SvgText>
           ))}
 
@@ -297,11 +299,11 @@ function WeightChart({ data, colors, onEdit }: {
                   fill={colors.backgroundSecondary} />
                 <SvgText x={bx + 44} y={by + 15} fontSize="11" fontWeight="bold"
                   fill={colors.textPrimary} textAnchor="middle">
-                  {tooltip.val} kg
+                  {tooltip.val} {t('kg')}
                 </SvgText>
                 <SvgText x={bx + 44} y={by + 28} fontSize="9"
                   fill={colors.textSecondary} textAnchor="middle">
-                  {formatFecha(tooltip.fecha)}
+                  {formatFecha(tooltip.fecha, i18n.language)}
                 </SvgText>
               </>
             );
@@ -310,21 +312,22 @@ function WeightChart({ data, colors, onEdit }: {
       </Pressable>
 
       <RangeBar range={range} setRange={setRange} colors={colors} />
-      <Text style={[wc.motiv, { color: colors.primary }]}>
-        ¡Sigue así! La consistencia es la clave 🎯
+      <Text style={[wc.motiv, { color: colors.primary }]}> 
+        {t('motivation_text')}
       </Text>
     </View>
   );
 }
 
 function WeightHeader({ peso, colors, onEdit }: { peso: number | null; colors: any; onEdit: () => void }) {
+  const { t } = useTranslation();
   return (
     <View style={wc.header}>
       <View>
-        <Text style={[wc.wLabel, { color: colors.textSecondary }]}>Tu peso</Text>
-        <Text style={[wc.wVal, { color: colors.textPrimary }]}>
+        <Text style={[wc.wLabel, { color: colors.textSecondary }]}>{t('your_weight')}</Text>
+        <Text style={[wc.wVal, { color: colors.textPrimary }]}> 
           {peso ?? '––'}{' '}
-          <Text style={[wc.wUnit, { color: colors.textSecondary }]}>kg</Text>
+          <Text style={[wc.wUnit, { color: colors.textSecondary }]}>{t('kg')}</Text>
         </Text>
       </View>
       <Pressable onPress={onEdit}
@@ -371,19 +374,20 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
   onSave: (peso: number, fase: Fase) => Promise<void>;
   colors: any;
 }) {
+  const { t } = useTranslation();
   const [pesoStr, setPesoStr] = useState('');
   const [fase,    setFase]    = useState<Fase>(null);
   const [saving,  setSaving]  = useState(false);
 
   const fases: { key: Fase; label: string; emoji: string }[] = [
-    { key: 'volumen',        label: 'Volumen',       emoji: '💪' },
-    { key: 'definicion',     label: 'Definición',    emoji: '🔥' },
-    { key: 'mantenimiento',  label: 'Mantenim.',     emoji: '⚖️' },
+    { key: 'volumen',        label: t('bulk'),        emoji: '💪' },
+    { key: 'definicion',     label: t('definition'),  emoji: '🔥' },
+    { key: 'mantenimiento',  label: t('maintenance'), emoji: '⚖️' },
   ];
 
   async function handleSave() {
     const val = parseFloat(pesoStr.replace(',', '.'));
-    if (!val || val < 20 || val > 400) { Alert.alert('Error', 'Peso no válido (20–400 kg)'); return; }
+    if (!val || val < 20 || val > 400) { Alert.alert(t('error'), t('invalid_weight')); return; }
     setSaving(true);
     await onSave(val, fase);
     setSaving(false);
@@ -397,7 +401,7 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
           <Pressable onPress={e => e.stopPropagation()}>
             <View style={[m.card, { backgroundColor: colors.backgroundPrimary }]}>
               <View style={[m.handle, { backgroundColor: colors.border }]} />
-              <Text style={[m.title, { color: colors.textPrimary }]}>Registrar peso</Text>
+              <Text style={[m.title, { color: colors.textPrimary }]}>{t('register_weight')}</Text>
 
               <View style={[m.inputWrap, { backgroundColor: colors.backgroundTertiary }]}>
                 <TextInput
@@ -406,10 +410,10 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
                   placeholder="0.0" placeholderTextColor={colors.iconInactive}
                   keyboardType="decimal-pad" autoFocus
                 />
-                <Text style={[m.unit, { color: colors.textSecondary }]}>kg</Text>
+                <Text style={[m.unit, { color: colors.textSecondary }]}>{t('kg')}</Text>
               </View>
 
-              <Text style={[m.faseTitle, { color: colors.textSecondary }]}>Fase actual</Text>
+              <Text style={[m.faseTitle, { color: colors.textSecondary }]}>{t('current_phase')}</Text>
               <View style={m.faseRow}>
                 {fases.map(f => (
                   <Pressable key={f.key!} onPress={() => setFase(f.key)}
@@ -427,10 +431,10 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
 
               <Pressable onPress={handleSave} disabled={saving}
                 style={({ pressed }) => [m.save, { backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 }]}>
-                {saving ? <ActivityIndicator color="#fff" /> : <Text style={m.saveTxt}>Guardar</Text>}
+                {saving ? <ActivityIndicator color="#fff" /> : <Text style={m.saveTxt}>{t('save')}</Text>}
               </Pressable>
               <Pressable onPress={onClose} style={m.cancel}>
-                <Text style={[m.cancelTxt, { color: colors.textSecondary }]}>Cancelar</Text>
+                <Text style={[m.cancelTxt, { color: colors.textSecondary }]}>{t('cancel')}</Text>
               </Pressable>
             </View>
           </Pressable>
@@ -461,6 +465,7 @@ const m = StyleSheet.create({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router     = useRouter();
   const fadeAnim   = useRef(new Animated.Value(0)).current;
 
@@ -501,7 +506,7 @@ export default function Dashboard() {
       let ultimoEntreno = null;
       if (entrenos?.[0]) {
         const { data: rutina } = await supabase.from('rutina').select('nombre').eq('id_rutina', entrenos[0].id_rutina).single();
-        ultimoEntreno = { nombre: rutina?.nombre ?? 'Entreno', duracion: entrenos[0].duracion_min ?? 0 };
+        ultimoEntreno = { nombre: rutina?.nombre ?? t('workouts'), duracion: entrenos[0].duracion_min ?? 0 };
       }
 
       const startWeek = new Date();
@@ -571,7 +576,7 @@ export default function Dashboard() {
 
   async function handleCheckIn() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería.'); return; }
+    if (!perm.granted) { Alert.alert(t('permission_needed'), t('gallery_permission')); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true, aspect: [1, 1], quality: 0.8,
@@ -592,11 +597,8 @@ export default function Dashboard() {
       });
       if (insErr) throw insErr;
       setData(prev => ({ ...prev, fotoProgreso: { url: urlData.publicUrl, fecha: new Date().toISOString().split('T')[0] } }));
-    } catch (e) { Alert.alert('Error', 'No se pudo guardar la foto.'); }
+    } catch { Alert.alert(t('error'), t('could_not_save_photo')); }
   }
-
-  const today    = new Date();
-  const todayStr = `${DIAS[today.getDay()]}, ${today.getDate()} ${MESES[today.getMonth()]}`;
 
   if (loading) return (
     <View style={[s.centered, { backgroundColor: colors.backgroundSecondary }]}>
@@ -626,8 +628,8 @@ export default function Dashboard() {
         {/* Welcome */}
         <View style={s.welcome}>
           <View>
-            <Text style={[s.greeting, { color: colors.textSecondary }]}>{getSaludo()}</Text>
-            <Text style={[s.userName, { color: colors.textPrimary }]}>{data.nombre || 'Atleta'} 👋</Text>
+            <Text style={[s.greeting, { color: colors.textSecondary }]}>{getSaludo(t)}</Text>
+            <Text style={[s.userName, { color: colors.textPrimary }]}>{data.nombre || t('athlete')} 👋</Text>
           </View>
           <View style={[s.rachaBadge, { backgroundColor: colors.primary }]}>
             <Text style={s.rachaFire}>🔥</Text>
@@ -638,18 +640,18 @@ export default function Dashboard() {
         {/* 2x2 Square grid */}
         <View style={s.grid}>
           <SquareCard
-            isStreak label="Racha" value={`${data.racha} días`}
+            isStreak label={t('streak')} value={`${data.racha} ${t('days')}`}
             accent={colors.primary} colors={colors}
           />
           <SquareCard
-            label="Último entreno"
-            value={data.ultimoEntreno ? `${data.ultimoEntreno.duracion} min` : '–'}
+            label={t('last_workout')}
+            value={data.ultimoEntreno ? `${data.ultimoEntreno.duracion} ${t('min')}` : '–'}
             sub={data.ultimoEntreno?.nombre}
             colors={colors}
           />
           <SquareCard
-            label="Mejor marca"
-            value={data.mejorMarca ? `${data.mejorMarca.peso} kg` : '–'}
+            label={t('best_mark')}
+            value={data.mejorMarca ? `${data.mejorMarca.peso} ${t('kg')}` : '–'}
             sub={data.mejorMarca?.ejercicio}
             colors={colors}
           />
@@ -665,13 +667,13 @@ export default function Dashboard() {
         <View style={s.statsRow}>
           <View style={[s.statCard, { backgroundColor: colors.backgroundPrimary }, shadow]}>
             <Text style={[s.statVal, { color: colors.textPrimary }]}>{data.entrenosSemana}</Text>
-            <Text style={[s.statLbl, { color: colors.textSecondary }]}>Entrenos esta semana</Text>
+            <Text style={[s.statLbl, { color: colors.textSecondary }]}>{t('workouts_this_week')}</Text>
           </View>
           <View style={[s.statCard, { backgroundColor: colors.backgroundPrimary }, shadow]}>
             <Text style={[s.statVal, { color: colors.textPrimary }]}>
               {data.volumenSemana > 0 ? `${(data.volumenSemana / 1000).toFixed(1)}t` : '–'}
             </Text>
-            <Text style={[s.statLbl, { color: colors.textSecondary }]}>Volumen semanal</Text>
+            <Text style={[s.statLbl, { color: colors.textSecondary }]}>{t('weekly_volume')}</Text>
           </View>
         </View>
 
@@ -680,17 +682,17 @@ export default function Dashboard() {
           <Pressable style={({ pressed }) => [s.actionBtn, { backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, shadow]}
             onPress={() => router.push('/(tabs)/train')}>
             <Ionicons name="time-outline" size={18} color={colors.textPrimary} />
-            <Text style={[s.actionTxt, { color: colors.textPrimary }]}>Historial</Text>
+            <Text style={[s.actionTxt, { color: colors.textPrimary }]}>{t('history')}</Text>
           </Pressable>
           <Pressable style={({ pressed }) => [s.actionBtn, { backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, shadow]}
             onPress={() => router.push('/(tabs)/exercises')}>
             <Ionicons name="search-outline" size={18} color={colors.textPrimary} />
-            <Text style={[s.actionTxt, { color: colors.textPrimary }]}>Ejercicios</Text>
+            <Text style={[s.actionTxt, { color: colors.textPrimary }]}>{t('exercises')}</Text>
           </Pressable>
           <Pressable style={({ pressed }) => [s.actionBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}
             onPress={() => router.push('/(tabs)/train')}>
             <Ionicons name="play-outline" size={18} color="#fff" />
-            <Text style={[s.actionTxt, { color: '#fff' }]}>Entrenar</Text>
+            <Text style={[s.actionTxt, { color: '#fff' }]}>{t('train')}</Text>
           </Pressable>
         </View>
       </ScrollView>

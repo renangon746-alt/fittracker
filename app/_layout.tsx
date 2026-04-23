@@ -1,4 +1,5 @@
 import { UserProvider } from '@/context/UserContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { useFonts } from 'expo-font';
 import { Stack } from "expo-router";
 import Head from 'expo-router/head';
@@ -16,24 +17,26 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <UserProvider>
-        <Head>
-          <title>FitTracker</title>
-          <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
-        </Head>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/register" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-          <Stack.Screen name="errorPage" options={{ headerShown: false }} />
-          <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
-          <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
-          <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
-          <Stack.Screen name="settings" options={{ headerShown: false }} />
-        </Stack>
-      </UserProvider>
+      <LanguageProvider>
+        <UserProvider>
+          <Head>
+            <title>FitTracker</title>
+            <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
+          </Head>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{headerShown: false}} />
+            <Stack.Screen name="errorPage" options={{ headerShown: false }} />
+            <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
+            <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
+            <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
+            <Stack.Screen name="settings" options={{ headerShown: false }} />
+          </Stack>
+        </UserProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

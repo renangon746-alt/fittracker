@@ -1,7 +1,9 @@
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/context/LanguageContext';
 import { useState } from 'react';
 
 export function useForgotPassword() {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -11,18 +13,18 @@ export function useForgotPassword() {
         setSuccessMsg(null);
 
         if (!email) {
-            setErrorMsg('Introduce tu email.');
+            setErrorMsg(t('enter_email'));
             return;
         }
 
         const { error } = await supabase.auth.resetPasswordForEmail(email);
 
         if (error) {
-            setErrorMsg('No se pudo enviar el email. Comprueba que la dirección es correcta.');
+            setErrorMsg(t('forgot_error'));
             return;
         }
 
-        setSuccessMsg('Email enviado. Revisa tu bandeja de entrada.');
+        setSuccessMsg(t('forgot_email_sent'));
     }
 
     return { email, setEmail, errorMsg, successMsg, handleForgotPassword };

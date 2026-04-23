@@ -1,9 +1,11 @@
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/context/LanguageContext';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
 export function useRegister() {
+    const { t } = useTranslation();
     const [nombre, setNombre] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -14,7 +16,7 @@ export function useRegister() {
     async function pickImage() {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            setErrorMsg('Necesitamos acceso a tu galería.');
+            setErrorMsg(t('gallery_permission'));
             return;
         }
 
@@ -48,7 +50,7 @@ export function useRegister() {
             .upload(fileName, bytes, { contentType: 'image/jpeg', upsert: true });
 
         if (error) {
-            setErrorMsg('No se pudo subir la imagen: ' + error.message);
+            setErrorMsg(`${t('image_upload_failed')}: ${error.message}`);
             return null;
         }
 
@@ -58,22 +60,22 @@ export function useRegister() {
 
     function parseError(message: string): string {
         if (message.includes('User already registered'))
-            return 'Ya existe una cuenta con este email.';
+            return t('account_exists_email');
         if (message.includes('invalid') && message.includes('email'))
-            return 'El formato del email no es válido.';
+            return t('invalid_email_format');
         if (message.includes('Password should be at least'))
-            return 'La contraseña debe tener al menos 6 caracteres.';
+            return t('password_min_6');
         if (message.includes('over_email_send_rate_limit'))
-            return 'Demasiados intentos. Espera unos minutos.';
+            return t('too_many_attempts_wait');
         return message;
     }
 
     async function handleRegister() {
         setErrorMsg(null);
 
-        if (!nombre) { setErrorMsg('El nombre es obligatorio.'); return; }
-        if (!email) { setErrorMsg('El email es obligatorio.'); return; }
-        if (!password) { setErrorMsg('La contraseña es obligatoria.'); return; }
+        if (!nombre) { setErrorMsg(t('name_required')); return; }
+        if (!email) { setErrorMsg(t('email_required')); return; }
+        if (!password) { setErrorMsg(t('password_required')); return; }
 
         try {
             const { data, error } = await supabase.auth.signUp({
@@ -90,7 +92,7 @@ export function useRegister() {
             const authUserId = data.user?.id;
 
             if (!authUserId) {
-                setErrorMsg('Error al crear el usuario.');
+                setErrorMsg(t('user_create_error'));
                 return;
             }
 
@@ -108,12 +110,12 @@ export function useRegister() {
                 .single();
 
             if (dbError) {
-                setErrorMsg('Error guardando perfil: ' + dbError.message + ' (Code: ' + dbError.code + ')');
+                setErrorMsg(`${t('profile_save_error')}: ${dbError.message} (Code: ${dbError.code})`);
                 return;
             }
 
             if (!newUser) {
-                setErrorMsg('Error: no se pudo crear el perfil en la base de datos');
+                setErrorMsg(t('profile_create_db_error'));
                 return;
             }
 
@@ -135,7 +137,7 @@ export function useRegister() {
             router.push('/auth/login');
 
         } catch (error) {
-            setErrorMsg('Error inesperado: ' + String(error));
+            setErrorMsg(`${t('unexpected_error')}: ${String(error)}`);
         }
     }
 

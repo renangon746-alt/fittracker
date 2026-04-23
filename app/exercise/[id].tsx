@@ -1,10 +1,13 @@
 import { exercises } from "@/assets/data/exercises";
+import { exerciseTranslationKeyByName, muscleTranslationKeyByName } from "@/constants/translationMaps";
+import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function ExerciseDetail(){
     const { colors } = useTheme();
+    const { t } = useTranslation();
 
     const { id } = useLocalSearchParams();
     //Lo paso a String porque id del router es en string
@@ -13,10 +16,15 @@ export default function ExerciseDetail(){
     if(!exercise) {
         return(
             <View>
-                <Text>Exercise not found.</Text>
+                <Text>{t('exercise_not_found')}</Text>
             </View>
         );
     }
+
+    const exerciseKey = exerciseTranslationKeyByName[exercise.exerciseName];
+    const muscleKey = muscleTranslationKeyByName[exercise.principalMuscleName];
+    const translatedExercise = exerciseKey ? t(exerciseKey) : exercise.exerciseName;
+    const translatedMuscle = muscleKey ? t(muscleKey) : exercise.principalMuscleName;
 
     return(
         <ScrollView
@@ -26,7 +34,7 @@ export default function ExerciseDetail(){
         >
             <Stack.Screen
                     options={{
-                    title: exercise.exerciseName,
+                    title: translatedExercise,
                     headerStyle: {
                     backgroundColor: colors.backgroundPrimary,
                     },
@@ -35,8 +43,8 @@ export default function ExerciseDetail(){
             />
 
             {/* Title */}
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
-            {exercise.exerciseName}
+            <Text style={[styles.title, { color: colors.textPrimary }]}> 
+            {translatedExercise}
             </Text>
             {/* Contenedor blanco para fondo de la imagen en modo oscuro */}
             <View style={styles.imageContainer}>
@@ -46,7 +54,7 @@ export default function ExerciseDetail(){
                 style={styles.image}
                 resizeMode="contain"
                 accessible
-                accessibilityLabel={'Image of ${exercise.exerciseName}'}
+                accessibilityLabel={translatedExercise}
                 />
             </View>
             {/* Info */}
@@ -57,12 +65,12 @@ export default function ExerciseDetail(){
                 ]}
             >
 
-                <Text style={[styles.label, { color: colors.textSecondary }]}>
-                    Main muscle
+                <Text style={[styles.label, { color: colors.textSecondary }]}> 
+                    {t('main_muscle')}
                 </Text>
 
-                <Text style={[styles.value, { color: colors.textPrimary }]}>
-                    {exercise.principalMuscleName}
+                <Text style={[styles.value, { color: colors.textPrimary }]}> 
+                    {translatedMuscle}
                 </Text>
 
             </View>

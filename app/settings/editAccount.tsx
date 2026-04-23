@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -18,6 +19,7 @@ import {
 
 export default function EditAccount() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -42,14 +44,14 @@ export default function EditAccount() {
   // ── Guardar cambios ───────────────────────────────────────────────────────
   async function handleSave() {
     if (newPassword && newPassword.length < 6) {
-      Alert.alert('Error', 'La contraseña nueva debe tener al menos 6 caracteres.');
+      Alert.alert(t('error'), t('new_password_min_length'));
       return;
     }
 
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Sin sesión');
+      if (!user) throw new Error(t('no_active_session'));
 
       // Cambiar email si ha cambiado
       if (email !== user.email) {
@@ -64,17 +66,17 @@ export default function EditAccount() {
           email: user.email!,
           password: currentPassword,
         });
-        if (signInError) throw new Error('La contraseña actual no es correcta.');
+        if (signInError) throw new Error(t('email_or_password_incorrect'));
 
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         if (error) throw error;
       }
 
-      Alert.alert('¡Listo!', 'Cuenta actualizada correctamente.', [
+      Alert.alert(t('done_title'), t('account_updated_success'), [
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (error: any) {
-      Alert.alert('Error', error.message ?? 'No se pudieron guardar los cambios.');
+      Alert.alert(t('error'), error.message ?? t('could_not_save_changes'));
     } finally {
       setSaving(false);
     }
@@ -83,17 +85,17 @@ export default function EditAccount() {
   // ── Borrar cuenta ─────────────────────────────────────────────────────────
   function handleDeleteAccount() {
     Alert.alert(
-      'Borrar cuenta',
-      '¿Estás seguro? Esta acción es irreversible y se eliminarán todos tus datos.',
+      t('delete_account_confirm_title'),
+      t('delete_account_confirm_message'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Borrar',
+          text: t('delete_account_button'),
           style: 'destructive',
           onPress: async () => {
             // Requiere una Edge Function en Supabase para borrar el usuario de Auth
             // ya que el cliente no puede borrarse a sí mismo por seguridad
-            Alert.alert('Próximamente', 'Esta función estará disponible pronto.');
+            Alert.alert(t('soon'), t('feature_available_soon'));
           },
         },
       ]
@@ -121,14 +123,14 @@ export default function EditAccount() {
       >
 
         {/* ── Correo ── */}
-        <Section title="CORREO" colors={colors}>
+        <Section title={t('email_section')} colors={colors}>
           <View style={styles.inputRow}>
             <Ionicons name="mail-outline" size={18} color={colors.iconInactive} />
             <TextInput
               style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
               value={email}
               onChangeText={setEmail}
-              placeholder="correo@ejemplo.com"
+              placeholder={t('email_placeholder_account')}
               placeholderTextColor={colors.iconInactive}
               autoCapitalize="none"
               keyboardType="email-address"
@@ -137,7 +139,7 @@ export default function EditAccount() {
         </Section>
 
         {/* ── Contraseña ── */}
-        <Section title="CONTRASEÑA" colors={colors}>
+        <Section title={t('password_section')} colors={colors}>
           {/* Contraseña actual */}
           <View style={[styles.inputRow, {
             borderBottomWidth: StyleSheet.hairlineWidth,
@@ -148,7 +150,7 @@ export default function EditAccount() {
               style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
               value={currentPassword}
               onChangeText={setCurrentPassword}
-              placeholder="Contraseña actual"
+              placeholder={t('current_password')}
               placeholderTextColor={colors.iconInactive}
               secureTextEntry={!showCurrent}
             />
@@ -168,7 +170,7 @@ export default function EditAccount() {
               style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
               value={newPassword}
               onChangeText={setNewPassword}
-              placeholder="Contraseña nueva"
+              placeholder={t('new_password')}
               placeholderTextColor={colors.iconInactive}
               secureTextEntry={!showNew}
             />
@@ -190,8 +192,8 @@ export default function EditAccount() {
           })}
           style={styles.forgotWrap}
         >
-          <Text style={[styles.forgotText, { color: colors.primary }]}>
-            Olvidé mi contraseña
+          <Text style={[styles.forgotText, { color: colors.primary }]}> 
+            {t('forgot_password_link')}
           </Text>
         </Pressable>
 
@@ -202,7 +204,7 @@ export default function EditAccount() {
             style={({ pressed }) => [styles.deleteRow, { opacity: pressed ? 0.6 : 1 }]}
           >
             <Ionicons name="heart-dislike-outline" size={20} color="#FF3B30" />
-            <Text style={styles.deleteText}>Borrar cuenta</Text>
+            <Text style={styles.deleteText}>{t('delete_account')}</Text>
           </Pressable>
         </Section>
 
@@ -218,7 +220,7 @@ export default function EditAccount() {
           {saving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveBtnText}>Guardar cambios</Text>
+            <Text style={styles.saveBtnText}>{t('save_changes')}</Text>
           )}
         </Pressable>
 

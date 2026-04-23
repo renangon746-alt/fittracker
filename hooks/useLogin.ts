@@ -1,9 +1,11 @@
 import { useUser } from '@/context/UserContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
 export function useLogin() {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -11,11 +13,11 @@ export function useLogin() {
 
     function parseError(message: string): string {
         if (message.includes('Invalid login credentials'))
-            return 'Email o contraseña incorrectos.';
+            return t('email_or_password_incorrect');
         if (message.includes('Email not confirmed'))
-            return 'Debes confirmar tu email antes de iniciar sesión.';
+            return t('confirm_email_before_login');
         if (message.includes('over_email_send_rate_limit'))
-            return 'Demasiados intentos. Espera unos minutos.';
+            return t('too_many_attempts_wait');
         return message;
     }
 
@@ -66,8 +68,8 @@ export function useLogin() {
     async function handleLogin() {
         setErrorMsg(null);
 
-        if (!email) { setErrorMsg('El email es obligatorio.'); return; }
-        if (!password) { setErrorMsg('La contraseña es obligatoria.'); return; }
+        if (!email) { setErrorMsg(t('email_required')); return; }
+        if (!password) { setErrorMsg(t('password_required')); return; }
 
         const { error } = await supabase.auth.signInWithPassword({ email, password });
 

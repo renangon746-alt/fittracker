@@ -1,6 +1,7 @@
 import Cal from "@/components/Cal";
 import Graph from "@/components/Graph";
 import StreakBadge from "@/components/StreakBadge";
+import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { globalStyles } from "@/styles/global-styles";
@@ -24,6 +25,7 @@ const screenWidth = Dimensions.get('window').width;
 
 export default function OwnProfile() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const global_styles = globalStyles(colors);
   const profile_styles = profileStyles(colors);
   const [imgError, setImgError] = useState(false);
@@ -34,7 +36,7 @@ export default function OwnProfile() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={colors.textPrimary} />
-        <Text style={[global_styles.secondaryText, { marginTop: 10 }]}>Cargando perfil...</Text>
+        <Text style={[global_styles.secondaryText, { marginTop: 10 }]}>{t('loading_profile')}</Text>
       </SafeAreaView>
     );
   }
@@ -42,10 +44,10 @@ export default function OwnProfile() {
   if (!userProfile) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={[global_styles.principalText, { color: 'red', marginBottom: 10 }]}>No se pudo cargar el perfil</Text>
+        <Text style={[global_styles.principalText, { color: 'red', marginBottom: 10 }]}>{t('profile_load_error')}</Text>
         <Text style={[global_styles.secondaryText, { textAlign: 'center' }]}>{errorMsg}</Text>
         <Pressable style={[global_styles.principalButton, { marginTop: 20 }]} onPress={() => router.back()}>
-          <Text style={global_styles.principalText}>Volver</Text>
+          <Text style={global_styles.principalText}>{t('back')}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -81,15 +83,15 @@ export default function OwnProfile() {
           {/* Profile statistics */}
           <View style={profile_styles.p_profileStatsContainer}>
             <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>Trainings</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
             </View>
             <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>Followers</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('followers')}</Text>
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>100</Text>
             </View>
             <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>Following</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('following')}</Text>
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>2</Text>
             </View>
           </View>

@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { useUser } from '@/context/UserContext';
 import { useEditProfile } from '@/hooks/useEditProfile';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ import {
 
 export default function EditProfile() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { loading } = useUser();
   const {
     saving,
@@ -63,23 +65,23 @@ export default function EditProfile() {
           </View>
         </Pressable>
 
-        <Section title="NOMBRE" colors={colors}>
+        <Section title={t('name_section')} colors={colors}>
           <TextInput
             style={[styles.input, { color: colors.textPrimary }]}
             value={nombre}
             onChangeText={setNombre}
-            placeholder="Tu nombre"
+            placeholder={t('your_name')}
             placeholderTextColor={colors.iconInactive}
             maxLength={50}
           />
         </Section>
 
-        <Section title="BIO" colors={colors}>
+        <Section title={t('bio_section')} colors={colors}>
           <TextInput
             style={[styles.input, styles.inputMultiline, { color: colors.textPrimary }]}
             value={bio}
             onChangeText={setBio}
-            placeholder="Cuéntanos algo sobre ti..."
+            placeholder={t('tell_about_you')}
             placeholderTextColor={colors.iconInactive}
             multiline
             maxLength={150}
@@ -89,14 +91,14 @@ export default function EditProfile() {
           </Text>
         </Section>
 
-        <Section title="ENLACE" colors={colors}>
+        <Section title={t('link_section')} colors={colors}>
           <View style={styles.inputRow}>
             <Ionicons name="link-outline" size={18} color={colors.iconInactive} />
             <TextInput
               style={[styles.input, styles.inputFlex, { color: colors.textPrimary }]}
               value={enlace}
               onChangeText={setEnlace}
-              placeholder="https://tu-web.com"
+              placeholder={t('your_website')}
               placeholderTextColor={colors.iconInactive}
               autoCapitalize="none"
               keyboardType="url"
@@ -115,7 +117,7 @@ export default function EditProfile() {
           {saving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveBtnText}>Guardar cambios</Text>
+            <Text style={styles.saveBtnText}>{t('save_changes')}</Text>
           )}
         </Pressable>
 

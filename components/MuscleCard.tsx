@@ -1,4 +1,6 @@
 import { useTheme } from "@/context/ThemeContext";
+import { useTranslation } from "@/context/LanguageContext";
+import { exerciseTranslationKeyByName, muscleTranslationKeyByName } from "@/constants/translationMaps";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
@@ -12,22 +14,28 @@ interface MuscleCardProps {
 
 export default function MuscleCard({ id, image, exerciseName, principalMuscleName }: MuscleCardProps){
   const { colors } = useTheme();
+  const { t } = useTranslation();
+
+  const exerciseKey = exerciseTranslationKeyByName[exerciseName];
+  const muscleKey = muscleTranslationKeyByName[principalMuscleName];
+  const translatedExercise = exerciseKey ? t(exerciseKey) : exerciseName;
+  const translatedMuscle = muscleKey ? t(muscleKey) : principalMuscleName;
   
   return(
         <Pressable style={[styles.container, 
           { borderBottomColor: colors.border }]} 
           accessible
           accessibilityRole="button"
-          accessibilityLabel={'Exercise ${exerciseName}'}
-          accessibilityHint="Opens exercise details"
+          accessibilityLabel={translatedExercise}
+          accessibilityHint={t('opens_exercise_details')}
           onPress={() => router.push({ pathname: "/exercise/[id]", params: { id: id.toString() }})}>
-            <Image style={styles.image} source={image} alt={exerciseName} />
+            <Image style={styles.image} source={image} alt={translatedExercise} />
             <View style={styles.textContainer}>
-                <Text style={[styles.exerciseName, { color: colors.textPrimary }]}>
-                    {exerciseName}
+                <Text style={[styles.exerciseName, { color: colors.textPrimary }]}> 
+                    {translatedExercise}
                 </Text>
-                <Text style={[styles.muscleName, { color: colors.textSecondary }]}>
-                    {principalMuscleName}
+                <Text style={[styles.muscleName, { color: colors.textSecondary }]}> 
+                    {translatedMuscle}
                 </Text>
             </View>
             <Ionicons

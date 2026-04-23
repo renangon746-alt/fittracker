@@ -1,4 +1,5 @@
 import UserList from '@/components/UserList';
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +26,7 @@ export default function Social() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     async function loadUsers() {
@@ -33,7 +35,7 @@ export default function Social() {
 
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError) {
-          setErrorMsg('Error obteniendo sesion: ' + authError.message);
+          setErrorMsg(`${t('error_getting_session')}: ${authError.message}`);
           return;
         }
 
@@ -58,7 +60,7 @@ export default function Social() {
           .order('nombre', { ascending: true });
 
         if (error) {
-          setErrorMsg('Error cargando usuarios: ' + error.message);
+          setErrorMsg(`${t('error_loading_users')}: ${error.message}`);
           return;
         }
 
@@ -75,14 +77,14 @@ export default function Social() {
 
         setUsers(mappedUsers);
       } catch (error) {
-        setErrorMsg('Error inesperado: ' + String(error));
+        setErrorMsg(`${t('unexpected_error')}: ${String(error)}`);
       } finally {
         setLoading(false);
       }
     }
 
     loadUsers();
-  }, []);
+  }, [t]);
 
   const filteredUsers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -110,12 +112,12 @@ export default function Social() {
               color: colors.textPrimary,
             },
           ]}
-          placeholder="Search users here..."
+          placeholder={t('search_users_placeholder')}
           placeholderTextColor={colors.textSecondary}
           onChangeText={setQuery}
           value={query}
-          accessibilityLabel="Search users"
-          accessibilityHint="Type to filter users"
+          accessibilityLabel={t('search_users_placeholder')}
+          accessibilityHint={t('search')}
         />
         <Ionicons
           style={styles.icon}
@@ -132,7 +134,7 @@ export default function Social() {
       ) : filteredUsers.length > 0 ? (
         <UserList users={filteredUsers} />
       ) : (
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No users found</Text>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('no_users_found')}</Text>
       )}
     </ScrollView>
   );

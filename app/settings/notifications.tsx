@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
@@ -17,6 +18,7 @@ import {
 
 export default function Notifications() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -37,15 +39,15 @@ export default function Notifications() {
 
         if (error) throw error;
         if (data) setEnabled(data.notificaciones_activas);
-      } catch (error) {
-        Alert.alert('Error', 'No se pudo cargar la configuración.');
+      } catch {
+        Alert.alert(t('error'), t('could_not_load_settings'));
       } finally {
         setLoading(false);
       }
     }
 
     fetchPreference();
-  }, []);
+  }, [t]);
 
   // ── Guardar cambio en Supabase ─────────────────────────────────────────────
   async function handleToggle(value: boolean) {
@@ -54,7 +56,7 @@ export default function Notifications() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No hay sesión activa');
+      if (!user) throw new Error(t('no_active_session'));
 
       const { error } = await supabase
         .from('usuario')
@@ -62,10 +64,10 @@ export default function Notifications() {
         .eq('email', user.email);
 
       if (error) throw error;
-    } catch (error) {
+    } catch {
       // Revertir si falla
       setEnabled(!value);
-      Alert.alert('Error', 'No se pudo guardar el cambio. Inténtalo de nuevo.');
+      Alert.alert(t('error'), t('could_not_save_change_retry'));
     } finally {
       setSaving(false);
     }
@@ -102,8 +104,8 @@ export default function Notifications() {
               size={20}
               color={colors.textPrimary}
             />
-            <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>
-              Notificaciones
+            <Text style={[styles.rowLabel, { color: colors.textPrimary }]}> 
+              {t('notifications')}
             </Text>
           </View>
 
@@ -123,8 +125,8 @@ export default function Notifications() {
       {/* ── Descripción ── */}
       <Text style={[styles.description, { color: colors.textSecondary }]}>
         {enabled
-          ? 'Recibirás notificaciones sobre tu actividad, logros y recordatorios de entrenamiento.'
-          : 'Las notificaciones están desactivadas. No recibirás avisos de la app.'}
+          ? t('notifications_enabled_description')
+          : t('notifications_disabled_description')}
       </Text>
     </ScrollView>
   );

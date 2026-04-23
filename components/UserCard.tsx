@@ -1,4 +1,5 @@
 import { useTheme } from "@/context/ThemeContext";
+import { useTranslation } from "@/context/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -16,6 +17,7 @@ interface UserCardProps {
 
 export default function UserCard({ id, userName, fullName, email }: UserCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,7 @@ export default function UserCard({ id, userName, fullName, email }: UserCardProp
       accessible
       accessibilityRole="button"
       accessibilityLabel={`User ${userName}`}
-      accessibilityHint="Opens user profile"
+      accessibilityHint={t('opens_user_profile')}
       onPress={() => router.push({ pathname: '/profile/profileDescription', params: { id: id.toString() } })}
     >
       <View style={styles.avatarContainer}>

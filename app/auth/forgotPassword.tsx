@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { useForgotPassword } from '@/hooks/useForgotPassword';
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from '@/styles/profile-styles';
@@ -8,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForgotPassword() {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const profile_styles = profileStyles(colors);
     const { email, setEmail, errorMsg, successMsg, handleForgotPassword } = useForgotPassword();
@@ -20,10 +22,10 @@ export default function ForgotPassword() {
 
                     <Image source={require('../../assets/images/Icon__dumbell_fitTracker.png')} style={global_styles.principalLogoImage} />
 
-                    <Text style={global_styles.tittleText}>Recuperar contrasena</Text>
+                    <Text style={global_styles.tittleText}>{t('forgot_title')}</Text>
 
                     <View style={{ paddingTop: 20 }}>
-                        <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>E-mail</Text>
+                        <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>{t('email')}</Text>
                         <TextInput style={global_styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                     </View>
 
@@ -33,14 +35,14 @@ export default function ForgotPassword() {
                     <View style={{ padding: 10 }}>
                         <Pressable style={global_styles.principalButton} onPress={handleForgotPassword}>
                             <Text style={global_styles.principalText}>
-                                Enviar e-mail
+                                {t('send_email')}
                             </Text>
                         </Pressable>
                     </View>
 
                     <Pressable onPress={() => from === 'settings' ? router.back() : router.replace('../../auth/login')}>
                         <Text style={global_styles.underlineText}>
-                            Volver
+                            {t('back')}
                         </Text>
                     </Pressable>
                 </View>

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/context/LanguageContext';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 export interface UserProfile {
@@ -34,6 +35,7 @@ const UserContext = createContext<UserContextType>({
 });
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+    const { t } = useTranslation();
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [authUserId, setAuthUserId] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 .single();
 
             if (profileError || !profile) {
-                setErrorMsg('Error cargando perfil: ' + profileError?.message);
+                setErrorMsg(`${t('error_loading_profile')}: ${profileError?.message}`);
                 return;
             }
 
@@ -76,11 +78,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
 
         } catch (error) {
-            setErrorMsg('Error inesperado: ' + String(error));
+            setErrorMsg(`${t('unexpected_error')}: ${String(error)}`);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const clearUser = useCallback(() => {
         setUserProfile(null);

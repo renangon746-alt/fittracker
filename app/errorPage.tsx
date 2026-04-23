@@ -1,9 +1,11 @@
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from '@/context/LanguageContext';
 import { globalStyles } from "@/styles/global-styles";
 import { Image, Text, View } from "react-native";
 
 export default function ErrorPage(){
     const {colors} = useTheme();
+    const { t } = useTranslation();
     const styles = globalStyles(colors);
 
     return (
@@ -15,15 +17,15 @@ export default function ErrorPage(){
             </View>
 
             <Text style={[styles.secondaryText, {color: colors.primary, fontSize: 28}]}>
-                ERROR
+                {t('error_title')}
             </Text>
 
             <Text style={styles.principalText}>
-                Lo sentimos, ha surgido un error desconocido
+                {t('error_message')}
             </Text>
 
             <Text style={[styles.secondaryText, {color: colors.primary}]}>
-                Estamos trabajando en ello
+                {t('error_working')}
             </Text>
         </View>
     );

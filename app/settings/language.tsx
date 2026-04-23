@@ -1,26 +1,28 @@
-/*
-
-PARA HACER POR ALEX
-
-import { Language, useLanguage } from '@/context/LanguageContext';
+import { Language, useLanguage, useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import {
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-const LANGUAGES: { code: Language; label: string; flag: string }[] = [
-  { code: 'es', label: 'Español', flag: '🇪🇸' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-];
+
+const LANGUAGE_FLAGS: Record<Language, string> = {
+  es: 'ES',
+  en: 'EN',
+};
+
+const LANGUAGES: Language[] = ['es', 'en'];
 
 export default function LanguageScreen() {
   const { colors } = useTheme();
   const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
+
+  const languageLabel = (lang: Language) => (lang === 'es' ? t('spanish') : t('english'));
 
   return (
     <ScrollView
@@ -38,8 +40,8 @@ export default function LanguageScreen() {
       >
         {LANGUAGES.map((lang, index) => (
           <Pressable
-            key={lang.code}
-            onPress={() => setLanguage(lang.code)}
+            key={lang}
+            onPress={() => setLanguage(lang)}
             style={({ pressed }) => [
               styles.row,
               { opacity: pressed ? 0.5 : 1 },
@@ -49,11 +51,11 @@ export default function LanguageScreen() {
               },
             ]}
           >
-            <Text style={styles.flag}>{lang.flag}</Text>
-            <Text style={[styles.label, { color: colors.textPrimary }]}>
-              {lang.label}
-            </Text>
-            {language === lang.code && (
+            <View style={[styles.badge, { backgroundColor: colors.backgroundTertiary }]}> 
+              <Text style={[styles.badgeText, { color: colors.textPrimary }]}>{LANGUAGE_FLAGS[lang]}</Text>
+            </View>
+            <Text style={[styles.label, { color: colors.textPrimary }]}>{languageLabel(lang)}</Text>
+            {language === lang && (
               <Ionicons name="checkmark" size={20} color={colors.primary} />
             )}
           </Pressable>
@@ -82,6 +84,13 @@ const styles = StyleSheet.create({
     minHeight: 50,
     gap: 14,
   },
-  flag: { fontSize: 24 },
+  badge: {
+    width: 34,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { fontSize: 11, fontWeight: '700' },
   label: { flex: 1, fontSize: 16 },
-});*/
+});
