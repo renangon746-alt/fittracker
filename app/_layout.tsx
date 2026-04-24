@@ -5,10 +5,10 @@ import { useFonts } from 'expo-font';
 import { Stack, router } from "expo-router";
 import Head from 'expo-router/head';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Pressable, Text, View } from 'react-native';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
-// Types
 export type SetsMap = Record<number, SetRow[]>;
 
 export interface ActiveRoutine {
@@ -23,7 +23,7 @@ export interface ActiveRoutine {
 
 interface ActiveRoutineCtx {
     active: ActiveRoutine | null;
-    startOrResume: (id: string, nombre: string) => void;
+    navigateToRoutine: (id: string, nombre: string) => void;
     tickSeconds: () => void;
     updateSetsMap: (setsMap: SetsMap) => void;
     updateRecordCount: (n: number) => void;
@@ -37,7 +37,7 @@ interface ActiveRoutineCtx {
 
 export const ActiveRoutineContext = createContext<ActiveRoutineCtx>({
     active: null,
-    startOrResume: () => {},
+    navigateToRoutine: () => {},
     tickSeconds: () => {},
     updateSetsMap: () => {},
     updateRecordCount: () => {},
@@ -53,9 +53,8 @@ export function useActiveRoutine() {
     return useContext(ActiveRoutineContext);
 }
 
-// MinimizedBar
 function MinimizedRoutineBar() {
-    const { active, minimized, setMinimized } = useActiveRoutine();
+    const { active, minimized, setMinimized, navigateToRoutine } = useActiveRoutine();
     const { colors } = useTheme();
     const train_styles = trainStyles(colors);
 
@@ -69,7 +68,6 @@ function MinimizedRoutineBar() {
         ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
         : `${m}:${String(sec).padStart(2, '0')}`;
 
-    // Show rest countdown in bar if rest is active
     const restLabel = active.restActive && active.restSeconds > 0
         ? ` · Rest ${Math.floor(active.restSeconds / 60)}:${String(active.restSeconds % 60).padStart(2, '0')}`
         : '';
@@ -79,7 +77,7 @@ function MinimizedRoutineBar() {
             style={[train_styles.mb_bar, { backgroundColor: colors.primary }]}
             onPress={() => {
                 setMinimized(false);
-                router.push({ pathname: '/train/routine', params: { id: active.id, nombre: active.nombre } });
+                navigateToRoutine(active.id, active.nombre);
             }}
         >
             <View style={train_styles.mb_left}>
@@ -94,25 +92,19 @@ function MinimizedRoutineBar() {
 function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     const [active, setActive] = useState<ActiveRoutine | null>(null);
     const [minimized, setMinimized] = useState(false);
-
-    // Single interval drives BOTH the main timer and the rest countdown
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // When minimized, the provider drives all timers
     useEffect(() => {
         if (active && minimized) {
             intervalRef.current = setInterval(() => {
                 setActive(prev => {
                     if (!prev) return prev;
-                    const newRest = prev.restActive && prev.restSeconds > 0
-                        ? prev.restSeconds - 1
-                        : prev.restSeconds;
-                    const restStillActive = newRest > 0 && prev.restActive;
+                    const newRest = prev.restActive && prev.restSeconds > 0 ? prev.restSeconds - 1 : prev.restSeconds;
                     return {
                         ...prev,
                         seconds: prev.seconds + 1,
                         restSeconds: newRest,
-                        restActive: restStillActive,
+                        restActive: newRest > 0 && prev.restActive,
                     };
                 });
             }, 1000);
@@ -122,25 +114,20 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
         return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
     }, [minimized, active?.id]);
 
-    function startOrResume(id: string, nombre: string) {
-        setActive(prev => {
-            if (prev && prev.id === id) return prev; // resume — keep everything
-            return { id, nombre, seconds: 0, setsMap: {}, newRecordCount: 0, restSeconds: 0, restActive: false };
+    const navigateToRoutine = useCallback((id: string, nombre: string) => {
+        // flushSync ensures setActive completes BEFORE router.push causes Routine to render
+        flushSync(() => {
+            setActive(prev => {
+                if (prev && prev.id === id) return prev;
+                return { id, nombre, seconds: 0, setsMap: {}, newRecordCount: 0, restSeconds: 0, restActive: false };
+            });
+            setMinimized(false);
         });
-        setMinimized(false);
-    }
+        router.push({ pathname: '/train/routine', params: { id, nombre } });
+    }, []);
 
     const tickSeconds = useCallback(() => {
         setActive(prev => prev ? { ...prev, seconds: prev.seconds + 1 } : prev);
-    }, []);
-
-    // Rest countdown tick 
-    const tickRest = useCallback(() => {
-        setActive(prev => {
-            if (!prev || !prev.restActive || prev.restSeconds <= 0) return prev;
-            const next = prev.restSeconds - 1;
-            return { ...prev, restSeconds: next, restActive: next > 0 };
-        });
     }, []);
 
     const updateSetsMap = useCallback((setsMap: SetsMap) => {
@@ -167,15 +154,15 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
         setActive(prev => prev ? { ...prev, restSeconds: 0, restActive: false } : prev);
     }, []);
 
-    function clearActive() {
+    const clearActive = useCallback(() => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setActive(null);
         setMinimized(false);
-    }
+    }, []);
 
     return (
         <ActiveRoutineContext.Provider value={{
-            active, startOrResume, tickSeconds,
+            active, navigateToRoutine, tickSeconds,
             updateSetsMap, updateRecordCount, clearActive,
             minimized, setMinimized,
             startRest, addRestTime, stopRest,
@@ -185,7 +172,6 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
-//RootLayaut
 export default function RootLayout() {
     const [loaded] = useFonts({
         Inter: require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),

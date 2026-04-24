@@ -83,7 +83,7 @@ export default function ExerciseCard({
             <View style={train_styles.ec_tableHeader}>
                 <Text style={[train_styles.ec_colSet, global_styles.secondaryText]}>SET</Text>
                 <Text style={[train_styles.ec_colPrev, global_styles.secondaryText]}>PREVIOUS</Text>
-                <Text style={[train_styles.ec_colKg, global_styles.secondaryText]}>⚙ KG</Text>
+                <Text style={[train_styles.ec_colKg, global_styles.secondaryText]}>KG</Text>
                 <Text style={[train_styles.ec_colReps, global_styles.secondaryText]}>REPS</Text>
                 <View style={train_styles.ec_colCheck} />
             </View>
@@ -122,7 +122,7 @@ export default function ExerciseCard({
                         style={[train_styles.ec_colCheck, train_styles.ec_checkBtn, { backgroundColor: set.done ? colors.primary : colors.backgroundPrimary }]}
                         onPress={() => handleTick(i)}
                     >
-                        <Ionicons name="checkmark" size={16} color={set.done ? '#fff' : colors.textSecondary} />
+                        <Ionicons name="checkmark" size={16} color={set.done ? colors.white : colors.textSecondary} />
                     </Pressable>
                 </View>
             ))}

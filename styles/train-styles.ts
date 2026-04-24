@@ -356,12 +356,11 @@ export const trainStyles = (colors: any) =>
         },
 
         ec_colKg:   { 
-            flex: 1, 
-            alignItems: 'center' 
+            flex:1,
+            alignItems: 'center'
         },
 
         ec_colReps: { 
-            flex: 1, 
             alignItems: 'center' 
         },
 

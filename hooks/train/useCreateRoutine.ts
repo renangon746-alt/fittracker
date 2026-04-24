@@ -1,6 +1,6 @@
+import { useActiveRoutine } from '@/app/_layout';
 import { useUser } from '@/context/UserContext';
 import { supabase } from '@/lib/supabase';
-import { router } from 'expo-router';
 import { useState } from 'react';
 
 export type FolderKey = 'my_routines' | 'saved' | 'other';
@@ -13,6 +13,7 @@ export const FOLDER_OPTIONS: { label: string; value: FolderKey }[] = [
 
 export function useCreateRoutine(onSuccess?: () => void) {
     const { userProfile } = useUser();
+    const { navigateToRoutine } = useActiveRoutine();
     const [visible, setVisible] = useState(false);
     const [nombre, setNombre] = useState('');
     const [carpeta, setCarpeta] = useState<FolderKey>('my_routines');
@@ -56,7 +57,8 @@ export function useCreateRoutine(onSuccess?: () => void) {
 
         setVisible(false);
         onSuccess?.();
-        router.push({ pathname: '/train/routine', params: { id: String(data.id_rutina), nombre: data.nombre } });
+        // navigateToRoutine handles both startOrResume and router.push
+        navigateToRoutine(String(data.id_rutina), data.nombre);
     }
 
     return {

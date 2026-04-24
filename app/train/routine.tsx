@@ -1,8 +1,8 @@
 import AddExerciseModal from '@/components/train/AddExerciseModal';
 import ExerciseCard from '@/components/train/ExerciseCard';
 import NewRecordOverlay from '@/components/train/NewRecordOverlay';
-import { useExercises } from '@/components/train/useExercises';
 import { useTheme } from '@/context/ThemeContext';
+import { useExercises } from '@/hooks/train/useExercises';
 import { useRecords } from '@/hooks/train/useRecords';
 import { SetRow, useRoutineDetail } from '@/hooks/train/useRoutineDetail';
 import { globalStyles } from '@/styles/global-styles';
@@ -12,7 +12,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SetsMap, useActiveRoutine } from '../_layout';
+import { ActiveRoutine, SetsMap, useActiveRoutine } from '../_layout';
 
 const screenWidth = Dimensions.get('window').width;
 const BOTTOM_BAR_HEIGHT = 110;
@@ -26,35 +26,43 @@ export default function Routine() {
     const routineId = Number(id);
 
     const {
-        active, startOrResume, tickSeconds,
-        updateSetsMap, updateRecordCount, clearActive, setMinimized,
-        startRest, addRestTime, stopRest,
+        active,
+        tickSeconds,
+        updateSetsMap,
+        updateRecordCount,
+        clearActive,
+        setMinimized,
+        startRest,
+        addRestTime,
+        stopRest,
     } = useActiveRoutine();
 
-    // On mount: start new or resume existing
-    useEffect(() => {
-        startOrResume(id, nombre ?? 'Routine');
-    }, [id]);
+    // No startOrResume here — it was already called by RoutineCard/useCreateRoutine before navigating
 
-    // Local timer interval — syncs to context each tick
-    const [localSeconds, setLocalSeconds] = useState(() =>
-        active?.id === id ? active.seconds : 0
-    );
+    const activeRoutine = active as ActiveRoutine | null;
+    const isCurrentRoutine = activeRoutine?.id === id;
+
+    // Local timer — synced from context once on mount
+    const [localSeconds, setLocalSeconds] = useState(0);
     const [running, setRunning] = useState(true);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const syncedRef = useRef(false);
 
-    // Sync local seconds from context on mount (resume case)
     useEffect(() => {
-        if (active?.id === id) setLocalSeconds(active.seconds);
-    }, []); // only on mount
+        if (isCurrentRoutine && activeRoutine && !syncedRef.current) {
+            setLocalSeconds(activeRoutine.seconds);
+            syncedRef.current = true;
+        }
+    }, [isCurrentRoutine]);
 
-    // Main timer interval
+    const restActiveRef = useRef(false);
+    restActiveRef.current = isCurrentRoutine ? (activeRoutine?.restActive ?? false) : false;
+
     useEffect(() => {
         if (running) {
             intervalRef.current = setInterval(() => {
                 setLocalSeconds(s => { tickSeconds(); return s + 1; });
-                // Also tick the rest countdown while screen is open
-                tickRestFromScreen();
+                if (restActiveRef.current) addRestTime(-1);
             }, 1000);
         } else {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -62,43 +70,11 @@ export default function Routine() {
         return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
     }, [running]);
 
-    // Tick rest from screen (avoids double-counting with provider interval)
-    function tickRestFromScreen() {
-        // The provider only ticks when minimized, so when screen is open we drive rest here
-    }
+    const restActive: boolean = isCurrentRoutine ? (activeRoutine?.restActive ?? false) : false;
+    const restSeconds: number = isCurrentRoutine ? (activeRoutine?.restSeconds ?? 0) : 0;
+    const restFormatted = `${Math.floor(restSeconds / 60)}:${String(restSeconds % 60).padStart(2, '0')}`;
 
-    // Read rest state from context
-    const restActive = active?.id === id ? (active.restActive ?? false) : false;
-    const restSeconds = active?.id === id ? (active.restSeconds ?? 0) : 0;
-    const restFormatted = (() => {
-        const m = Math.floor(restSeconds / 60);
-        const s = restSeconds % 60;
-        return `${m}:${String(s).padStart(2, '0')}`;
-    })();
-
-    // When screen is open, drive rest countdown ourselves
-    useEffect(() => {
-        if (!restActive || !running) return;
-        const id_ = setInterval(() => {
-            // addRestTime(-1) would trigger a re-render loop, so we call stopRest if 0
-            // Instead, we use a dedicated tick via addRestTime
-        }, 1000);
-        return () => clearInterval(id_);
-    }, [restActive, running]);
-
-    // Simpler approach: piggyback on main interval via a ref
-    const restActiveRef = useRef(restActive);
-    restActiveRef.current = restActive;
-    useEffect(() => {
-        if (!running) return;
-        const id_ = setInterval(() => {
-            if (restActiveRef.current) addRestTime(-1);
-        }, 1000);
-        return () => clearInterval(id_);
-    }, [running]);
-
-    // setsMap from context
-    const setsMap: SetsMap = active?.id === id ? (active.setsMap ?? {}) : {};
+    const setsMap: SetsMap = isCurrentRoutine ? (activeRoutine?.setsMap ?? {}) : {};
 
     function getSets(idRutinaEjercicio: number): SetRow[] {
         return setsMap[idRutinaEjercicio] ?? [{ num: 1, kg: '', reps: '', done: false }];
@@ -115,7 +91,7 @@ export default function Routine() {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [recordVisible, setRecordVisible] = useState(false);
-    const newRecordCount = active?.id === id ? (active.newRecordCount ?? 0) : 0;
+    const newRecordCount = isCurrentRoutine ? (activeRoutine?.newRecordCount ?? 0) : 0;
 
     const formatted = (() => {
         const s = localSeconds;
@@ -156,7 +132,8 @@ export default function Routine() {
                     style: pendingSets ? 'destructive' : 'default',
                     onPress: async () => {
                         if (intervalRef.current) clearInterval(intervalRef.current);
-                        await finishRoutine(localSeconds, setsMap);
+                        const finalSetsMap = (active as ActiveRoutine | null)?.setsMap ?? {};
+                        await finishRoutine(localSeconds, finalSetsMap);
                         clearActive();
                         router.back();
                     },
@@ -241,7 +218,6 @@ export default function Routine() {
 
             </ScrollView>
 
-            {/* Bottom bar */}
             <View style={[train_styles.r_bottomBar, { backgroundColor: colors.backgroundSecondary }]}>
                 {restActive ? (
                     <>
@@ -269,14 +245,12 @@ export default function Routine() {
                     </>
                 ) : (
                     <View style={train_styles.r_normalRow}>
-                        <View style={train_styles.r_pauseButtonTimer}>
-                            <Pressable onPress={() => setRunning(r => !r)} style={train_styles.r_playPauseButton}>
-                                <Ionicons name={running ? 'pause' : 'play'} size={24} color="#000" />
-                            </Pressable>
-                            <Text style={[global_styles.principalText, { fontSize: 18, fontWeight: '600' }]}>{formatted}</Text>
-                        </View>
+                        <Text style={[global_styles.principalText, { fontSize: 18, fontWeight: '600' }]}>{formatted}</Text>
+                        <Pressable onPress={() => setRunning(r => !r)} style={train_styles.r_playPauseButton}>
+                            <Ionicons name={running ? 'pause' : 'play'} size={24} color="#000" />
+                        </Pressable>
                         <Pressable
-                            style={[global_styles.principalButton, { width: 120, height: 36 }]}
+                            style={[global_styles.principalButton, { paddingHorizontal: 18, height: 36 }]}
                             onPress={handleFinish}
                         >
                             <Text style={[global_styles.principalText, { fontSize: 13 }]}>Finish</Text>
