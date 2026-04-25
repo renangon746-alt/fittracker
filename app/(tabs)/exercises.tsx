@@ -1,5 +1,5 @@
 import { exercises } from "@/assets/data/exercises";
-import MuscleList from '@/components/MuscleList';
+import MuscleList from "@/components/exercises/MuscleList";
 import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { globalStyles } from '@/styles/global-styles';

@@ -1,4 +1,4 @@
-import UserList from '@/components/UserList';
+import UserList from '@/components/social/UserList';
 import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';

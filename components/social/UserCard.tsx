@@ -7,7 +7,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 
-const defaultAvatar = require('../assets/images/defaultAvatar.png');
+const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 
 interface UserCardProps {
   id: number;

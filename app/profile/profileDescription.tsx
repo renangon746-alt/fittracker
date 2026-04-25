@@ -1,6 +1,6 @@
-import Cal from "@/components/Cal";
-import Graph from "@/components/Graph";
-import StreakBadge from "@/components/StreakBadge";
+import Cal from "@/components/global/Cal";
+import Graph from "@/components/global/Graph";
+import StreakBadge from "@/components/global/StreakBadge";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/lib/supabase";
@@ -10,14 +10,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Image,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
@@ -90,7 +90,7 @@ export default function ProfileDescription() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary, justifyContent: 'center', alignItems: 'center' }}>
+      <SafeAreaView style={profile_styles.loadProfileContainer}>
         <ActivityIndicator size="large" color={colors.textPrimary} />
         <Text style={[global_styles.secondaryText, { marginTop: 10 }]}>{t('loading_profile')}</Text>
       </SafeAreaView>
@@ -111,7 +111,7 @@ export default function ProfileDescription() {
 
   return (
     <SafeAreaView style={global_styles.defaultContainer}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+      <ScrollView contentContainerStyle={global_styles.defaultScroll}>
 
         {/* Back button */}
         <View style={global_styles.backArrowContainer}>
@@ -155,13 +155,13 @@ export default function ProfileDescription() {
           {/* Bio + link + Follow button */}
           <View style={profile_styles.pd_bioFollowButton}>
             <View style={{ flex: 1 }}>
-              {userProfile.bio ? (
-                <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14 }]}>
+              {userProfile.bio ? ( 
+                <Text style={[global_styles.secondaryText, profile_styles.p_bio, {fontSize: screenWidth < 350 ? 12 : 14 }]}>
                   {userProfile.bio}
                 </Text>
               ) : null}
               {userProfile.enlace ? (
-                <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14, color: colors.primary, marginTop: userProfile.bio ? 4 : 0 }]}>
+                <Text style={[global_styles.secondaryText, profile_styles.p_link,{fontSize: screenWidth < 350 ? 12 : 14, marginTop: userProfile.bio ? 4 : 0 }]}>
                   {userProfile.enlace}
                 </Text>
               ) : null}

@@ -1,6 +1,6 @@
-import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
-import { useForgotPassword } from '@/hooks/useForgotPassword';
+import { useTheme } from '@/context/ThemeContext';
+import { useForgotPassword } from '@/hooks/auth/useForgotPassword';
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from '@/styles/profile-styles';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -17,7 +17,7 @@ export default function ForgotPassword() {
     
     return (
         <SafeAreaView style={global_styles.defaultContainer}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            <ScrollView contentContainerStyle={global_styles.defaultScroll}>
                 <View style={profile_styles.auth_container}>
 
                     <Image source={require('../../assets/images/Icon__dumbell_fitTracker.png')} style={global_styles.principalLogoImage} />
@@ -29,10 +29,10 @@ export default function ForgotPassword() {
                         <TextInput style={global_styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                     </View>
 
-                    {errorMsg && <Text style={[global_styles.secondaryText, { color: 'red', paddingTop: 10 }]}>{errorMsg}</Text>}
-                    {successMsg && <Text style={[global_styles.secondaryText, { color: 'green', paddingTop: 10 }]}>{successMsg}</Text>}
+                    {errorMsg && <Text style={[global_styles.secondaryText, profile_styles.loadProfileErrorMessage]}>{errorMsg}</Text>}
+                    {successMsg && <Text style={[global_styles.secondaryText, profile_styles.loadProfileSuccesMessage]}>{successMsg}</Text>}
 
-                    <View style={{ padding: 10 }}>
+                    <View style={profile_styles.buttonContainer}>
                         <Pressable style={global_styles.principalButton} onPress={handleForgotPassword}>
                             <Text style={global_styles.principalText}>
                                 {t('send_email')}

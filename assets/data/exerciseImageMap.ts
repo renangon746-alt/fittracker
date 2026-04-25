@@ -1,0 +1,30 @@
+// Maps image_key stored in Supabase to the local asset require()
+// This avoids dynamic require() which is not supported in Metro bundler
+
+export const exerciseImageMap: Record<string, number> = {
+    chest_fly:              require('../images/chest_fly.png'),
+    bench_press:            require('../images/bench_press.png'),
+    inclined_bench_press:   require('../images/inclined_bench_press.png'),
+    pull_up:                require('../images/pull_up.png'),
+    seated_row:             require('../images/seated_row.png'),
+    lat_pulldown:           require('../images/lat_pulldown.png'),
+    face_pull:              require('../images/face_pull.png'),
+    press_hombro:           require('../images/press_hombro.png'),
+    arnold_press:           require('../images/arnold_press.png'),
+    lateral_raise:          require('../images/lateral_raise.png'),
+    bicepsCurl:             require('../images/bicepsCurl.png'),
+    hammer_curl:            require('../images/hammer_curl.png'),
+    concentration_curl:     require('../images/concentration_curl.png'),
+    tricep_extension:       require('../images/tricep_extension.png'),
+    skull_crusher:          require('../images/skull_crusher.png'),
+    leg_press:              require('../images/leg_press.png'),
+    bulgarian_split_squat:  require('../images/bulgarian_split_squat.png'),
+    squat_barbell:          require('../images/squat_barbell.png'),
+    hip_thrust:             require('../images/hip_thrust.png'),
+    glute_bridge:           require('../images/glute_bridge.png'),
+    hamstring_curl:         require('../images/hamstring_curl.png'),
+    romanian_deadlift:      require('../images/romanian_deadlift.png'),
+    calf_raise:             require('../images/calf_raise.png'),
+    back_extension:         require('../images/back_extension.png'),
+    hanging_leg_raise:      require('../images/hanging_leg_raise.png'),
+};

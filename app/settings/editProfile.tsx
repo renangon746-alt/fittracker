@@ -1,7 +1,7 @@
-import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
+import { useTheme } from '@/context/ThemeContext';
 import { useUser } from '@/context/UserContext';
-import { useEditProfile } from '@/hooks/useEditProfile';
+import { useEditProfile } from '@/hooks/auth/useEditProfile';
 import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import {

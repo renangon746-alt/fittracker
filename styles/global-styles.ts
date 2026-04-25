@@ -432,7 +432,18 @@ export const globalStyles = (colors: any) =>
         borderBottomWidth: 1,
     },
     themeSwitchText: { fontSize: 16 },
-    themeSwitchControl: { marginLeft: 'auto', transform: [{ scale: 1.2 }] }
+    themeSwitchControl: { marginLeft: 'auto', transform: [{ scale: 1.2 }] },
+    separator:{
+        height: 1, // Grosor de la línea
+        width: '100%', // Ancho total
+        backgroundColor: colors.textSecondary, // Color de la línea
+        marginVertical: 10, 
+        
+    },
+
+    defaultScroll:{
+        paddingBottom: 100
+    }
 
 
 });

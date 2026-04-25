@@ -11,6 +11,8 @@ export const darkColors = {
   border: '#1A1A1A',
   iconActive: '#FF6B00',
   iconInactive: '#6F6F6F',
+  white: 'white',
+  black: 'black',
   
   // Colores del calendario
   calendar: {
@@ -26,6 +28,13 @@ export const darkColors = {
     selectedDot: '#FFFFFF',
     arrow: '#FF6B00',             
     monthText: '#FFFFFF',
+  },
+
+  routineCard: {
+    background: '#1E2923',
+    title: '#FFFFFF',
+    day: '#B5B5B5',
+    border: '#988f8f'
   }
 };
 
@@ -42,6 +51,8 @@ export const lightColors = {
   border: '#CCCCCC',
   iconActive: '#FF6B00',
   iconInactive: '#A0A0A0',
+  white: 'white',
+  black: 'black',
   
   // Colores del calendario para modo claro
   calendar: {
@@ -57,6 +68,12 @@ export const lightColors = {
     selectedDot: '#FFFFFF',
     arrow: '#FF6B00',
     monthText: '#121212',
+  },
+  routineCard: {
+    background: '#FFFFFF',
+    title: '#121212',
+    day: '#555555',
+    border: '#988f8f'
   }
 };
 

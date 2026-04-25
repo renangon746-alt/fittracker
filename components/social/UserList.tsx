@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import UserCard from "./UserCard";
 
+
 interface UserItem {
   id: number;
   userName: string;

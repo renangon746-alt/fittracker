@@ -1,6 +1,6 @@
-import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
-import { useLogin } from '@/hooks/useLogin';
+import { useTheme } from '@/context/ThemeContext';
+import { useLogin } from '@/hooks/auth/useLogin';
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from '@/styles/profile-styles';
 import { router } from 'expo-router';
@@ -18,7 +18,7 @@ export default function Login(){
 
     return (
         <SafeAreaView style={global_styles.defaultContainer}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            <ScrollView contentContainerStyle={global_styles.defaultScroll}>
                 <View style={profile_styles.auth_container}>
 
                     <Image source={require('../../assets/images/Icon__dumbell_fitTracker.png')} style={global_styles.principalLogoImage}/>
@@ -39,9 +39,9 @@ export default function Login(){
 
                     </View>
 
-                    {errorMsg && <Text style={[global_styles.secondaryText, { color: 'red', paddingTop: 10 }]}>{errorMsg}</Text>}
+                    {errorMsg && <Text style={[global_styles.secondaryText, profile_styles.loadProfileErrorMessage]}>{errorMsg}</Text>}
 
-                    <View style={{padding:10}}>
+                    <View style={profile_styles.buttonContainer}>
                         <Pressable style={global_styles.principalButton} onPress={handleLogin}>
                             <Text style={global_styles.principalText}>
                                 {t('login_button')}
