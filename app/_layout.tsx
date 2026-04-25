@@ -5,7 +5,6 @@ import { useFonts } from 'expo-font';
 import { Stack, router } from "expo-router";
 import Head from 'expo-router/head';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import { Pressable, Text, View } from 'react-native';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
@@ -22,7 +21,10 @@ export interface ActiveRoutine {
 }
 
 interface ActiveRoutineCtx {
+    // Reactive state for UI components that need to re-render (MinimizedBar, stats)
     active: ActiveRoutine | null;
+    // Stable ref — Routine reads this on mount without causing setState-during-render
+    activeRef: React.MutableRefObject<ActiveRoutine | null>;
     navigateToRoutine: (id: string, nombre: string) => void;
     tickSeconds: () => void;
     updateSetsMap: (setsMap: SetsMap) => void;
@@ -35,8 +37,11 @@ interface ActiveRoutineCtx {
     stopRest: () => void;
 }
 
+const stubRef = { current: null } as React.MutableRefObject<ActiveRoutine | null>;
+
 export const ActiveRoutineContext = createContext<ActiveRoutineCtx>({
     active: null,
+    activeRef: stubRef,
     navigateToRoutine: () => {},
     tickSeconds: () => {},
     updateSetsMap: () => {},
@@ -92,77 +97,109 @@ function MinimizedRoutineBar() {
 function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     const [active, setActive] = useState<ActiveRoutine | null>(null);
     const [minimized, setMinimized] = useState(false);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // This ref is passed directly into context — stable across renders
+    const activeRef = useRef<ActiveRoutine | null>(null);
+
+    function set(next: ActiveRoutine | null) {
+        console.log('SET ACTIVE CALLED', new Error().stack?.split('\n')[2]);
+        activeRef.current = next;
+        setActive(next);
+    }
 
     useEffect(() => {
         if (active && minimized) {
-            intervalRef.current = setInterval(() => {
-                setActive(prev => {
-                    if (!prev) return prev;
-                    const newRest = prev.restActive && prev.restSeconds > 0 ? prev.restSeconds - 1 : prev.restSeconds;
-                    return {
-                        ...prev,
-                        seconds: prev.seconds + 1,
-                        restSeconds: newRest,
-                        restActive: newRest > 0 && prev.restActive,
-                    };
-                });
+            timerRef.current = setInterval(() => {
+                const prev = activeRef.current;
+                if (!prev) return;
+                const newRest = prev.restActive && prev.restSeconds > 0 ? prev.restSeconds - 1 : prev.restSeconds;
+                const next = {
+                    ...prev,
+                    seconds: prev.seconds + 1,
+                    restSeconds: newRest,
+                    restActive: newRest > 0 && prev.restActive,
+                };
+                activeRef.current = next;
+                setActive(next);
             }, 1000);
         } else {
-            if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+            if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
         }
-        return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+        return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }, [minimized, active?.id]);
 
     const navigateToRoutine = useCallback((id: string, nombre: string) => {
-        // flushSync ensures setActive completes BEFORE router.push causes Routine to render
-        flushSync(() => {
-            setActive(prev => {
-                if (prev && prev.id === id) return prev;
-                return { id, nombre, seconds: 0, setsMap: {}, newRecordCount: 0, restSeconds: 0, restActive: false };
-            });
-            setMinimized(false);
-        });
+        const existing = activeRef.current;
+        const next: ActiveRoutine = (existing && existing.id === id)
+            ? existing
+            : { id, nombre, seconds: 0, setsMap: {}, newRecordCount: 0, restSeconds: 0, restActive: false };
+        // Write to ref synchronously — Routine will read this on its first render
+        activeRef.current = next;
+        // Schedule the state update separately so it doesn't race with navigation
+        setActive(next);
+        setMinimized(false);
         router.push({ pathname: '/train/routine', params: { id, nombre } });
     }, []);
 
     const tickSeconds = useCallback(() => {
-        setActive(prev => prev ? { ...prev, seconds: prev.seconds + 1 } : prev);
+        const prev = activeRef.current;
+        if (!prev) return;
+        const next = { ...prev, seconds: prev.seconds + 1 };
+        activeRef.current = next;
+        setActive(next);
     }, []);
 
     const updateSetsMap = useCallback((setsMap: SetsMap) => {
-        setActive(prev => prev ? { ...prev, setsMap } : prev);
+        const prev = activeRef.current;
+        if (!prev) return;
+        const next = { ...prev, setsMap };
+        activeRef.current = next;
+        setActive(next);
     }, []);
 
     const updateRecordCount = useCallback((n: number) => {
-        setActive(prev => prev ? { ...prev, newRecordCount: n } : prev);
+        const prev = activeRef.current;
+        if (!prev) return;
+        const next = { ...prev, newRecordCount: n };
+        activeRef.current = next;
+        setActive(next);
     }, []);
 
     const startRest = useCallback((seconds: number) => {
-        setActive(prev => prev ? { ...prev, restSeconds: seconds, restActive: true } : prev);
+        const prev = activeRef.current;
+        if (!prev) return;
+        const next = { ...prev, restSeconds: seconds, restActive: true };
+        activeRef.current = next;
+        setActive(next);
     }, []);
 
     const addRestTime = useCallback((delta: number) => {
-        setActive(prev => {
-            if (!prev) return prev;
-            const next = Math.max(0, prev.restSeconds + delta);
-            return { ...prev, restSeconds: next, restActive: next > 0 };
-        });
+        const prev = activeRef.current;
+        if (!prev) return;
+        const newRest = Math.max(0, prev.restSeconds + delta);
+        const next = { ...prev, restSeconds: newRest, restActive: newRest > 0 };
+        activeRef.current = next;
+        setActive(next);
     }, []);
 
     const stopRest = useCallback(() => {
-        setActive(prev => prev ? { ...prev, restSeconds: 0, restActive: false } : prev);
+        const prev = activeRef.current;
+        if (!prev) return;
+        const next = { ...prev, restSeconds: 0, restActive: false };
+        activeRef.current = next;
+        setActive(next);
     }, []);
 
     const clearActive = useCallback(() => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (timerRef.current) clearInterval(timerRef.current);
+        activeRef.current = null;
         setActive(null);
         setMinimized(false);
     }, []);
 
     return (
         <ActiveRoutineContext.Provider value={{
-            active, navigateToRoutine, tickSeconds,
+            active, activeRef, navigateToRoutine, tickSeconds,
             updateSetsMap, updateRecordCount, clearActive,
             minimized, setMinimized,
             startRest, addRestTime, stopRest,

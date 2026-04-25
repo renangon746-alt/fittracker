@@ -228,7 +228,7 @@ export const trainStyles = (colors: any) =>
 
         crm_overlay: {
             flex: 1,
-            backgroundColor: colors.backgroundSecondary,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
             justifyContent: 'center',
             alignItems: 'center',
             padding: 24,

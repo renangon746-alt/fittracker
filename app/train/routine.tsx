@@ -10,12 +10,26 @@ import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Dimensions, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActiveRoutine, SetsMap, useActiveRoutine } from '../_layout';
 
 const screenWidth = Dimensions.get('window').width;
 const BOTTOM_BAR_HEIGHT = 110;
+const EMPTY_SETS_MAP: SetsMap = {};
+
+// Cross-platform confirm dialog
+function confirm(message: string): Promise<boolean> {
+    if (Platform.OS === 'web') {
+        return Promise.resolve(window.confirm(message));
+    }
+    return new Promise(resolve => {
+        Alert.alert('Confirm', message, [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'OK', onPress: () => resolve(true) },
+        ]);
+    });
+}
 
 export default function Routine() {
     const { colors } = useTheme();
@@ -27,6 +41,7 @@ export default function Routine() {
 
     const {
         active,
+        activeRef,
         tickSeconds,
         updateSetsMap,
         updateRecordCount,
@@ -37,23 +52,15 @@ export default function Routine() {
         stopRest,
     } = useActiveRoutine();
 
-    // No startOrResume here — it was already called by RoutineCard/useCreateRoutine before navigating
-
     const activeRoutine = active as ActiveRoutine | null;
     const isCurrentRoutine = activeRoutine?.id === id;
 
-    // Local timer — synced from context once on mount
-    const [localSeconds, setLocalSeconds] = useState(0);
+    const [localSeconds] = useState(() =>
+        (activeRef.current?.id === id) ? activeRef.current.seconds : 0
+    );
     const [running, setRunning] = useState(true);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const syncedRef = useRef(false);
-
-    useEffect(() => {
-        if (isCurrentRoutine && activeRoutine && !syncedRef.current) {
-            setLocalSeconds(activeRoutine.seconds);
-            syncedRef.current = true;
-        }
-    }, [isCurrentRoutine]);
+    const elapsedRef = useRef(localSeconds);
 
     const restActiveRef = useRef(false);
     restActiveRef.current = isCurrentRoutine ? (activeRoutine?.restActive ?? false) : false;
@@ -61,8 +68,10 @@ export default function Routine() {
     useEffect(() => {
         if (running) {
             intervalRef.current = setInterval(() => {
-                setLocalSeconds(s => { tickSeconds(); return s + 1; });
+                elapsedRef.current += 1;
+                tickSeconds();
                 if (restActiveRef.current) addRestTime(-1);
+                setDisplaySeconds(s => s + 1);
             }, 1000);
         } else {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -70,11 +79,15 @@ export default function Routine() {
         return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
     }, [running]);
 
+    const [displaySeconds, setDisplaySeconds] = useState(localSeconds);
+
     const restActive: boolean = isCurrentRoutine ? (activeRoutine?.restActive ?? false) : false;
     const restSeconds: number = isCurrentRoutine ? (activeRoutine?.restSeconds ?? 0) : 0;
     const restFormatted = `${Math.floor(restSeconds / 60)}:${String(restSeconds % 60).padStart(2, '0')}`;
 
-    const setsMap: SetsMap = isCurrentRoutine ? (activeRoutine?.setsMap ?? {}) : {};
+    const setsMap: SetsMap = isCurrentRoutine
+        ? (activeRoutine?.setsMap ?? EMPTY_SETS_MAP)
+        : EMPTY_SETS_MAP;
 
     function getSets(idRutinaEjercicio: number): SetRow[] {
         return setsMap[idRutinaEjercicio] ?? [{ num: 1, kg: '', reps: '', done: false }];
@@ -94,7 +107,7 @@ export default function Routine() {
     const newRecordCount = isCurrentRoutine ? (activeRoutine?.newRecordCount ?? 0) : 0;
 
     const formatted = (() => {
-        const s = localSeconds;
+        const s = displaySeconds;
         const h = Math.floor(s / 3600);
         const m = Math.floor((s % 3600) / 60);
         const sec = s % 60;
@@ -122,37 +135,27 @@ export default function Routine() {
 
     async function handleFinish() {
         const pendingSets = !allSetsDone();
-        Alert.alert(
-            'Finish Routine',
-            pendingSets ? 'You have incomplete sets. Are you sure?' : 'Great job! Save this workout?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Finish',
-                    style: pendingSets ? 'destructive' : 'default',
-                    onPress: async () => {
-                        if (intervalRef.current) clearInterval(intervalRef.current);
-                        const finalSetsMap = (active as ActiveRoutine | null)?.setsMap ?? {};
-                        await finishRoutine(localSeconds, finalSetsMap);
-                        clearActive();
-                        router.back();
-                    },
-                },
-            ]
-        );
+        const message = pendingSets
+            ? 'You have incomplete sets. Are you sure you want to finish?'
+            : 'Save this workout?';
+
+        const confirmed = await confirm(message);
+        if (!confirmed) return;
+
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        const finalSetsMap = activeRef.current?.setsMap ?? EMPTY_SETS_MAP;
+        await finishRoutine(elapsedRef.current, finalSetsMap);
+        clearActive();
+        router.back();
     }
 
-    function handleDiscard() {
-        Alert.alert('Discard Workout', 'This workout will not be saved. Discard?', [
-            { text: 'Keep going', style: 'cancel' },
-            {
-                text: 'Discard', style: 'destructive', onPress: () => {
-                    if (intervalRef.current) clearInterval(intervalRef.current);
-                    clearActive();
-                    router.back();
-                },
-            },
-        ]);
+    async function handleDiscard() {
+        const confirmed = await confirm('This workout will not be saved. Discard?');
+        if (!confirmed) return;
+
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        clearActive();
+        router.back();
     }
 
     function handleMinimize() {
