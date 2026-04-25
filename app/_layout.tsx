@@ -9,6 +9,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { Pressable, Text, View } from 'react-native';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
+
 export type SetsMap = Record<number, SetRow[]>;
 
 export interface ActiveRoutine {
@@ -139,7 +140,7 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
         // Schedule the state update separately so it doesn't race with navigation
         setActive(next);
         setMinimized(false);
-        router.push({ pathname: './train/routine', params: { id, nombre } });
+        router.push({ pathname: '/train/routine', params: { id, nombre } });
     }, []);
 
     const tickSeconds = useCallback(() => {
