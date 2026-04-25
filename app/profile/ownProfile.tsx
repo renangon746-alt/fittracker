@@ -4,33 +4,41 @@ import StreakBadge from "@/components/StreakBadge";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
+import { useFollow } from "@/hooks/useFollow";
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from "@/styles/profile-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Image,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 const screenWidth = Dimensions.get('window').width;
 
 export default function OwnProfile() {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const global_styles = globalStyles(colors);
-  const profile_styles = profileStyles(colors);
-  const [imgError, setImgError] = useState(false);
+const { colors } = useTheme();
+const { t } = useTranslation();
+const global_styles = globalStyles(colors);
+const profile_styles = profileStyles(colors);
+const [imgError, setImgError] = useState(false);
 
-  const { userProfile, avatarUrl, loading, errorMsg } = useUser();
+const { userProfile, avatarUrl, loading, errorMsg } = useUser();
+
+// Follow system for own profile
+const { 
+  followersCount, 
+  followingCount, 
+  loading: followLoading 
+} = useFollow(userProfile?.id_usuario || null);
 
   if (loading) {
     return (
@@ -80,21 +88,25 @@ export default function OwnProfile() {
             <StreakBadge count={userProfile.racha_actual || 0} />
           </View>
 
-          {/* Profile statistics */}
-          <View style={profile_styles.p_profileStatsContainer}>
-            <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
-            </View>
-            <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('followers')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>100</Text>
-            </View>
-            <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('following')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>2</Text>
-            </View>
-          </View>
+{/* Profile statistics */}
+<View style={profile_styles.p_profileStatsContainer}>
+<View style={profile_styles.p_stat}>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
+</View>
+<View style={profile_styles.p_stat}>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('followers')}</Text>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>
+{followLoading ? '...' : followersCount}
+</Text>
+</View>
+<View style={profile_styles.p_stat}>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('following')}</Text>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>
+{followLoading ? '...' : followingCount}
+</Text>
+</View>
+</View>
 
           {/* Bio + link */}
           <View style={profile_styles.op_bio}>

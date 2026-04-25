@@ -253,9 +253,10 @@ export default {
   add: "Añadir",
   loading: "Cargando...",
 
-  // Profile / social extras
-  follow: "Seguir",
-  streak: "Racha",
+// Profile / social extras
+follow: "Seguir",
+following: "Siguiendo",
+streak: "Racha",
 
   // Edit profile
   name_section: "NOMBRE",

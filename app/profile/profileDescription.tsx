@@ -3,6 +3,8 @@ import Graph from "@/components/Graph";
 import StreakBadge from "@/components/StreakBadge";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/context/UserContext";
+import { useFollow } from "@/hooks/useFollow";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from "@/styles/profile-styles";
@@ -10,14 +12,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Image,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
@@ -34,16 +36,30 @@ interface UserProfile {
 }
 
 export default function ProfileDescription() {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const global_styles = globalStyles(colors);
-  const profile_styles = profileStyles(colors);
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const [imgError, setImgError] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string>('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+const { colors } = useTheme();
+const { t } = useTranslation();
+const { userProfile: currentUserProfile } = useUser();
+const global_styles = globalStyles(colors);
+const profile_styles = profileStyles(colors);
+const { id } = useLocalSearchParams<{ id?: string }>();
+const [imgError, setImgError] = useState(false);
+const [loading, setLoading] = useState(true);
+const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+const [errorMsg, setErrorMsg] = useState<string>('');
+const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+// Follow system
+const targetUserId = id ? Number(id) : null;
+const { 
+  isFollowing, 
+  followersCount, 
+  followingCount, 
+  loading: followLoading,
+  toggleFollow 
+} = useFollow(targetUserId);
+
+// Check if viewing own profile
+const isOwnProfile = currentUserProfile?.id_usuario === targetUserId;
 
   useEffect(() => {
     async function loadUserProfile() {
@@ -136,41 +152,59 @@ export default function ProfileDescription() {
             <StreakBadge count={userProfile.racha_actual || 0} />
           </View>
 
-          {/* Profile statistics */}
-          <View style={profile_styles.p_profileStatsContainer}>
-            <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
-            </View>
-            <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('followers')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>100</Text>
-            </View>
-            <View style={profile_styles.p_stat}>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('following')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>2</Text>
-            </View>
-          </View>
+{/* Profile statistics */}
+<View style={profile_styles.p_profileStatsContainer}>
+<View style={profile_styles.p_stat}>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
+</View>
+<View style={profile_styles.p_stat}>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('followers')}</Text>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>
+{followLoading ? '...' : followersCount}
+</Text>
+</View>
+<View style={profile_styles.p_stat}>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('following')}</Text>
+<Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>
+{followLoading ? '...' : followingCount}
+</Text>
+</View>
+</View>
 
-          {/* Bio + link + Follow button */}
-          <View style={profile_styles.pd_bioFollowButton}>
-            <View style={{ flex: 1 }}>
-              {userProfile.bio ? (
-                <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14 }]}>
-                  {userProfile.bio}
-                </Text>
-              ) : null}
-              {userProfile.enlace ? (
-                <Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14, color: colors.primary, marginTop: userProfile.bio ? 4 : 0 }]}>
-                  {userProfile.enlace}
-                </Text>
-              ) : null}
-            </View>
+{/* Bio + link + Follow button */}
+<View style={profile_styles.pd_bioFollowButton}>
+<View style={{ flex: 1 }}>
+{userProfile.bio ? (
+<Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14 }]}>
+{userProfile.bio}
+</Text>
+) : null}
+{userProfile.enlace ? (
+<Text style={[global_styles.secondaryText, { textAlign: 'center', fontSize: screenWidth < 350 ? 12 : 14, color: colors.primary, marginTop: userProfile.bio ? 4 : 0 }]}>
+{userProfile.enlace}
+</Text>
+) : null}
+</View>
 
-            <Pressable style={[global_styles.principalButton, { width: 100, height: 35 }]}> 
-              <Text style={global_styles.principalText}>{t('follow')}</Text>
-            </Pressable>
-          </View>
+{!isOwnProfile && (
+  <Pressable 
+    style={[
+      global_styles.principalButton, 
+      { 
+        width: 100, 
+        height: 35,
+        backgroundColor: isFollowing ? colors.backgroundTertiary : undefined
+      }
+    ]} 
+    onPress={toggleFollow}
+  >
+    <Text style={global_styles.principalText}>
+      {followLoading ? '...' : isFollowing ? t('following') : t('follow')}
+    </Text>
+  </Pressable>
+)}
+</View>
 
         </View>
 
