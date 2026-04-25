@@ -222,23 +222,26 @@ export default function RootLayout() {
     <ThemeProvider>
       <LanguageProvider>
         <UserProvider>
-          <Head>
-            <title>FitTracker</title>
-            <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
-          </Head>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-            <Stack.Screen name="auth/register" options={{ headerShown: false }} />
-            <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-            <Stack.Screen name="errorPage" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
-            <Stack.Screen name="settings" options={{ headerShown: false }} />
-            <Stack.Screen name="train/routine" options={{ headerShown: false }} />
-          </Stack>
+            <ActiveRoutineProvider>
+                <Head>
+                    <title>FitTracker</title>
+                    <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
+                </Head>
+                <Stack>
+                    <Stack.Screen name="index" options={{ headerShown: false }} />
+                    <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+                    <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+                    <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
+                    <Stack.Screen name="(tabs)" options={{headerShown: false}} />
+                    <Stack.Screen name="errorPage" options={{ headerShown: false }} />
+                    <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
+                    <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
+                    <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
+                    <Stack.Screen name="settings" options={{ headerShown: false }} />
+                    <Stack.Screen name="train/routine" options={{ headerShown: false }} />
+                </Stack>
+                <MinimizedRoutineBar />
+            </ActiveRoutineProvider>
         </UserProvider>
       </LanguageProvider>
     </ThemeProvider>
