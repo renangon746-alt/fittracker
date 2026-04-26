@@ -174,7 +174,7 @@ export default function WeightChart({ data, onEdit, containerWidth, cardSize }: 
       {chartContent}
 
       {pts.length >= 2 && (
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 32, marginTop: 6 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 32, marginTop: 14 }}>
           {(['90D', '6M', '1Y', 'ALL'] as Range[]).map(r => (
             <Pressable
               key={r}
