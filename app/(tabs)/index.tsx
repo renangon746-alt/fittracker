@@ -45,7 +45,7 @@ interface DashboardData {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const H_PAD = 24;
-const GAP = 8;
+const GAP = 10;
 
 function getSaludo() {
   const h = new Date().getHours();

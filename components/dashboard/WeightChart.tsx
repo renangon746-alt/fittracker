@@ -167,7 +167,7 @@ export default function WeightChart({ data, onEdit, containerWidth, cardSize }: 
             opacity: pressed ? 0.6 : 1,
           })}
         >
-          <Text style={{ fontSize: 14 }}>✏️</Text>
+          <Ionicons name="pencil" size={16} color={colors.primary} />
         </Pressable>
       </View>
 
