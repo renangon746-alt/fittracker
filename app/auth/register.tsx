@@ -19,7 +19,7 @@ export default function Register() {
 
             <Text style={styles.tittleText}>Crear Cuenta</Text>
 
-            <Pressable onPress={pickImage}>
+            <Pressable onPress={pickImage} style={{ paddingTop: 24 }}>
                 <Image
                     source={imageUri ? { uri: imageUri } : require('../../assets/images/defaultAvatar.png')}
                     style={styles.profileImage}

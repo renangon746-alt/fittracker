@@ -1,8 +1,10 @@
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useRouter } from 'expo-router';
 import {
+  Alert,
   Linking,
   Platform,
   Pressable,
@@ -164,7 +166,7 @@ export default function Settings() {
           colors={colors}
           icon={<FontAwesome5 name="dumbbell" size={16} color={colors.textPrimary} />}
           label="Acerca de nosotros"
-          onPress={() => router.push('/')}
+          onPress={() => Alert.alert('FitTracker', 'Versión 1.0.0\nDesarrollado por Renan, Héctor y Alex.\n\n© 2026 FitTracker · Todos los derechos reservados.')}
           isLast
         />
       </Section>
@@ -208,7 +210,10 @@ export default function Settings() {
           styles.logoutBtn,
           { backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 },
         ]}
-        onPress={() => { /* cerrar sesión */ }}
+        onPress={async () => {
+          await supabase.auth.signOut();
+          router.replace('/auth/login');
+        }}
       >
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </Pressable>

@@ -1,12 +1,14 @@
+import { typography } from '@/constants/typography';
 import { useTheme } from '@/context/ThemeContext';
-import { Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, Pressable } from 'react-native';
 
 export default function SettingsLayout() {
   const { colors } = useTheme();
+  const router = useRouter();
 
-  // ── Eliminar outline en web al seleccionar inputs, si deja de ser web la app se puede eliminar esto sin problema ──
   useEffect(() => {
     if (Platform.OS === 'web') {
       const style = document.createElement('style');
@@ -15,13 +17,24 @@ export default function SettingsLayout() {
     }
   }, []);
 
+  const headerLeft = () => (
+    <Pressable
+      onPress={() => router.back()}
+      hitSlop={12}
+      style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, marginLeft: Platform.OS === 'android' ? 4 : 0 })}
+    >
+      <Ionicons name="chevron-back" size={26} color={colors.textPrimary} />
+    </Pressable>
+  );
+
   return (
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: colors.backgroundPrimary },
         headerTintColor: colors.textPrimary,
-        headerBackTitle: 'Ajustes',
-        contentStyle: { backgroundColor: colors.backgroundSecondary },
+        headerTitleStyle: { ...typography.headline, color: colors.textPrimary },
+        headerShadowVisible: false,
+        headerLeft,
       }}
     >
       <Stack.Screen name="notifications" options={{ title: 'Notificaciones' }} />

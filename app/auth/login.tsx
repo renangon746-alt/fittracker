@@ -18,7 +18,7 @@ export default function Login(){
 
             <Text style={styles.tittleText}>Iniciar Sesion</Text>
 
-            <View style={{paddingTop: 8}}>
+            <View style={{paddingTop: 24}}>
                 <Text style={[styles.principalText, {paddingLeft:10}]}>E-mail</Text>
                 <TextInput style={styles.inputs} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
 
@@ -34,7 +34,7 @@ export default function Login(){
 
             {errorMsg && <Text style={[styles.secondaryText, { color: 'red', paddingTop: 10 }]}>{errorMsg}</Text>}
 
-            <View style={{padding:10}}>
+            <View style={{padding:10, paddingTop: 24}}>
                 <Pressable style={styles.principalButton} onPress={handleLogin}>
                     <Text style={styles.principalText}>
                         Iniciar Sesion
