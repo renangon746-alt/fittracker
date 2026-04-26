@@ -40,7 +40,9 @@ export default function RoutineCard({ id, title, lastTrained }: RoutineCardProps
             </View>
 
             <View style={train_styles.rc_routineTitle}>
-                <Text style={{ ...global_styles.principalText, color: colors.routineCard.title }}>{title}</Text>
+                <Text style={{ ...global_styles.principalText, color: colors.routineCard.title }} numberOfLines={1}>
+                    {title}
+                </Text>
             </View>
 
             <View style={train_styles.rc_startButtonContainer}>

@@ -21,18 +21,16 @@ export default function RoutineFolder({ title, routines, loading = false }: Rout
 
     return (
         <View style={train_styles.rf_container}>
-            {/* Folder header — tap to expand/collapse */}
             <Pressable style={train_styles.t_routineFolder} onPress={() => setOpen(prev => !prev)}>
                 <View style={train_styles.t_routineFolderTextIcon}>
                     <Text style={global_styles.principalText}>{title}</Text>
-                    <Ionicons name={open ? 'chevron-down' : 'chevron-forward'} size={14} color={colors.textPrimary}/>
+                    <Ionicons name={open ? 'chevron-down' : 'chevron-forward'} size={14} color={colors.textPrimary} />
                 </View>
                 <Text style={global_styles.principalText}>
                     {loading ? '...' : routines.length}
                 </Text>
             </Pressable>
 
-            {/* Expanded content */}
             {open && (
                 <View style={train_styles.t_routinesList}>
                     {loading ? (
@@ -43,7 +41,12 @@ export default function RoutineFolder({ title, routines, loading = false }: Rout
                         </Text>
                     ) : (
                         routines.map(routine => (
-                            <RoutineCard key={routine.id_rutina} id={String(routine.id_rutina)} title={routine.nombre}day={new Date(routine.fecha_creacion).toLocaleDateString('en-US', { weekday: 'long' })}/>
+                            <RoutineCard
+                                key={routine.id_rutina}
+                                id={String(routine.id_rutina)}
+                                title={routine.nombre}
+                                lastTrained={routine.last_trained}
+                            />
                         ))
                     )}
                 </View>

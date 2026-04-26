@@ -7,6 +7,7 @@ export interface Routine {
     nombre: string;
     fecha_creacion: string;
     carpeta: 'my_routines' | 'saved' | 'other';
+    last_trained: string | null;
 }
 
 export interface RoutinesByFolder {
@@ -31,7 +32,7 @@ export function useRoutines() {
 
         const { data, error } = await supabase
             .from('rutina')
-            .select('id_rutina, nombre, fecha_creacion, carpeta')
+            .select('id_rutina, nombre, fecha_creacion, carpeta, last_trained')
             .eq('id_usuario', userProfile.id_usuario)
             .order('fecha_creacion', { ascending: false });
 

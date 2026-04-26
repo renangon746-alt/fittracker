@@ -174,7 +174,11 @@ export default function Routine() {
                     <Pressable onPress={handleMinimize}>
                         <Ionicons name="chevron-down" size={20} color={colors.textPrimary} />
                     </Pressable>
-                    <Text style={global_styles.tittleText}>{nombre ?? 'Routine'}</Text>
+                    <Text style={[global_styles.tittleText, { flex: 1, textAlign: 'center', marginHorizontal: 8 }]}
+                        numberOfLines={1}
+                    >
+                        {nombre ?? 'Routine'}
+                    </Text>
                     <Pressable onPress={handleDiscard}>
                         <Ionicons name="close" size={24} color={colors.textPrimary} />
                     </Pressable>
