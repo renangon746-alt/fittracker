@@ -47,10 +47,12 @@ interface DashboardData {
   entrenosSemana: number;
   volumenSemana: number;
   fotoProgreso: { url: string; fecha: string } | null;
+  fechasEntrenadas: string[]; // 'YYYY-MM-DD'
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+// Lun-Dom para el calendario (índice = posición en semana)
+const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const H_PAD = 24;
 const GAP = 16;
@@ -65,6 +67,9 @@ function formatFecha(iso: string) {
   const d = new Date(iso);
   return `${d.getDate()} ${MESES[d.getMonth()]}`;
 }
+function toDateStr(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 const SHADOW = Platform.select({
   ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 },
@@ -72,28 +77,58 @@ const SHADOW = Platform.select({
   default: {},
 }) as object;
 
-// ─── Week Selector ────────────────────────────────────────────────────────────
-function WeekSelector({ colors }: { colors: any }) {
+// ─── Week Selector ─────────────────────────────────────────────────────────────
+// Siempre muestra Lun-Dom de la semana actual. Hoy = fondo sólido.
+// Días con entreno = borde naranja. Resto sin entrenar = borde sutil.
+function WeekSelector({ colors, fechasEntrenadas }: { colors: any; fechasEntrenadas: string[] }) {
   const today = new Date();
+
+  // Calcular el lunes de esta semana
+  const dayOfWeek = today.getDay(); // 0=Dom, 1=Lun...
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset);
+
   const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - 3 + i);
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
     return d;
   });
+
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 4 }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
       {days.map((d, i) => {
-        const isToday = d.toDateString() === today.toDateString();
-        const isPast = d < today && !isToday;
+        const isToday     = d.toDateString() === today.toDateString();
+        const dateStr     = toDateStr(d);
+        const hasWorkout  = fechasEntrenadas.includes(dateStr);
+        const isFuture    = d > today && !isToday;
+
         return (
-          <View key={i} style={{ alignItems: 'center' }}>
+          <View key={i} style={{ alignItems: 'center', gap: 6 }}>
+            <Text style={{
+              fontSize: 11, fontWeight: isToday ? '700' : '400',
+              color: isToday ? colors.textPrimary : colors.textSecondary,
+            }}>
+              {DIAS_SEMANA[i]}
+            </Text>
             <View style={[
-              { width: 34, height: 34, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-              isToday && { backgroundColor: colors.primary },
-              !isToday && isPast && { borderColor: colors.primary, borderWidth: 1.5 },
-              !isToday && !isPast && { borderColor: colors.border, borderWidth: 1 },
+              { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+              // Hoy: fondo sólido textPrimary
+              isToday && { backgroundColor: colors.textPrimary },
+              // Día con entreno (no hoy): borde naranja
+              !isToday && hasWorkout && { borderColor: colors.primary, borderWidth: 2 },
+              // Día pasado sin entreno: borde sutil
+              !isToday && !hasWorkout && !isFuture && { borderColor: colors.border, borderWidth: 1 },
+              // Día futuro: borde muy sutil
+              isFuture && { borderColor: colors.border, borderWidth: 1, opacity: 0.4 },
             ]}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: isToday ? '#fff' : isPast ? colors.primary : colors.textSecondary }}>
+              <Text style={{
+                fontSize: 13, fontWeight: '600',
+                color: isToday
+                  ? (colors.backgroundSecondary ?? '#000')
+                  : hasWorkout ? colors.primary
+                  : colors.textSecondary,
+              }}>
                 {d.getDate()}
               </Text>
             </View>
@@ -161,16 +196,18 @@ function CheckInCard({ foto, colors, size, onPress }: {
 }
 
 // ─── Weight Chart ─────────────────────────────────────────────────────────────
-function WeightChart({ data, colors, onEdit, containerWidth }: {
-  data: PesoPoint[]; colors: any; onEdit: () => void; containerWidth: number;
+// La altura total de la card de peso debe ser ~cardSize + 30px máximo.
+// Controlamos esto con chartH pequeño y sin padding extra.
+function WeightChart({ data, colors, onEdit, containerWidth, cardSize }: {
+  data: PesoPoint[]; colors: any; onEdit: () => void; containerWidth: number; cardSize: number;
 }) {
   const [range, setRange] = useState<Range>('6M');
   const [tooltip, setTooltip] = useState<{ x: number; y: number; val: number; fecha: string } | null>(null);
 
-  // Chart dimensions based on actual container width
-  const chartW = containerWidth > 0 ? containerWidth - 32 : 300; // 32 = card padding (16*2)
-  const chartH = 140;
-  const PAD = { top: 16, bottom: 24, left: 32, right: 12 };
+  const chartW = containerWidth > 0 ? containerWidth - H_PAD * 2 - 32 : 280;
+  // Altura del gráfico calibrada para que la card total no supere cardSize + 40px
+  const chartH = Math.max(60, cardSize - 120);
+  const PAD = { top: 8, bottom: 16, left: 26, right: 6 };
 
   const now = new Date();
   const cutoff = new Date(now);
@@ -182,45 +219,38 @@ function WeightChart({ data, colors, onEdit, containerWidth }: {
   const pts = data.filter(p => new Date(p.fecha) >= cutoff);
   const pesoActual = data.length > 0 ? data[data.length - 1].valor : null;
 
-  // Empty state
-  if (pts.length < 2) {
-    return (
-      <View style={[{ borderRadius: 24, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
-        <WeightHeader peso={pesoActual} colors={colors} onEdit={onEdit} />
-        <View style={{ alignItems: 'center', paddingVertical: 24, gap: 10 }}>
-          <Ionicons name="scale-outline" size={30} color={colors.iconInactive} />
-          <Text style={{ fontSize: 12, textAlign: 'center', color: colors.textSecondary }}>
-            Registra tu peso para ver el progreso
-          </Text>
-          <Pressable onPress={onEdit} style={{ backgroundColor: colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 24 }}>
-            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Registrar peso →</Text>
-          </Pressable>
-        </View>
-        <RangeBar range={range} setRange={setRange} colors={colors} />
-      </View>
-    );
-  }
+  const emptyContent = (
+    <View style={{ alignItems: 'center', paddingVertical: 16, gap: 8 }}>
+      <Ionicons name="scale-outline" size={28} color={colors.iconInactive} />
+      <Text style={{ fontSize: 12, textAlign: 'center', color: colors.textSecondary }}>
+        Registra tu peso para ver el progreso
+      </Text>
+      <Pressable onPress={onEdit} style={{ backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 24 }}>
+        <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Registrar peso →</Text>
+      </Pressable>
+    </View>
+  );
 
-  const vals = pts.map(p => p.valor);
-  const minV = Math.min(...vals);
-  const maxV = Math.max(...vals);
-  const rangeV = maxV - minV || 1;
+  let chartContent = emptyContent;
 
-  const toX = (i: number) => PAD.left + (i / (pts.length - 1)) * (chartW - PAD.left - PAD.right);
-  const toY = (v: number) => PAD.top + (1 - (v - minV) / rangeV) * (chartH - PAD.top - PAD.bottom);
+  if (pts.length >= 2) {
+    const vals = pts.map(p => p.valor);
+    const minV = Math.min(...vals);
+    const maxV = Math.max(...vals);
+    const rangeV = maxV - minV || 1;
+    const toX = (i: number) => PAD.left + (i / (pts.length - 1)) * (chartW - PAD.left - PAD.right);
+    const toY = (v: number) => PAD.top + (1 - (v - minV) / rangeV) * (chartH - PAD.top - PAD.bottom);
+    const polyPts = pts.map((p, i) => `${toX(i)},${toY(p.valor)}`).join(' ');
+    const areaPath = [
+      `M${toX(0)},${chartH - PAD.bottom}`,
+      `L${toX(0)},${toY(pts[0].valor)}`,
+      ...pts.map((p, i) => `L${toX(i)},${toY(p.valor)}`),
+      `L${toX(pts.length - 1)},${chartH - PAD.bottom}`, 'Z',
+    ].join(' ');
+    const yLabels = [minV, (minV + maxV) / 2, maxV];
+    const xIdxs = [...new Set([0, Math.round((pts.length - 1) / 3), Math.round(2 * (pts.length - 1) / 3), pts.length - 1])];
 
-  const polyPts = pts.map((p, i) => `${toX(i)},${toY(p.valor)}`).join(' ');
-  const areaPath = [`M${toX(0)},${chartH - PAD.bottom}`, `L${toX(0)},${toY(pts[0].valor)}`,
-  ...pts.map((p, i) => `L${toX(i)},${toY(p.valor)}`),
-  `L${toX(pts.length - 1)},${chartH - PAD.bottom}`, 'Z'].join(' ');
-
-  const yLabels = [minV, (minV + maxV) / 2, maxV];
-  const xIdxs = [...new Set([0, Math.round((pts.length - 1) / 3), Math.round(2 * (pts.length - 1) / 3), pts.length - 1])];
-
-  return (
-    <View style={[{ borderRadius: 24, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
-      <WeightHeader peso={pesoActual} colors={colors} onEdit={onEdit} />
-
+    chartContent = (
       <Pressable
         onPress={e => {
           const tx = e.nativeEvent.locationX;
@@ -237,7 +267,6 @@ function WeightChart({ data, colors, onEdit, containerWidth }: {
               <Stop offset="1" stopColor={colors.primary} stopOpacity="0" />
             </LinearGradient>
           </Defs>
-
           {yLabels.map((v, i) => (
             <Line key={i} x1={PAD.left} y1={toY(v)} x2={chartW - PAD.right} y2={toY(v)}
               stroke={colors.border} strokeWidth="1" strokeDasharray="3,4" />
@@ -248,14 +277,12 @@ function WeightChart({ data, colors, onEdit, containerWidth }: {
             </SvgText>
           ))}
           {xIdxs.filter(i => i < pts.length).map(idx => (
-            <SvgText key={idx} x={toX(idx)} y={chartH - 4} fontSize="8" fill={colors.textSecondary} textAnchor="middle">
+            <SvgText key={idx} x={toX(idx)} y={chartH - 2} fontSize="8" fill={colors.textSecondary} textAnchor="middle">
               {formatFecha(pts[idx].fecha)}
             </SvgText>
           ))}
-
           <Path d={areaPath} fill="url(#gr)" />
           <Polyline points={polyPts} fill="none" stroke={colors.primary} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-
           {tooltip && (() => {
             const bx = Math.min(Math.max(tooltip.x - 44, PAD.left), chartW - PAD.right - 88);
             const by = Math.max(tooltip.y - 46, PAD.top);
@@ -263,13 +290,13 @@ function WeightChart({ data, colors, onEdit, containerWidth }: {
               <>
                 <Line x1={tooltip.x} y1={PAD.top} x2={tooltip.x} y2={chartH - PAD.bottom}
                   stroke={colors.textSecondary} strokeWidth="1" strokeDasharray="3,3" />
-                <Circle cx={tooltip.x} cy={tooltip.y} r={5} fill={colors.primary} />
-                <Path d={`M${bx},${by} h88 a4,4 0 0 1 4,4 v24 a4,4 0 0 1 -4,4 h-88 a4,4 0 0 1 -4,-4 v-24 a4,4 0 0 1 4,-4 Z`}
+                <Circle cx={tooltip.x} cy={tooltip.y} r={4} fill={colors.primary} />
+                <Path d={`M${bx},${by} h88 a4,4 0 0 1 4,4 v22 a4,4 0 0 1 -4,4 h-88 a4,4 0 0 1 -4,-4 v-22 a4,4 0 0 1 4,-4 Z`}
                   fill={colors.backgroundSecondary} />
-                <SvgText x={bx + 44} y={by + 15} fontSize="11" fontWeight="bold" fill={colors.textPrimary} textAnchor="middle">
+                <SvgText x={bx + 44} y={by + 14} fontSize="11" fontWeight="bold" fill={colors.textPrimary} textAnchor="middle">
                   {tooltip.val} kg
                 </SvgText>
-                <SvgText x={bx + 44} y={by + 28} fontSize="9" fill={colors.textSecondary} textAnchor="middle">
+                <SvgText x={bx + 44} y={by + 26} fontSize="9" fill={colors.textSecondary} textAnchor="middle">
                   {formatFecha(tooltip.fecha)}
                 </SvgText>
               </>
@@ -277,42 +304,45 @@ function WeightChart({ data, colors, onEdit, containerWidth }: {
           })()}
         </Svg>
       </Pressable>
+    );
+  }
 
-      <RangeBar range={range} setRange={setRange} colors={colors} />
-      <Text style={{ fontSize: 11, fontWeight: '500', marginTop: 8, textAlign: 'center', color: colors.primary }}>
-        ¡Sigue así! La consistencia es la clave 🎯
-      </Text>
-    </View>
-  );
-}
-
-function WeightHeader({ peso, colors, onEdit }: { peso: number | null; colors: any; onEdit: () => void }) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-      <View>
-        <Text style={{ fontSize: 11, marginBottom: 2, color: colors.textSecondary }}>Tu peso</Text>
-        <Text style={{ fontSize: 26, fontWeight: '700', letterSpacing: -0.8, color: colors.textPrimary }}>
-          {peso ?? '––'}{' '}
-          <Text style={{ fontSize: 15, fontWeight: '400', color: colors.textSecondary }}>kg</Text>
-        </Text>
-      </View>
-      <Pressable onPress={onEdit}
-        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 24, backgroundColor: colors.backgroundTertiary, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}>
-        <Text style={{ fontSize: 15 }}>✏️</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function RangeBar({ range, setRange, colors }: { range: Range; setRange: (r: Range) => void; colors: any }) {
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 4, marginTop: 10 }}>
-      {(['90D', '6M', '1Y', 'ALL'] as Range[]).map(r => (
-        <Pressable key={r} onPress={() => setRange(r)}
-          style={[{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 24 }, r === range && { backgroundColor: colors.backgroundTertiary }]}>
-          <Text style={{ fontSize: 12, fontWeight: '600', color: r === range ? colors.textPrimary : colors.textSecondary }}>{r}</Text>
+    <View style={[{ borderRadius: 24, padding: 14, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <View>
+          <Text style={{ fontSize: 11, color: colors.textSecondary, marginBottom: 1 }}>Tu peso</Text>
+          <Text style={{ fontSize: 24, fontWeight: '700', letterSpacing: -0.8, color: colors.textPrimary }}>
+            {pesoActual ?? '––'}{' '}
+            <Text style={{ fontSize: 14, fontWeight: '400', color: colors.textSecondary }}>kg</Text>
+          </Text>
+        </View>
+        <Pressable onPress={onEdit}
+          style={({ pressed }) => ({ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.backgroundTertiary, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}>
+          <Text style={{ fontSize: 14 }}>✏️</Text>
         </Pressable>
-      ))}
+      </View>
+
+      {chartContent}
+
+      {/* Range bar — solo si hay datos */}
+      {pts.length >= 2 && (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 2, marginTop: 6 }}>
+          {(['90D', '6M', '1Y', 'ALL'] as Range[]).map(r => (
+            <Pressable key={r} onPress={() => { setRange(r); setTooltip(null); }}
+              style={[{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 }, r === range && { backgroundColor: colors.backgroundTertiary }]}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: r === range ? colors.textPrimary : colors.textSecondary }}>{r}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      {pts.length >= 2 && (
+        <Text style={{ fontSize: 10, fontWeight: '500', marginTop: 6, textAlign: 'center', color: colors.primary }}>
+          ¡Sigue así! La consistencia es la clave 🎯
+        </Text>
+      )}
     </View>
   );
 }
@@ -343,30 +373,30 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={onClose}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }} onPress={onClose}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <Pressable onPress={e => e.stopPropagation()}>
-            <View style={{ backgroundColor: colors.backgroundPrimary, borderRadius: 24, padding: 24, alignItems: 'center' }}>
-              <View style={{ width: 36, height: 4, borderRadius: 24, backgroundColor: colors.border, marginBottom: 16 }} />
-              <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>Registrar peso</Text>
+            <View style={{ backgroundColor: colors.backgroundPrimary, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, alignItems: 'center' }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 20 }} />
+              <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 24, color: colors.textPrimary }}>Registrar peso</Text>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 24, paddingHorizontal: 20, width: '100%', marginBottom: 20, backgroundColor: colors.backgroundTertiary }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 16, paddingHorizontal: 20, width: '100%', marginBottom: 24, backgroundColor: colors.backgroundTertiary }}>
                 <TextInput
-                  style={[{ flex: 1, fontSize: 38, fontWeight: '700', textAlign: 'center', paddingVertical: 10, color: colors.textPrimary }, { outlineWidth: 0 } as any]}
+                  style={[{ flex: 1, fontSize: 40, fontWeight: '700', textAlign: 'center', paddingVertical: 12, color: colors.textPrimary }, { outlineWidth: 0 } as any]}
                   value={pesoStr} onChangeText={setPesoStr}
                   placeholder="0.0" placeholderTextColor={colors.iconInactive}
                   keyboardType="decimal-pad" autoFocus
                 />
-                <Text style={{ fontSize: 18, fontWeight: '500', color: colors.textSecondary }}>kg</Text>
+                <Text style={{ fontSize: 18, color: colors.textSecondary }}>kg</Text>
               </View>
 
-              <Text style={{ fontSize: 12, fontWeight: '600', marginBottom: 10, alignSelf: 'flex-start', color: colors.textSecondary }}>Fase actual</Text>
-              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 24, width: '100%' }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', marginBottom: 12, alignSelf: 'flex-start', color: colors.textSecondary }}>Fase actual</Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 28, width: '100%' }}>
                 {fases.map(f => (
                   <Pressable key={f.key!} onPress={() => setFase(f.key)}
                     style={[
-                      { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 24, borderWidth: 1.5, gap: 4, borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
+                      { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 16, borderWidth: 1.5, gap: 4, borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
                       fase === f.key && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
                     ]}>
                     <Text style={{ fontSize: 18 }}>{f.emoji}</Text>
@@ -376,7 +406,7 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
               </View>
 
               <Pressable onPress={handleSave} disabled={saving}
-                style={({ pressed }) => ({ width: '100%', paddingVertical: 15, borderRadius: 24, alignItems: 'center', marginBottom: 10, backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 })}>
+                style={({ pressed }) => ({ width: '100%', paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginBottom: 12, backgroundColor: colors.primary, opacity: pressed || saving ? 0.7 : 1 })}>
                 {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Guardar</Text>}
               </Pressable>
               <Pressable onPress={onClose} style={{ paddingVertical: 8 }}>
@@ -396,7 +426,6 @@ export default function Dashboard() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Measure actual container width for responsive sizing
   const [containerWidth, setContainerWidth] = useState(0);
   const cardSize = containerWidth > 0 ? (containerWidth - H_PAD * 2 - GAP) / 2 : 150;
 
@@ -406,7 +435,8 @@ export default function Dashboard() {
     idUsuario: null, nombre: '', racha: 0,
     ultimoEntreno: null, mejorMarca: null,
     pesoActual: null, fase: null, pesosGrafico: [],
-    entrenosSemana: 0, volumenSemana: 0, fotoProgreso: null,
+    entrenosSemana: 0, volumenSemana: 0,
+    fotoProgreso: null, fechasEntrenadas: [],
   });
 
   useEffect(() => { loadDashboard(); }, []);
@@ -445,12 +475,22 @@ export default function Dashboard() {
         ultimoEntreno = { nombre: rutina?.nombre ?? 'Entreno', duracion: entrenos[0].duracion_min ?? 0 };
       }
 
-      const startWeek = new Date();
-      startWeek.setDate(startWeek.getDate() - startWeek.getDay());
+      // Inicio de la semana actual (lunes)
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const startWeek = new Date(today);
+      startWeek.setDate(today.getDate() + mondayOffset);
       startWeek.setHours(0, 0, 0, 0);
+
       const { data: semana } = await supabase
-        .from('entrenamiento').select('id_entrenamiento')
+        .from('entrenamiento').select('id_entrenamiento, fecha_inicio')
         .eq('id_usuario', idUsuario).gte('fecha_inicio', startWeek.toISOString()).not('fecha_fin', 'is', null);
+
+      // Fechas únicas de entreno esta semana (YYYY-MM-DD)
+      const fechasEntrenadas = [...new Set(
+        (semana ?? []).map(e => new Date(e.fecha_inicio).toISOString().split('T')[0])
+      )];
 
       const { data: series } = await supabase
         .from('serie').select('peso_kg, repeticiones')
@@ -486,6 +526,7 @@ export default function Dashboard() {
         entrenosSemana: semana?.length ?? 0,
         volumenSemana: Math.round(volumen),
         fotoProgreso: fotos?.[0] ?? null,
+        fechasEntrenadas,
       });
     } catch (e) { console.error('Dashboard:', e); }
     finally { setLoading(false); }
@@ -521,9 +562,6 @@ export default function Dashboard() {
     } catch { Alert.alert('Error', 'No se pudo guardar la foto.'); }
   }
 
-  const today = new Date();
-  const todayStr = `${DIAS[today.getDay()]}, ${today.getDate()} ${MESES[today.getMonth()]}`;
-
   if (loading) return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.backgroundSecondary }}>
       <ActivityIndicator size="large" color={colors.primary} />
@@ -532,52 +570,33 @@ export default function Dashboard() {
 
   return (
     <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-      {/* onLayout on the root view captures the real available width */}
       <View style={{ flex: 1 }} onLayout={onLayout}>
         <ScrollView
           style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
           contentContainerStyle={{ paddingBottom: 36 }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ paddingHorizontal: H_PAD, paddingTop: 16, paddingBottom: 16, backgroundColor: colors.backgroundSecondary }}>
-
-            {/* Week row: día encima del círculo */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-              {Array.from({ length: 7 }, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - 3 + i);
-                const isToday = d.toDateString() === new Date().toDateString();
-                const isPast = d < new Date() && !isToday;
-                const dayName = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()];
-                return (
-                  <View key={i} style={{ alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 11, color: isToday ? colors.textPrimary : colors.textSecondary, fontWeight: isToday ? '600' : '400' }}>
-                      {dayName}
-                    </Text>
-                    <View style={[
-                      { width: 36, height: 36, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-                      isToday && { backgroundColor: colors.textPrimary },
-                      !isToday && isPast && { borderColor: colors.primary, borderWidth: 1.5 },
-                      !isToday && !isPast && { backgroundColor: colors.backgroundPrimary },
-                    ]}>
-                      <Text style={{ fontSize: 13, fontWeight: '600', color: isToday ? colors.backgroundSecondary : isPast ? colors.primary : colors.textSecondary }}>
-                        {d.getDate()}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
+          {/* ── Header: semana Lun-Dom ── */}
+          <View style={{ paddingHorizontal: H_PAD, paddingTop: 16, paddingBottom: 16 }}>
+            
+            <WeekSelector colors={colors} fechasEntrenadas={data.fechasEntrenadas} />
+            
           </View>
 
-          {/* Weight chart */}
-          <View style={{ marginHorizontal: H_PAD, marginBottom: 16 }}>
-            <WeightChart data={data.pesosGrafico} colors={colors} onEdit={() => setShowAddWeight(true)} containerWidth={containerWidth} />
+          {/* ── Weight card ── */}
+          <View style={{ marginHorizontal: H_PAD, marginBottom: GAP }}>
+            <WeightChart
+              data={data.pesosGrafico}
+              colors={colors}
+              onEdit={() => setShowAddWeight(true)}
+              containerWidth={containerWidth}
+              cardSize={cardSize}
+            />
           </View>
 
-          {/* 2×2 grid — uses measured cardSize */}
+          {/* ── 2×2 grid ── */}
           {cardSize > 0 && (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, paddingHorizontal: H_PAD, marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, paddingHorizontal: H_PAD, marginBottom: GAP }}>
               <SquareCard isStreak label="Racha" value={`${data.racha} días`} accent={colors.primary} colors={colors} size={cardSize} />
               <SquareCard
                 label="Último entreno"
@@ -595,8 +614,8 @@ export default function Dashboard() {
             </View>
           )}
 
-          {/* Stats */}
-          <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD, marginBottom: 12 }}>
+          {/* ── Stats ── */}
+          <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD, marginBottom: GAP }}>
             <View style={[{ flex: 1, borderRadius: 24, padding: 16, backgroundColor: colors.backgroundPrimary }, SHADOW]}>
               <Text style={{ fontSize: 22, fontWeight: '700', letterSpacing: -0.5, color: colors.textPrimary, marginBottom: 4 }}>{data.entrenosSemana}</Text>
               <Text style={{ fontSize: 11, color: colors.textSecondary }}>Entrenos esta semana</Text>
@@ -609,7 +628,7 @@ export default function Dashboard() {
             </View>
           </View>
 
-          {/* Actions */}
+          {/* ── Actions ── */}
           <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD }}>
             <Pressable style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 24, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
               onPress={() => router.push('/(tabs)/train')}>
