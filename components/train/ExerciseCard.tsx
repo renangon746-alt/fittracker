@@ -5,7 +5,7 @@ import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, Text, TextInput, View } from 'react-native';
 import RestTimerModal from './RestTimerModal';
 
 interface ExerciseCardProps {
@@ -18,11 +18,6 @@ interface ExerciseCardProps {
     onNewRecord: () => void;
 }
 
-// Fixed column widths — shared between header and rows so they always align
-const COL_SET   = 36;
-const COL_PREV  = 100;
-const COL_INPUT = 60;
-const COL_CHECK = 40;
 
 export default function ExerciseCard({
     exercise, sets, onSetsChange,
@@ -89,30 +84,30 @@ export default function ExerciseCard({
             </Pressable>
 
             {/* Column headers */}
-            <View style={styles.row}>
-                <Text style={[styles.colSet,  global_styles.secondaryText]}>SET</Text>
-                <Text style={[styles.colPrev, global_styles.secondaryText]}>PREVIOUS</Text>
-                <Text style={[styles.colInput, global_styles.secondaryText]}>KG</Text>
-                <Text style={[styles.colInput, global_styles.secondaryText]}>REPS</Text>
-                <View style={styles.colCheck} />
+            <View style={train_styles.ec_row}>
+                <Text style={[train_styles.ec_colSet,  global_styles.secondaryText]}>SET</Text>
+                <Text style={[train_styles.ec_colPrev, global_styles.secondaryText]}>PREVIOUS</Text>
+                <Text style={[train_styles.ec_colInput, global_styles.secondaryText]}>KG</Text>
+                <Text style={[train_styles.ec_colInput, global_styles.secondaryText]}>REPS</Text>
+                <View style={train_styles.ec_colCheck} />
             </View>
 
             {/* Set rows */}
             {sets.map((set, i) => (
                 <View
                     key={i}
-                    style={[styles.row, styles.setRow, set.done && { backgroundColor: colors.primary + '18' }]}
+                    style={[train_styles.ec_row, train_styles.ec_setRow, set.done && { backgroundColor: colors.primary + '18' }]}
                 >
-                    <Text style={[styles.colSet, global_styles.principalText, { fontWeight: '700' }]}>
+                    <Text style={[train_styles.ec_colSet, global_styles.principalText, { fontWeight: '700' }]}>
                         {set.num}
                     </Text>
 
-                    <Text style={[styles.colPrev, global_styles.secondaryText]} numberOfLines={1}>
+                    <Text style={[train_styles.ec_colPrev, global_styles.secondaryText]} numberOfLines={1}>
                         {recordLabel}
                     </Text>
 
                     <TextInput
-                        style={[styles.colInput, styles.input, global_styles.principalText, { borderColor: colors.border, color: colors.textPrimary }]}
+                        style={[train_styles.ec_colInput, train_styles.ec_input, global_styles.principalText, { borderColor: colors.border, color: colors.textPrimary }]}
                         value={set.kg}
                         onChangeText={v => updateSet(i, 'kg', sanitizeNumber(v))}
                         keyboardType="decimal-pad"
@@ -122,7 +117,7 @@ export default function ExerciseCard({
                     />
 
                     <TextInput
-                        style={[styles.colInput, styles.input, global_styles.principalText, { borderColor: colors.border, color: colors.textPrimary }]}
+                        style={[train_styles.ec_colInput,train_styles.ec_input, global_styles.principalText, { borderColor: colors.border, color: colors.textPrimary }]}
                         value={set.reps}
                         onChangeText={v => updateSet(i, 'reps', v.replace(/[^0-9]/g, ''))}
                         keyboardType="number-pad"
@@ -132,7 +127,7 @@ export default function ExerciseCard({
                     />
 
                     <Pressable
-                        style={[styles.colCheck, styles.checkBtn, { backgroundColor: set.done ? colors.primary : colors.backgroundPrimary }]}
+                        style={[train_styles.ec_colCheck, train_styles.ec_checkBtn, { backgroundColor: set.done ? colors.primary : colors.backgroundPrimary }]}
                         onPress={() => handleTick(i)}
                     >
                         <Ionicons name="checkmark" size={16} color={set.done ? '#fff' : colors.textSecondary} />
@@ -155,46 +150,3 @@ export default function ExerciseCard({
     );
 }
 
-const styles = StyleSheet.create({
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-    },
-    setRow: {
-        // background applied inline when done
-    },
-    colSet: {
-        width: COL_SET,
-        textAlign: 'center',
-    },
-    colPrev: {
-        width: COL_PREV,
-        textAlign: 'center',
-        fontSize: 13,
-    },
-    colInput: {
-        width: COL_INPUT,
-        textAlign: 'center',
-    },
-    colCheck: {
-        width: COL_CHECK,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    input: {
-        borderWidth: 1,
-        borderRadius: 6,
-        paddingVertical: 4,
-        paddingHorizontal: 4,
-        textAlign: 'center',
-    },
-    checkBtn: {
-        width: 30,
-        height: 30,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-});

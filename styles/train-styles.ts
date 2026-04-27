@@ -344,13 +344,14 @@ export const trainStyles = (colors: any) =>
             paddingVertical: 6
         },
 
-        ec_colSet:  { 
-            width: 32, 
-            textAlign: 'center' 
+        ec_colSet: {
+            width: 36,
+            textAlign: 'center',
         },
 
         ec_colPrev: { 
             flex: 2, 
+            width:100,
             textAlign: 'center', 
             fontSize: 13 
         },
@@ -365,7 +366,7 @@ export const trainStyles = (colors: any) =>
         },
 
         ec_colCheck: { 
-            width: 36, 
+            width: 40, 
             alignItems: 'center', 
             justifyContent: 'center' 
         },
@@ -390,6 +391,21 @@ export const trainStyles = (colors: any) =>
         ec_addSetBtn: {
             paddingVertical: 14,
             borderTopWidth: 1
+        },
+
+        ec_row: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            justifyContent: 'space-between',
+            width:'100%'
+        },
+
+
+        ec_colInput: {
+            width: 60,
+            textAlign: 'center',
         },
 
         rtm_backdrop: {
