@@ -1,11 +1,17 @@
 import { useFonts } from 'expo-font';
 import { Stack } from "expo-router";
 import Head from 'expo-router/head';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 import { ThemeProvider } from '../context/ThemeContext';
 
+function AppStatusBar() {
+  const { theme } = useTheme();
+  return <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />;
+}
+
 export default function RootLayout() {
-  //Cargamos la tipografia y estara disponible en el resto del proyecto
   const [loaded] = useFonts({
     Inter: require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
     Poppins: require('../assets/fonts/Poppins-Regular.ttf')
@@ -18,6 +24,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
+        <AppStatusBar />
         <Head>
           <title>FitTracker</title>
           <meta name="description" content="App de seguimiento de ejercicios FitTracker" />

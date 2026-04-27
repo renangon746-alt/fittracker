@@ -204,8 +204,14 @@ export default function Dashboard() {
         .from('entrenamiento').select('id_entrenamiento, fecha_inicio')
         .eq('id_usuario', idUsuario).gte('fecha_inicio', startWeek.toISOString()).not('fecha_fin', 'is', null);
 
+      const calendarStart = new Date(startWeek);
+      calendarStart.setDate(startWeek.getDate() - 42);
+      const { data: allEntrenos } = await supabase
+        .from('entrenamiento').select('fecha_inicio')
+        .eq('id_usuario', idUsuario).gte('fecha_inicio', calendarStart.toISOString()).not('fecha_fin', 'is', null);
+
       const fechasEntrenadas = [...new Set(
-        (semana ?? []).map(e => toDateStr(new Date(e.fecha_inicio)))
+        (allEntrenos ?? []).map(e => toDateStr(new Date(e.fecha_inicio)))
       )];
 
       const { data: series } = await supabase
@@ -297,8 +303,8 @@ export default function Dashboard() {
           showsVerticalScrollIndicator={false}
         >
           {/* ── Topbar ── */}
-          <View style={{ paddingHorizontal: H_PAD, paddingTop: insets.top + 12, paddingBottom: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <View style={{ paddingTop: insets.top + 12, paddingBottom: 16 }}>
+            <View style={{ paddingHorizontal: H_PAD, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <View>
                 <Text style={[typography.title1, { color: colors.textPrimary }]}>
                   Home
@@ -317,7 +323,7 @@ export default function Dashboard() {
             <Pressable
               onPress={() => setShowInfo(true)}
               hitSlop={10}
-              style={{ alignSelf: 'flex-start', marginBottom: 6 }}
+              style={{ alignSelf: 'flex-start', marginBottom: 16 }}
             >
               <Ionicons name="information-circle-outline" size={24} color={colors.iconInactive} />
             </Pressable>

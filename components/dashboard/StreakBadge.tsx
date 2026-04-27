@@ -1,5 +1,5 @@
-import { useTheme } from '@/context/ThemeContext';
 import { typography } from '@/constants/typography';
+import { useTheme } from '@/context/ThemeContext';
 import { Platform, Text, View } from 'react-native';
 
 const SHADOW = Platform.select({
