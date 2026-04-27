@@ -103,7 +103,7 @@ export default function Social() {
   }, [query, users]);
 
   return (
-    <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
+    <ScrollView style={{ backgroundColor: colors.backgroundSecondary }}>
       <View style={styles.socialSearchContainer}>
         <TextInput
           style={[

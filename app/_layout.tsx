@@ -5,8 +5,10 @@ import { trainStyles } from '@/styles/train-styles';
 import { useFonts } from 'expo-font';
 import { Stack, router } from "expo-router";
 import Head from 'expo-router/head';
+import { StatusBar } from 'expo-status-bar';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
 
@@ -102,12 +104,6 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     // This ref is passed directly into context — stable across renders
     const activeRef = useRef<ActiveRoutine | null>(null);
-
-    function set(next: ActiveRoutine | null) {
-        console.log('SET ACTIVE CALLED', new Error().stack?.split('\n')[2]);
-        activeRef.current = next;
-        setActive(next);
-    }
 
     useEffect(() => {
         if (active && minimized) {
@@ -211,6 +207,11 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
+function AppStatusBar() {
+  const { theme } = useTheme();
+  return <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />;
+}
+
 export default function RootLayout() {
     const [loaded] = useFonts({
         Inter: require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
@@ -220,31 +221,34 @@ export default function RootLayout() {
     if (!loaded) return null;
 
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <UserProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <UserProvider>
             <ActiveRoutineProvider>
-                <Head>
-                    <title>FitTracker</title>
-                    <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
-                </Head>
-                <Stack>
-                    <Stack.Screen name="index" options={{ headerShown: false }} />
-                    <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-                    <Stack.Screen name="auth/register" options={{ headerShown: false }} />
-                    <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
-                    <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-                    <Stack.Screen name="errorPage" options={{ headerShown: false }} />
-                    <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
-                    <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
-                    <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
-                    <Stack.Screen name="settings" options={{ headerShown: false }} />
-                    <Stack.Screen name="train/routine" options={{ headerShown: false }} />
-                </Stack>
-                <MinimizedRoutineBar />
+              <AppStatusBar />
+              <Head>
+                <title>FitTracker</title>
+                <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
+              </Head>
+              <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+                <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+                <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{headerShown: false}} />
+                <Stack.Screen name="errorPage" options={{ headerShown: false }} />
+                <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
+                <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
+                <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
+                <Stack.Screen name="settings" options={{ headerShown: false }} />
+                <Stack.Screen name="train/routine" options={{ headerShown: false }} />
+              </Stack>
+              <MinimizedRoutineBar />
             </ActiveRoutineProvider>
-        </UserProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+          </UserProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

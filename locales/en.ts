@@ -280,5 +280,39 @@ export default {
   image_upload_failed: "Could not upload image",
 
   // Misc
-  train_tab_placeholder: "Train tab"
+  train_tab_placeholder: "Train tab",
+
+  // About screen
+  about_tagline: "Your training companion",
+  about_developers_label: "Developers",
+  about_year_label: "Year",
+  about_platform_label: "Platform",
+
+  // Dashboard info modal
+  dashboard_info_title: "About this screen",
+  dashboard_info_body: "On this screen you can see your most important metrics: weight progress, training streak, personal best, and check-in photos.\n\nUse the chart to visualize your evolution and filter by period to see trends over time.",
+  understood: "Got it",
+
+  // Weekday short labels (Mon..Sun)
+  weekday_mon: "Mon",
+  weekday_tue: "Tue",
+  weekday_wed: "Wed",
+  weekday_thu: "Thu",
+  weekday_fri: "Fri",
+  weekday_sat: "Sat",
+  weekday_sun: "Sun",
+
+  // Month short labels (Jan..Dec)
+  month_jan: "Jan",
+  month_feb: "Feb",
+  month_mar: "Mar",
+  month_apr: "Apr",
+  month_may: "May",
+  month_jun: "Jun",
+  month_jul: "Jul",
+  month_aug: "Aug",
+  month_sep: "Sep",
+  month_oct: "Oct",
+  month_nov: "Nov",
+  month_dec: "Dec",
 }

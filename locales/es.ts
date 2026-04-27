@@ -281,5 +281,39 @@ streak: "Racha",
   image_upload_failed: "No se pudo subir la imagen",
 
   // Misc
-  train_tab_placeholder: "Tab Settings"
+  train_tab_placeholder: "Tab Settings",
+
+  // About screen
+  about_tagline: "Tu compañero de entrenamiento",
+  about_developers_label: "Desarrolladores",
+  about_year_label: "Año",
+  about_platform_label: "Plataforma",
+
+  // Dashboard info modal
+  dashboard_info_title: "Acerca de esta pantalla",
+  dashboard_info_body: "En esta pantalla puedes observar tus métricas más importantes: progreso de peso, racha de entrenamientos, mejor marca personal y fotos de seguimiento.\n\nUsa el gráfico para visualizar tu evolución y filtra por periodo para ver tendencias a lo largo del tiempo.",
+  understood: "Entendido",
+
+  // Weekday short labels (Mon..Sun)
+  weekday_mon: "Lun",
+  weekday_tue: "Mar",
+  weekday_wed: "Mié",
+  weekday_thu: "Jue",
+  weekday_fri: "Vie",
+  weekday_sat: "Sáb",
+  weekday_sun: "Dom",
+
+  // Month short labels (Jan..Dec)
+  month_jan: "Ene",
+  month_feb: "Feb",
+  month_mar: "Mar",
+  month_apr: "Abr",
+  month_may: "May",
+  month_jun: "Jun",
+  month_jul: "Jul",
+  month_aug: "Ago",
+  month_sep: "Sep",
+  month_oct: "Oct",
+  month_nov: "Nov",
+  month_dec: "Dic",
 };
