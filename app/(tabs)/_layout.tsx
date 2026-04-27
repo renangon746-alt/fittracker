@@ -127,7 +127,7 @@ export default function TabLayout() {
       <Tabs.Screen name="exercises" options={{ title: 'Ejercicios' }} />
       <Tabs.Screen name="train"     options={{ title: 'Entrenar' }} />
       <Tabs.Screen name="social"    options={{ title: 'Social' }} />
-      <Tabs.Screen name="settings"   />
+      <Tabs.Screen name="settings"  options={{ title: 'Ajustes' }} />
     </Tabs>
   );
 }

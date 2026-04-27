@@ -21,7 +21,7 @@ export default function Exercises() {
   const { colors } = useTheme();
 
   return (
-    <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
+    <ScrollView style={{ backgroundColor: colors.backgroundSecondary }}>
       <View style={styles.search_container}>
         <TextInput
           style={[styles.input, { 
