@@ -12,6 +12,7 @@ interface DbUser {
   nombre: string;
   nickname?: string | null;
   email?: string | null;
+  auth_uuid?: string | null;
 }
 
 interface SocialUser {
@@ -19,6 +20,7 @@ interface SocialUser {
   userName: string;
   fullName: string;
   email: string;
+  authUuid: string | null;
 }
 
 export default function Social() {
@@ -58,7 +60,7 @@ export default function Social() {
 
         const { data, error } = await supabase
           .from('usuario')
-          .select('id_usuario, nombre, nickname, email')
+          .select('id_usuario, nombre, nickname, email, auth_uuid')
           .order('nombre', { ascending: true });
 
         if (error) {
@@ -75,6 +77,7 @@ export default function Social() {
               : `user${user.id_usuario}`,
             fullName: user.nombre,
             email: user.email || '',
+            authUuid: user.auth_uuid ?? null,
           }));
 
         setUsers(mappedUsers);

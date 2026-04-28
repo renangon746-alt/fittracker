@@ -14,9 +14,14 @@ interface UserCardProps {
   userName: string;
   fullName: string;
   email: string;
+  /**
+   * Optional pre-fetched auth_uuid. If the parent already has it,
+   * pass it down to skip the lookup query in this card.
+   */
+  authUuid?: string | null;
 }
 
-export default function UserCard({ id, userName, fullName, email }: UserCardProps) {
+export default function UserCard({ id, userName, fullName, authUuid }: UserCardProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const styles = globalStyles(colors);
@@ -25,41 +30,47 @@ export default function UserCard({ id, userName, fullName, email }: UserCardProp
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchAvatar() {
-      try {
-        if (!email) {
-          setLoading(false);
-          return;
-        }
+    let cancelled = false;
 
-        // Get all auth users and find by email
-        const { data: { users: authUsers }, error } = await supabase.auth.admin.listUsers();
-        
-        if (error) {
-          console.error('Error fetching auth users:', error);
-          setLoading(false);
-          return;
-        }
-
-        // Find user with matching email
-        const authUser = authUsers?.find(u => u.email === email);
-        
-        if (authUser) {
-          const { data } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(`${authUser.id}/avatar.jpg`);
-          
-          setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
-        }
-      } catch (error) {
-        console.error('Error in fetchAvatar:', error);
-      } finally {
+    async function loadAvatar(uuid: string) {
+      const { data } = supabase.storage.from('avatars').getPublicUrl(`${uuid}/avatar.jpg`);
+      if (!cancelled) {
+        setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
         setLoading(false);
       }
     }
 
-    fetchAvatar();
-  }, [email]);
+    async function resolve() {
+      // Fast path: parent already gave us the auth_uuid
+      if (authUuid) {
+        await loadAvatar(authUuid);
+        return;
+      }
+
+      // Slow path: look it up via the usuario row (no admin endpoints)
+      try {
+        const { data, error } = await supabase
+          .from('usuario')
+          .select('auth_uuid')
+          .eq('id_usuario', id)
+          .single();
+
+        if (cancelled) return;
+
+        if (error || !data?.auth_uuid) {
+          setLoading(false);
+          return;
+        }
+
+        await loadAvatar(data.auth_uuid);
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    resolve();
+    return () => { cancelled = true; };
+  }, [id, authUuid]);
 
   return (
     <Pressable
