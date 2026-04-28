@@ -1,5 +1,5 @@
-import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
+import { useTheme } from '@/context/ThemeContext';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { Tabs } from 'expo-router';
 
@@ -21,6 +21,7 @@ export default function TabLayout() {
         options={{
           title: t('home'),
           tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="home" color={color} />,
+          headerShown: false 
         }}
       />
       <Tabs.Screen
@@ -28,13 +29,15 @@ export default function TabLayout() {
         options={{
           title: t('exercises'),
           tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="weight-hanging" color={color} />,
+          headerShown: false
         }}
-      />
+      /> 
       <Tabs.Screen
         name="train"
         options={{
           title: t('train'),
           tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="dumbbell" color={color} />,
+          headerShown: false
         }}
       />
       <Tabs.Screen
@@ -42,6 +45,7 @@ export default function TabLayout() {
         options={{
           title: t('social'),
           tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="users" color={color} />,
+          headerShown: false
         }}
       />
       <Tabs.Screen
@@ -49,6 +53,7 @@ export default function TabLayout() {
         options={{
           title: t('settings'),
           tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="cog" color={color} />,
+          headerShown: false
         }}
       />   
     </Tabs>
