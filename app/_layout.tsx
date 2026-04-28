@@ -11,7 +11,6 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
-
 export type SetsMap = Record<number, SetRow[]>;
 
 export interface ActiveRoutine {
@@ -241,6 +240,8 @@ export default function RootLayout() {
                 <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
                 <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
                 <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
+                <Stack.Screen name="profile/followers" options={{ headerShown: false }} />
+                <Stack.Screen name="profile/following" options={{ headerShown: false }} />
                 <Stack.Screen name="settings" options={{ headerShown: false }} />
                 <Stack.Screen name="train/routine" options={{ headerShown: false }} />
               </Stack>
