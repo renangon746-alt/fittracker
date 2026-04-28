@@ -255,6 +255,9 @@ export default {
 
 // Profile / social extras
 follow: "Seguir",
+unfollow: "Siguiendo",
+no_followers_yet: "Aún no tiene seguidores",
+not_following_anyone: "Aún no sigue a nadie",
 streak: "Racha",
 
   // Edit profile

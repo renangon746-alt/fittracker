@@ -8,7 +8,7 @@ import Head from 'expo-router/head';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
-
+import { StatusBar } from 'expo-status-bar';
 
 export type SetsMap = Record<number, SetRow[]>;
 
@@ -211,6 +211,11 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
+function AppStatusBar() {
+  const { theme } = useTheme();
+  return <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />;
+}
+
 export default function RootLayout() {
     const [loaded] = useFonts({
         Inter: require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
@@ -224,6 +229,7 @@ export default function RootLayout() {
       <LanguageProvider>
         <UserProvider>
             <ActiveRoutineProvider>
+              <AppStatusBar />
                 <Head>
                     <title>FitTracker</title>
                     <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
@@ -238,6 +244,8 @@ export default function RootLayout() {
                     <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
                     <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
                     <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
+                    <Stack.Screen name="profile/followers" options={{ headerShown: false }} />
+                    <Stack.Screen name="profile/following" options={{ headerShown: false }} />
                     <Stack.Screen name="settings" options={{ headerShown: false }} />
                     <Stack.Screen name="train/routine" options={{ headerShown: false }} />
                 </Stack>

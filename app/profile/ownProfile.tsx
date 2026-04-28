@@ -4,6 +4,7 @@ import StreakBadge from "@/components/global/StreakBadge";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
+import { useFollowers } from "@/hooks/social/useFollowers";
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from "@/styles/profile-styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,6 +32,7 @@ export default function OwnProfile() {
   const [imgError, setImgError] = useState(false);
 
   const { userProfile, avatarUrl, loading, errorMsg } = useUser();
+  const { followers, following } = useFollowers(userProfile?.id_usuario ?? null);
 
   if (loading) {
     return (
@@ -84,16 +86,22 @@ export default function OwnProfile() {
           <View style={profile_styles.p_profileStatsContainer}>
             <View style={profile_styles.p_stat}>
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>0</Text>
             </View>
-            <View style={profile_styles.p_stat}>
+            <Pressable
+              style={profile_styles.p_stat}
+              onPress={() => userProfile && router.push({ pathname: '/profile/followers', params: { id: String(userProfile.id_usuario) } })}
+            >
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('followers')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>100</Text>
-            </View>
-            <View style={profile_styles.p_stat}>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>{followers}</Text>
+            </Pressable>
+            <Pressable
+              style={profile_styles.p_stat}
+              onPress={() => userProfile && router.push({ pathname: '/profile/following', params: { id: String(userProfile.id_usuario) } })}
+            >
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('following')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>2</Text>
-            </View>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>{following}</Text>
+            </Pressable>
           </View>
 
           {/* Bio + link */}
