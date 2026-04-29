@@ -436,6 +436,34 @@ export const trainStyles = (colors: any) =>
             textAlign: 'center',
         },
 
+        ec_rowOption: { 
+            flexDirection: 'row', 
+            alignItems: 'center',
+            gap: 8 
+        },
+        
+        ec_menuOverlay: { 
+            flex: 1, 
+            backgroundColor: 'rgba(0,0,0,0.4)', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            padding: 32 
+        },
+
+        ec_menuCard: { 
+            width: '100%', 
+            borderRadius: 16, 
+            overflow: 'hidden' 
+        },
+
+        ec_menuItem: { 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: 16, 
+            borderBottomWidth: StyleSheet.hairlineWidth, 
+            borderBottomColor: 'rgba(128,128,128,0.2)' 
+        },
+
         rtm_backdrop: {
             flex: 1,
             backgroundColor: colors.backgroundSecondary,

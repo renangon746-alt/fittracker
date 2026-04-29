@@ -8,7 +8,7 @@ import { trainStyles } from "@/styles/train-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Modal, Platform, Pressable, Text, View } from "react-native";
 
 interface RoutineCardProps {
     id: string;
@@ -102,17 +102,17 @@ export default function RoutineCard({ id, title, lastTrained, carpeta = 'my_rout
 
             {/* 3-dot menu */}
             <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
-                <Pressable style={styles.menuOverlay} onPress={() => setMenuVisible(false)}>
-                    <View style={[styles.menuCard, { backgroundColor: colors.backgroundSecondary }]}>
-                        <Pressable style={styles.menuItem} onPress={handleDelete}>
+                <Pressable style={train_styles.rc_menuOverlay} onPress={() => setMenuVisible(false)}>
+                    <View style={[train_styles.rc_menuCard, { backgroundColor: colors.backgroundSecondary }]}>
+                        <Pressable style={train_styles.rc_menuItem} onPress={handleDelete}>
                             <Ionicons name="trash-outline" size={18} color="red" />
                             <Text style={[global_styles.principalText, { color: 'red', marginLeft: 10 }]}>Delete routine</Text>
                         </Pressable>
-                        <Pressable style={styles.menuItem} onPress={handleEditExercises}>
+                        <Pressable style={train_styles.rc_menuItem} onPress={handleEditExercises}>
                             <Ionicons name="barbell-outline" size={18} color={colors.textPrimary} />
                             <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Edit exercises</Text>
                         </Pressable>
-                        <Pressable style={styles.menuItem} onPress={() => { setMenuVisible(false); setEditModalVisible(true); }}>
+                        <Pressable style={train_styles.rc_menuItem} onPress={() => { setMenuVisible(false); setEditModalVisible(true); }}>
                             <Ionicons name="create-outline" size={18} color={colors.textPrimary} />
                             <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Edit data</Text>
                         </Pressable>
@@ -131,9 +131,3 @@ export default function RoutineCard({ id, title, lastTrained, carpeta = 'my_rout
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 32 },
-    menuCard: { width: '100%', borderRadius: 16, overflow: 'hidden' },
-    menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(128,128,128,0.2)' },
-});

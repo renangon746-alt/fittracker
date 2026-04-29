@@ -9,7 +9,7 @@ import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Modal, Pressable, Text, TextInput, View } from 'react-native';
 
 interface ExerciseCardProps {
     exercise: RoutineExercise;
@@ -107,7 +107,7 @@ export default function ExerciseCard({
             {/* Table — hidden in edit mode */}
             {!editMode && (
                 <>
-                    <View style={[styles.row, { paddingHorizontal: 12, paddingVertical: 6 }]}>
+                    <View style={[train_styles.ec_rowOption, { paddingHorizontal: 12, paddingVertical: 6 }]}>
                         <Text style={[{ width: COL_SET, textAlign: 'center' }, global_styles.secondaryText]}>SET</Text>
                         <Text style={[{ width: COL_PREV, textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]}>PREVIOUS</Text>
                         <Text style={[{ width: COL_INPUT, textAlign: 'center' }, global_styles.secondaryText]}>KG</Text>
@@ -116,7 +116,7 @@ export default function ExerciseCard({
                     </View>
 
                     {sets.map((set, i) => (
-                        <View key={i} style={[styles.row, { paddingHorizontal: 12, paddingVertical: 6 },
+                        <View key={i} style={[train_styles.ec_rowOption, { paddingHorizontal: 12, paddingVertical: 6 },
                             set.done && { backgroundColor: colors.primary + '18' }]}>
                             <Text style={[{ width: COL_SET, textAlign: 'center', fontWeight: '700' }, global_styles.principalText]}>
                                 {set.num}
@@ -162,17 +162,17 @@ export default function ExerciseCard({
 
             {/* 3-dot menu */}
             <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
-                <Pressable style={styles.menuOverlay} onPress={() => setMenuVisible(false)}>
-                    <View style={[styles.menuCard, { backgroundColor: colors.backgroundSecondary }]}>
-                        <Pressable style={styles.menuItem} onPress={() => { setMenuVisible(false); onRemove(exercise.id_rutina_ejercicio); }}>
+                <Pressable style={train_styles.ec_menuOverlay} onPress={() => setMenuVisible(false)}>
+                    <View style={[train_styles.ec_menuCard, { backgroundColor: colors.backgroundSecondary }]}>
+                        <Pressable style={train_styles.ec_menuItem} onPress={() => { setMenuVisible(false); onRemove(exercise.id_rutina_ejercicio); }}>
                             <Ionicons name="trash-outline" size={18} color="red" />
                             <Text style={[global_styles.principalText, { color: 'red', marginLeft: 10 }]}>Remove exercise</Text>
                         </Pressable>
-                        <Pressable style={styles.menuItem} onPress={() => { setMenuVisible(false); setReplaceVisible(true); }}>
+                        <Pressable style={train_styles.ec_menuItem} onPress={() => { setMenuVisible(false); setReplaceVisible(true); }}>
                             <Ionicons name="swap-horizontal-outline" size={18} color={colors.textPrimary} />
                             <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Replace exercise</Text>
                         </Pressable>
-                        <Pressable style={styles.menuItem} onPress={() => { setMenuVisible(false); setReorderVisible(true); }}>
+                        <Pressable style={train_styles.ec_menuItem} onPress={() => { setMenuVisible(false); setReorderVisible(true); }}>
                             <Ionicons name="reorder-three-outline" size={18} color={colors.textPrimary} />
                             <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Reorder exercises</Text>
                         </Pressable>
@@ -208,9 +208,3 @@ export default function ExerciseCard({
     );
 }
 
-const styles = StyleSheet.create({
-    row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 32 },
-    menuCard: { width: '100%', borderRadius: 16, overflow: 'hidden' },
-    menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(128,128,128,0.2)' },
-});
