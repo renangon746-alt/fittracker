@@ -11,9 +11,10 @@ interface RoutineFolderProps {
     title: string;
     routines: Routine[];
     loading?: boolean;
+    onRefresh?: () => void;
 }
 
-export default function RoutineFolder({ title, routines, loading = false }: RoutineFolderProps) {
+export default function RoutineFolder({ title, routines, loading = false, onRefresh }: RoutineFolderProps) {
     const { colors } = useTheme();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
@@ -46,6 +47,9 @@ export default function RoutineFolder({ title, routines, loading = false }: Rout
                                 id={String(routine.id_rutina)}
                                 title={routine.nombre}
                                 lastTrained={routine.last_trained}
+                                carpeta={routine.carpeta}
+                                onDeleted={onRefresh}
+                                onUpdated={onRefresh}
                             />
                         ))
                     )}

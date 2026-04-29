@@ -19,11 +19,7 @@ export default function Train() {
   const { routinesByFolder, loading, refresh } = useRoutines();
   const { navigateToRoutine } = useActiveRoutine();
 
-  // Refresh routines every time this screen comes into focus
-  // This ensures last_trained updates after finishing a routine
-  useFocusEffect(useCallback(() => {
-    refresh();
-  }, []));
+  useFocusEffect(useCallback(() => { refresh(); }, []));
 
   const { visible, openModal, closeModal, nombre, setNombre, carpeta, setCarpeta, saving, errorMsg, handleCreate } = useCreateRoutine(refresh);
 
@@ -41,17 +37,10 @@ export default function Train() {
         </View>
 
         <View style={train_styles.t_buttonContainer}>
-          <Pressable
-            style={[global_styles.principalButton, train_styles.t_buttonPressable]}
-            onPress={openModal}
-          >
+          <Pressable style={[global_styles.principalButton, train_styles.t_buttonPressable]} onPress={openModal}>
             <Text style={global_styles.principalText}>Create new routine</Text>
           </Pressable>
-
-          <Pressable
-            style={[global_styles.secondaryButton, train_styles.t_buttonPressable]}
-            onPress={handleEmptyTraining}
-          >
+          <Pressable style={[global_styles.secondaryButton, train_styles.t_buttonPressable]} onPress={handleEmptyTraining}>
             <Text style={global_styles.principalText}>Start empty training +</Text>
           </Pressable>
         </View>
@@ -61,10 +50,11 @@ export default function Train() {
           <Ionicons name="folder-open" size={24} color={colors.textPrimary} />
         </View>
 
+        {/* Pass refresh so RoutineCard can trigger re-fetch on delete/update */}
         <View style={train_styles.t_routinesFoldersList}>
-          <RoutineFolder title="My Routines" routines={routinesByFolder.my_routines} loading={loading} />
-          <RoutineFolder title="Routines Saved" routines={routinesByFolder.saved} loading={loading} />
-          <RoutineFolder title="Other Folders" routines={routinesByFolder.other} loading={loading} />
+          <RoutineFolder title="My Routines" routines={routinesByFolder.my_routines} loading={loading} onRefresh={refresh} />
+          <RoutineFolder title="Routines Saved" routines={routinesByFolder.saved} loading={loading} onRefresh={refresh} />
+          <RoutineFolder title="Other Folders" routines={routinesByFolder.other} loading={loading} onRefresh={refresh} />
         </View>
 
       </ScrollView>

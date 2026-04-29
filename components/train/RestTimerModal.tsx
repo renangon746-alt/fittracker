@@ -58,7 +58,11 @@ export default function RestTimerModal({ visible, initialSeconds, onConfirm, onC
 
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-            <Pressable style={train_styles.rtm_backdrop} onPress={onCancel} />
+            {/* Fixed backdrop — transparent dark overlay, NOT backgroundSecondary */}
+            <Pressable
+                style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
+                onPress={onCancel}
+            />
             <View style={[train_styles.rtm_sheet, { backgroundColor: colors.backgroundSecondary }]}>
                 <View style={[train_styles.rtm_handle, { backgroundColor: colors.border }]} />
                 <Text style={[global_styles.tittleText, train_styles.rtm_title]}>Rest Timer</Text>

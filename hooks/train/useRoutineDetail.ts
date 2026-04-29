@@ -28,8 +28,11 @@ export function useRoutineDetail(routineId: number) {
     const [exercises, setExercises] = useState<RoutineExercise[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Guard: empty training has no real DB id
+    const isValid = !isNaN(routineId) && routineId > 0;
+
     const fetchExercises = useCallback(async () => {
-        if (!routineId || isNaN(routineId)) { setLoading(false); return; }
+        if (!isValid) { setLoading(false); return; }
         setLoading(true);
 
         const { data, error } = await supabase
@@ -63,11 +66,25 @@ export function useRoutineDetail(routineId: number) {
             console.error('Error fetching routine exercises:', error.message);
         }
         setLoading(false);
-    }, [routineId]);
+    }, [routineId, isValid]);
 
     useEffect(() => { fetchExercises(); }, [fetchExercises]);
 
     async function addExercise(idEjercicio: number) {
+        if (!isValid) {
+            // Empty training: add exercise locally without DB
+            const newEx: RoutineExercise = {
+                id_rutina_ejercicio: Date.now(), // temp local id
+                id_ejercicio: idEjercicio,
+                nombre: '',
+                image_key: null,
+                orden: exercises.length + 1,
+                series: null, repeticiones: null, carga_kg: null, descanso_seg: null,
+            };
+            setExercises(prev => [...prev, newEx]);
+            return;
+        }
+
         const nextOrden = exercises.length + 1;
         const { error } = await supabase
             .from('rutina_ejercicio')
@@ -82,24 +99,31 @@ export function useRoutineDetail(routineId: number) {
     }
 
     async function removeExercise(idRutinaEjercicio: number) {
+        if (!isValid) {
+            setExercises(prev => prev.filter(e => e.id_rutina_ejercicio !== idRutinaEjercicio));
+            return;
+        }
         const { error } = await supabase
             .from('rutina_ejercicio')
             .delete()
             .eq('id_rutina_ejercicio', idRutinaEjercicio);
         if (error) { console.error('Error removing exercise:', error.message); return; }
-        // Re-number orden after removal
         const remaining = exercises
             .filter(e => e.id_rutina_ejercicio !== idRutinaEjercicio)
             .map((e, idx) => ({ ...e, orden: idx + 1 }));
         await Promise.all(remaining.map(e =>
-            supabase.from('rutina_ejercicio')
-                .update({ orden: e.orden })
-                .eq('id_rutina_ejercicio', e.id_rutina_ejercicio)
+            supabase.from('rutina_ejercicio').update({ orden: e.orden }).eq('id_rutina_ejercicio', e.id_rutina_ejercicio)
         ));
         await fetchExercises();
     }
 
     async function replaceExercise(idRutinaEjercicio: number, newIdEjercicio: number) {
+        if (!isValid) {
+            setExercises(prev => prev.map(e =>
+                e.id_rutina_ejercicio === idRutinaEjercicio ? { ...e, id_ejercicio: newIdEjercicio } : e
+            ));
+            return;
+        }
         const { error } = await supabase
             .from('rutina_ejercicio')
             .update({ id_ejercicio: newIdEjercicio })
@@ -109,40 +133,39 @@ export function useRoutineDetail(routineId: number) {
     }
 
     async function reorderExercises(ordered: RoutineExercise[]) {
-        // Update orden for each exercise according to new position
+        if (!isValid) { setExercises(ordered); return; }
         await Promise.all(ordered.map((e, idx) =>
-            supabase.from('rutina_ejercicio')
-                .update({ orden: idx + 1 })
-                .eq('id_rutina_ejercicio', e.id_rutina_ejercicio)
+            supabase.from('rutina_ejercicio').update({ orden: idx + 1 }).eq('id_rutina_ejercicio', e.id_rutina_ejercicio)
         ));
         await fetchExercises();
     }
 
     async function updateRestTime(idRutinaEjercicio: number, seconds: number) {
-        await supabase
-            .from('rutina_ejercicio')
-            .update({ descanso_seg: seconds })
-            .eq('id_rutina_ejercicio', idRutinaEjercicio);
+        if (!isValid) {
+            setExercises(prev => prev.map(e =>
+                e.id_rutina_ejercicio === idRutinaEjercicio ? { ...e, descanso_seg: seconds } : e
+            ));
+            return;
+        }
+        await supabase.from('rutina_ejercicio').update({ descanso_seg: seconds }).eq('id_rutina_ejercicio', idRutinaEjercicio);
         setExercises(prev => prev.map(e =>
             e.id_rutina_ejercicio === idRutinaEjercicio ? { ...e, descanso_seg: seconds } : e
         ));
     }
 
     async function deleteRoutine() {
-        // Delete all exercises first, then the routine
+        if (!isValid) return;
         await supabase.from('rutina_ejercicio').delete().eq('id_rutina', routineId);
         await supabase.from('rutina').delete().eq('id_rutina', routineId);
     }
 
     async function updateRoutineData(nombre: string, carpeta: string) {
-        await supabase
-            .from('rutina')
-            .update({ nombre, carpeta })
-            .eq('id_rutina', routineId);
+        if (!isValid) return;
+        await supabase.from('rutina').update({ nombre, carpeta }).eq('id_rutina', routineId);
     }
 
     async function finishRoutine(durationSeconds: number, setsMap: SetsMap) {
-        if (!userProfile) return;
+        if (!userProfile || !isValid) return;
 
         const now = new Date().toISOString();
         const startTime = new Date(Date.now() - durationSeconds * 1000).toISOString();
