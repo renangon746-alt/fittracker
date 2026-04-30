@@ -56,7 +56,7 @@ export default function Routine() {
     restActiveRef.current = isCurrentRoutine ? (activeRoutine?.restActive ?? false) : false;
 
     useEffect(() => {
-        if (isEditMode) return; // no timer in edit mode
+        if (isEditMode) return;
         if (running) {
             intervalRef.current = setInterval(() => {
                 elapsedRef.current += 1;
@@ -110,7 +110,12 @@ export default function Routine() {
 
     async function handleAddExercise(idEjercicio: number) {
         setModalVisible(false);
-        await addExercise(idEjercicio);
+        // Find exercise data from the available list to pass nombre/image_key for empty training
+        const found = allExercises.find(e => e.id_ejercicio === idEjercicio);
+        await addExercise(idEjercicio, found
+            ? { nombre: found.nombre, image_key: found.image_key }
+            : undefined
+        );
     }
 
     function handleNewRecord() {
@@ -168,14 +173,13 @@ export default function Routine() {
                         {nombre ?? 'Routine'}
                     </Text>
                     {isEditMode
-                        ? <View style={{ width: 24 }} /> // spacer to keep title centered
+                        ? <View style={{ width: 24 }} />
                         : <Pressable onPress={handleDiscard}>
                             <Ionicons name="close" size={24} color={colors.textPrimary} />
                           </Pressable>
                     }
                 </View>
 
-                {/* Stats — only in workout mode */}
                 {!isEditMode && (
                     <View style={train_styles.r_statistics}>
                         <View style={train_styles.r_stat}>
@@ -224,7 +228,6 @@ export default function Routine() {
 
             </ScrollView>
 
-            {/* Bottom bar — only in workout mode */}
             {!isEditMode && (
                 <View style={[train_styles.r_bottomBar, { backgroundColor: colors.backgroundSecondary }]}>
                     {restActive ? (

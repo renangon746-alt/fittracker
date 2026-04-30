@@ -466,7 +466,7 @@ export const trainStyles = (colors: any) =>
 
         rtm_backdrop: {
             flex: 1,
-            backgroundColor: colors.backgroundSecondary,
+            backgroundColor: 'rgba(0,0,0,0.4)',
         },
 
         rtm_sheet: {

@@ -28,7 +28,6 @@ export function useRoutineDetail(routineId: number) {
     const [exercises, setExercises] = useState<RoutineExercise[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Guard: empty training has no real DB id
     const isValid = !isNaN(routineId) && routineId > 0;
 
     const fetchExercises = useCallback(async () => {
@@ -70,14 +69,18 @@ export function useRoutineDetail(routineId: number) {
 
     useEffect(() => { fetchExercises(); }, [fetchExercises]);
 
-    async function addExercise(idEjercicio: number) {
+    // exerciseData is optional — used for empty training to provide nombre/image_key locally
+    async function addExercise(
+        idEjercicio: number,
+        exerciseData?: { nombre: string; image_key: string | null }
+    ) {
         if (!isValid) {
-            // Empty training: add exercise locally without DB
+            // Empty training: add locally without DB
             const newEx: RoutineExercise = {
-                id_rutina_ejercicio: Date.now(), // temp local id
+                id_rutina_ejercicio: Date.now(),
                 id_ejercicio: idEjercicio,
-                nombre: '',
-                image_key: null,
+                nombre: exerciseData?.nombre ?? '',
+                image_key: exerciseData?.image_key ?? null,
                 orden: exercises.length + 1,
                 series: null, repeticiones: null, carga_kg: null, descanso_seg: null,
             };
@@ -104,9 +107,7 @@ export function useRoutineDetail(routineId: number) {
             return;
         }
         const { error } = await supabase
-            .from('rutina_ejercicio')
-            .delete()
-            .eq('id_rutina_ejercicio', idRutinaEjercicio);
+            .from('rutina_ejercicio').delete().eq('id_rutina_ejercicio', idRutinaEjercicio);
         if (error) { console.error('Error removing exercise:', error.message); return; }
         const remaining = exercises
             .filter(e => e.id_rutina_ejercicio !== idRutinaEjercicio)
@@ -125,9 +126,7 @@ export function useRoutineDetail(routineId: number) {
             return;
         }
         const { error } = await supabase
-            .from('rutina_ejercicio')
-            .update({ id_ejercicio: newIdEjercicio })
-            .eq('id_rutina_ejercicio', idRutinaEjercicio);
+            .from('rutina_ejercicio').update({ id_ejercicio: newIdEjercicio }).eq('id_rutina_ejercicio', idRutinaEjercicio);
         if (error) { console.error('Error replacing exercise:', error.message); return; }
         await fetchExercises();
     }

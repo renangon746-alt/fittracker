@@ -33,7 +33,6 @@ export default function Train() {
 
         <View style={train_styles.t_tittleAndSearch}>
           <Text style={global_styles.tittleText}>Fast Start</Text>
-          <Ionicons name="search" size={24} color={colors.textPrimary} />
         </View>
 
         <View style={train_styles.t_buttonContainer}>
