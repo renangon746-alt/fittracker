@@ -213,6 +213,34 @@ export const trainStyles = (colors: any) =>
             height: 40
         },
 
+        rc_row: { 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            gap: 8 
+        },
+
+        rc_menuOverlay: { 
+            flex: 1, 
+            backgroundColor: 'rgba(0,0,0,0.4)', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            padding: 32 
+        },
+
+        rc_menuCard: { 
+            width: '100%', 
+            borderRadius: 16, 
+            overflow: 'hidden' 
+        },
+
+        rc_menuItem: { 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: 16, 
+            borderBottomWidth: StyleSheet.hairlineWidth, 
+            borderBottomColor: 'rgba(128,128,128,0.2)' 
+        },
+
         rf_container: {
             width: '95%'
         },
@@ -344,13 +372,14 @@ export const trainStyles = (colors: any) =>
             paddingVertical: 6
         },
 
-        ec_colSet:  { 
-            width: 32, 
-            textAlign: 'center' 
+        ec_colSet: {
+            width: 36,
+            textAlign: 'center',
         },
 
         ec_colPrev: { 
             flex: 2, 
+            width:100,
             textAlign: 'center', 
             fontSize: 13 
         },
@@ -365,7 +394,7 @@ export const trainStyles = (colors: any) =>
         },
 
         ec_colCheck: { 
-            width: 36, 
+            width: 40, 
             alignItems: 'center', 
             justifyContent: 'center' 
         },
@@ -392,9 +421,52 @@ export const trainStyles = (colors: any) =>
             borderTopWidth: 1
         },
 
+        ec_row: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            justifyContent: 'space-between',
+            width:'100%'
+        },
+
+
+        ec_colInput: {
+            width: 60,
+            textAlign: 'center',
+        },
+
+        ec_rowOption: { 
+            flexDirection: 'row', 
+            alignItems: 'center',
+            gap: 8 
+        },
+        
+        ec_menuOverlay: { 
+            flex: 1, 
+            backgroundColor: 'rgba(0,0,0,0.4)', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            padding: 32 
+        },
+
+        ec_menuCard: { 
+            width: '100%', 
+            borderRadius: 16, 
+            overflow: 'hidden' 
+        },
+
+        ec_menuItem: { 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: 16, 
+            borderBottomWidth: StyleSheet.hairlineWidth, 
+            borderBottomColor: 'rgba(128,128,128,0.2)' 
+        },
+
         rtm_backdrop: {
             flex: 1,
-            backgroundColor: colors.backgroundSecondary,
+            backgroundColor: 'rgba(0,0,0,0.4)',
         },
 
         rtm_sheet: {
@@ -573,4 +645,84 @@ export const trainStyles = (colors: any) =>
             color: colors.white, 
             fontSize: 16 
         },
+
+        rm_overlay: { 
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.55)', 
+            justifyContent: 'flex-end' 
+        },
+        
+        rm_card: { 
+            borderTopLeftRadius: 24, 
+            borderTopRightRadius: 24, 
+            padding: 24, 
+            maxHeight: '80%' 
+        },
+
+        rm_list: { 
+            maxHeight: 360, 
+            marginBottom: 16 
+        },
+
+        rm_row: { 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            padding: 10, 
+            borderRadius: 12, 
+            marginBottom: 8 
+        },
+
+        rm_img: { 
+            width: 40, 
+            height: 40, 
+            borderRadius: 20 
+        },
+
+        rm_arrowBtn: { 
+            padding: 6 
+        },
+
+        rm_actions: { 
+            flexDirection: 'row', 
+            gap: 12 
+        },
+
+        rm_btn: { 
+            flex: 1, 
+            height: 44, 
+            borderRadius: 12, 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            backgroundColor: colors.backgroundPrimary 
+        },
+
+        erdm_overlay: { 
+            flex: 1, 
+            backgroundColor: 'rgba(0,0,0,0.55)', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            padding: 24
+        },
+        
+        erdm_card: { 
+            width: '100%', 
+            borderRadius: 20, 
+            padding: 24,
+            backgroundColor: colors.backgroundSecondary
+        },
+        
+        erdm_actions: { 
+            flexDirection: 'row', 
+            gap: 12, 
+            marginTop: 8 
+        },
+        
+        erdm_btn: { 
+            flex: 1, 
+            height: 44, 
+            borderRadius: 12, 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+        },
+        
     });

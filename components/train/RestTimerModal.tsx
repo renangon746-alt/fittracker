@@ -28,28 +28,48 @@ function formatOption(s: number): string {
     return `${m}min ${sec}s`;
 }
 
+function snapIndex(y: number): number {
+    return Math.max(0, Math.min(Math.round(y / ITEM_HEIGHT), TIME_OPTIONS.length - 1));
+}
+
 export default function RestTimerModal({ visible, initialSeconds, onConfirm, onCancel }: RestTimerModalProps) {
     const { colors } = useTheme();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
     const scrollRef = useRef<ScrollView>(null);
-    const [selected, setSelected] = useState(initialSeconds);
+
     const nearest = Math.round(initialSeconds / 15) * 15;
+    const initialIdx = TIME_OPTIONS.indexOf(nearest) !== -1 ? TIME_OPTIONS.indexOf(nearest) : 0;
+
+    const [selectedIdx, setSelectedIdx] = useState(initialIdx);
+    // Ref always holds the latest index — used in onConfirm to avoid stale closure
+    const selectedIdxRef = useRef(initialIdx);
 
     useEffect(() => {
         if (visible) {
             const idx = TIME_OPTIONS.indexOf(nearest) !== -1 ? TIME_OPTIONS.indexOf(nearest) : 0;
-            setSelected(TIME_OPTIONS[idx]);
+            setSelectedIdx(idx);
+            selectedIdxRef.current = idx;
             setTimeout(() => {
                 scrollRef.current?.scrollTo({ y: idx * ITEM_HEIGHT, animated: false });
-            }, 50);
+            }, 80);
         }
     }, [visible]);
 
+    function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+        const y = e.nativeEvent.contentOffset.y;
+        const idx = snapIndex(y);
+        if (idx !== selectedIdxRef.current) {
+            selectedIdxRef.current = idx;
+            setSelectedIdx(idx);
+        }
+    }
+
     function handleScrollEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
         const y = e.nativeEvent.contentOffset.y;
-        const idx = Math.max(0, Math.min(Math.round(y / ITEM_HEIGHT), TIME_OPTIONS.length - 1));
-        setSelected(TIME_OPTIONS[idx]);
+        const idx = snapIndex(y);
+        selectedIdxRef.current = idx;
+        setSelectedIdx(idx);
         scrollRef.current?.scrollTo({ y: idx * ITEM_HEIGHT, animated: true });
     }
 
@@ -58,10 +78,18 @@ export default function RestTimerModal({ visible, initialSeconds, onConfirm, onC
 
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-            <Pressable style={train_styles.rtm_backdrop} onPress={onCancel} />
+            <Pressable
+                style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
+                onPress={onCancel}
+            />
             <View style={[train_styles.rtm_sheet, { backgroundColor: colors.backgroundSecondary }]}>
                 <View style={[train_styles.rtm_handle, { backgroundColor: colors.border }]} />
                 <Text style={[global_styles.tittleText, train_styles.rtm_title]}>Rest Timer</Text>
+
+                {/* Selected preview */}
+                <Text style={[global_styles.tittleText, { fontSize: 22, marginBottom: 8, color: colors.primary }]}>
+                    {formatOption(TIME_OPTIONS[selectedIdx])}
+                </Text>
 
                 <View style={[train_styles.rtm_pickerContainer, { height: visibleHeight }]}>
                     <View style={[
@@ -77,23 +105,32 @@ export default function RestTimerModal({ visible, initialSeconds, onConfirm, onC
                         showsVerticalScrollIndicator={false}
                         snapToInterval={ITEM_HEIGHT}
                         decelerationRate="fast"
+                        onScroll={handleScroll}
                         onMomentumScrollEnd={handleScrollEnd}
+                        onScrollEndDrag={handleScrollEnd}
                         scrollEventThrottle={16}
                         contentContainerStyle={{ paddingVertical: padding }}
                     >
-                        {TIME_OPTIONS.map((t) => {
-                            const isSelected = t === selected;
+                        {TIME_OPTIONS.map((t, i) => {
+                            const isSelected = i === selectedIdx;
                             return (
-                                <View key={t} style={[train_styles.rtm_item, { height: ITEM_HEIGHT }]}>
+                                <Pressable
+                                    key={t}
+                                    style={[train_styles.rtm_item, { height: ITEM_HEIGHT }]}
+                                    onPress={() => {
+                                        selectedIdxRef.current = i;
+                                        setSelectedIdx(i);
+                                        scrollRef.current?.scrollTo({ y: i * ITEM_HEIGHT, animated: true });
+                                    }}
+                                >
                                     <Text style={{
                                         color: isSelected ? colors.textPrimary : colors.textSecondary,
                                         fontSize: isSelected ? 20 : 16,
                                         fontWeight: isSelected ? '700' : '400',
-                                        zIndex: 1,
                                     }}>
                                         {formatOption(t)}
                                     </Text>
-                                </View>
+                                </Pressable>
                             );
                         })}
                     </ScrollView>
@@ -101,7 +138,7 @@ export default function RestTimerModal({ visible, initialSeconds, onConfirm, onC
 
                 <Pressable
                     style={[train_styles.rtm_doneBtn, { backgroundColor: colors.primary }]}
-                    onPress={() => onConfirm(selected)}
+                    onPress={() => onConfirm(TIME_OPTIONS[selectedIdxRef.current])}
                 >
                     <Text style={[global_styles.principalText, { color: '#fff', fontSize: 16 }]}>Done</Text>
                 </Pressable>
