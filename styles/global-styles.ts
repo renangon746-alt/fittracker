@@ -135,6 +135,10 @@ export const globalStyles = (colors: any) =>
       marginVertical: 8,
       alignItems: 'center' as const,
     },
+    calendarRadius: {          
+      borderRadius: 16,
+      overflow: 'hidden' as const,
+    },
     graphContainer: {
       marginVertical: 8,
       borderRadius: 16,
