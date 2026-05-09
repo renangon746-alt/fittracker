@@ -21,15 +21,17 @@ export interface SetRow {
     done: boolean;
 }
 
-export type SetsMap = Record<number, SetRow[]>; // keyed by id_rutina_ejercicio
+export type SetsMap = Record<number, SetRow[]>;
 
 export function useRoutineDetail(routineId: number) {
     const { userProfile } = useUser();
     const [exercises, setExercises] = useState<RoutineExercise[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const isValid = !isNaN(routineId) && routineId > 0;
+
     const fetchExercises = useCallback(async () => {
-        if (!routineId) return;
+        if (!isValid) { setLoading(false); return; }
         setLoading(true);
 
         const { data, error } = await supabase
@@ -62,13 +64,30 @@ export function useRoutineDetail(routineId: number) {
         } else if (error) {
             console.error('Error fetching routine exercises:', error.message);
         }
-
         setLoading(false);
-    }, [routineId]);
+    }, [routineId, isValid]);
 
     useEffect(() => { fetchExercises(); }, [fetchExercises]);
 
-    async function addExercise(idEjercicio: number) {
+    // exerciseData is optional — used for empty training to provide nombre/image_key locally
+    async function addExercise(
+        idEjercicio: number,
+        exerciseData?: { nombre: string; image_key: string | null }
+    ) {
+        if (!isValid) {
+            // Empty training: add locally without DB
+            const newEx: RoutineExercise = {
+                id_rutina_ejercicio: Date.now(),
+                id_ejercicio: idEjercicio,
+                nombre: exerciseData?.nombre ?? '',
+                image_key: exerciseData?.image_key ?? null,
+                orden: exercises.length + 1,
+                series: null, repeticiones: null, carga_kg: null, descanso_seg: null,
+            };
+            setExercises(prev => [...prev, newEx]);
+            return;
+        }
+
         const nextOrden = exercises.length + 1;
         const { error } = await supabase
             .from('rutina_ejercicio')
@@ -76,40 +95,80 @@ export function useRoutineDetail(routineId: number) {
                 id_rutina: routineId,
                 id_ejercicio: idEjercicio,
                 orden: nextOrden,
-                series: null,
-                repeticiones: null,
-                carga_kg: null,
-                descanso_seg: null,
+                series: null, repeticiones: null, carga_kg: null, descanso_seg: null,
             });
-
         if (error) { console.error('Error adding exercise:', error.message); return; }
         await fetchExercises();
     }
 
-    // Update descanso_seg for a specific rutina_ejercicio row
-    async function updateRestTime(idRutinaEjercicio: number, seconds: number) {
-        await supabase
-            .from('rutina_ejercicio')
-            .update({ descanso_seg: seconds })
-            .eq('id_rutina_ejercicio', idRutinaEjercicio);
+    async function removeExercise(idRutinaEjercicio: number) {
+        if (!isValid) {
+            setExercises(prev => prev.filter(e => e.id_rutina_ejercicio !== idRutinaEjercicio));
+            return;
+        }
+        const { error } = await supabase
+            .from('rutina_ejercicio').delete().eq('id_rutina_ejercicio', idRutinaEjercicio);
+        if (error) { console.error('Error removing exercise:', error.message); return; }
+        const remaining = exercises
+            .filter(e => e.id_rutina_ejercicio !== idRutinaEjercicio)
+            .map((e, idx) => ({ ...e, orden: idx + 1 }));
+        await Promise.all(remaining.map(e =>
+            supabase.from('rutina_ejercicio').update({ orden: e.orden }).eq('id_rutina_ejercicio', e.id_rutina_ejercicio)
+        ));
+        await fetchExercises();
+    }
 
+    async function replaceExercise(idRutinaEjercicio: number, newIdEjercicio: number) {
+        if (!isValid) {
+            setExercises(prev => prev.map(e =>
+                e.id_rutina_ejercicio === idRutinaEjercicio ? { ...e, id_ejercicio: newIdEjercicio } : e
+            ));
+            return;
+        }
+        const { error } = await supabase
+            .from('rutina_ejercicio').update({ id_ejercicio: newIdEjercicio }).eq('id_rutina_ejercicio', idRutinaEjercicio);
+        if (error) { console.error('Error replacing exercise:', error.message); return; }
+        await fetchExercises();
+    }
+
+    async function reorderExercises(ordered: RoutineExercise[]) {
+        if (!isValid) { setExercises(ordered); return; }
+        await Promise.all(ordered.map((e, idx) =>
+            supabase.from('rutina_ejercicio').update({ orden: idx + 1 }).eq('id_rutina_ejercicio', e.id_rutina_ejercicio)
+        ));
+        await fetchExercises();
+    }
+
+    async function updateRestTime(idRutinaEjercicio: number, seconds: number) {
+        if (!isValid) {
+            setExercises(prev => prev.map(e =>
+                e.id_rutina_ejercicio === idRutinaEjercicio ? { ...e, descanso_seg: seconds } : e
+            ));
+            return;
+        }
+        await supabase.from('rutina_ejercicio').update({ descanso_seg: seconds }).eq('id_rutina_ejercicio', idRutinaEjercicio);
         setExercises(prev => prev.map(e =>
-            e.id_rutina_ejercicio === idRutinaEjercicio
-                ? { ...e, descanso_seg: seconds }
-                : e
+            e.id_rutina_ejercicio === idRutinaEjercicio ? { ...e, descanso_seg: seconds } : e
         ));
     }
 
-    async function finishRoutine(
-        durationSeconds: number,
-        setsMap: SetsMap,
-    ) {
-        if (!userProfile) return;
+    async function deleteRoutine() {
+        if (!isValid) return;
+        await supabase.from('rutina_ejercicio').delete().eq('id_rutina', routineId);
+        await supabase.from('rutina').delete().eq('id_rutina', routineId);
+    }
+
+    async function updateRoutineData(nombre: string, carpeta: string) {
+        if (!isValid) return;
+        await supabase.from('rutina').update({ nombre, carpeta }).eq('id_rutina', routineId);
+    }
+
+    async function finishRoutine(durationSeconds: number, setsMap: SetsMap) {
+        if (!userProfile || !isValid) return;
 
         const now = new Date().toISOString();
         const startTime = new Date(Date.now() - durationSeconds * 1000).toISOString();
 
-        // 1. Create entrenamiento record
         const { data: entrenamientoData, error: entrenamientoError } = await supabase
             .from('entrenamiento')
             .insert({
@@ -128,13 +187,11 @@ export function useRoutineDetail(routineId: number) {
         }
 
         const idEntrenamiento = entrenamientoData.id_entrenamiento;
-
-        // 2. Save completed sets to serie table
         const seriesToInsert: any[] = [];
+
         for (const exercise of exercises) {
             const sets = setsMap[exercise.id_rutina_ejercicio] ?? [];
-            const doneSets = sets.filter(s => s.done);
-            doneSets.forEach((set, idx) => {
+            sets.filter(s => s.done).forEach((set, idx) => {
                 seriesToInsert.push({
                     id_entrenamiento: idEntrenamiento,
                     id_ejercicio: exercise.id_ejercicio,
@@ -147,18 +204,16 @@ export function useRoutineDetail(routineId: number) {
         }
 
         if (seriesToInsert.length > 0) {
-            const { error: seriesError } = await supabase
-                .from('serie')
-                .insert(seriesToInsert);
+            const { error: seriesError } = await supabase.from('serie').insert(seriesToInsert);
             if (seriesError) console.error('Error saving series:', seriesError.message);
         }
 
-        // 3. Update last_trained on rutina
-        await supabase
-            .from('rutina')
-            .update({ last_trained: now })
-            .eq('id_rutina', routineId);
+        await supabase.from('rutina').update({ last_trained: now }).eq('id_rutina', routineId);
     }
 
-    return { exercises, loading, addExercise, updateRestTime, finishRoutine, refresh: fetchExercises };
+    return {
+        exercises, loading, addExercise, removeExercise, replaceExercise,
+        reorderExercises, updateRestTime, deleteRoutine, updateRoutineData,
+        finishRoutine, refresh: fetchExercises,
+    };
 }
