@@ -3,6 +3,7 @@ import Graph from "@/components/global/Graph";
 import StreakBadge from "@/components/global/StreakBadge";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useFollowers } from "@/hooks/social/useFollowers";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from "@/styles/profile-styles";
@@ -45,6 +46,16 @@ export default function ProfileDescription() {
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
+  const targetId = userProfile?.id_usuario ?? null;
+  const {
+    followers,
+    following,
+    isFollowing,
+    isOwnProfile,
+    pending: followPending,
+    toggle: toggleFollow,
+  } = useFollowers(targetId);
+
   useEffect(() => {
     async function loadUserProfile() {
       try {
@@ -55,7 +66,6 @@ export default function ProfileDescription() {
           return;
         }
 
-        // Fetch profile including auth_uuid — no admin call needed
         const { data: profile, error } = await supabase
           .from('usuario')
           .select('id_usuario, nombre, email, auth_uuid, racha_actual, bio, enlace')
@@ -67,7 +77,6 @@ export default function ProfileDescription() {
         } else if (profile) {
           setUserProfile(profile);
 
-          // Build avatar URL directly from auth_uuid stored in the table
           if (profile.auth_uuid) {
             const { data } = supabase.storage
               .from('avatars')
@@ -140,36 +149,67 @@ export default function ProfileDescription() {
           <View style={profile_styles.p_profileStatsContainer}>
             <View style={profile_styles.p_stat}>
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>103</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>0</Text>
             </View>
-            <View style={profile_styles.p_stat}>
+            <Pressable
+              style={profile_styles.p_stat}
+              onPress={() => router.push({ pathname: '/profile/followers', params: { id: String(userProfile.id_usuario) } })}
+            >
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('followers')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>100</Text>
-            </View>
-            <View style={profile_styles.p_stat}>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>{followers}</Text>
+            </Pressable>
+            <Pressable
+              style={profile_styles.p_stat}
+              onPress={() => router.push({ pathname: '/profile/following', params: { id: String(userProfile.id_usuario) } })}
+            >
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('following')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>2</Text>
-            </View>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>{following}</Text>
+            </Pressable>
           </View>
 
           {/* Bio + link + Follow button */}
           <View style={profile_styles.pd_bioFollowButton}>
             <View style={{ flex: 1 }}>
-              {userProfile.bio ? ( 
-                <Text style={[global_styles.secondaryText, profile_styles.p_bio, {fontSize: screenWidth < 350 ? 12 : 14 }]}>
+              {userProfile.bio ? (
+                <Text style={[global_styles.secondaryText, profile_styles.p_bio, { fontSize: screenWidth < 350 ? 12 : 14 }]}>
                   {userProfile.bio}
                 </Text>
               ) : null}
               {userProfile.enlace ? (
-                <Text style={[global_styles.secondaryText, profile_styles.p_link,{fontSize: screenWidth < 350 ? 12 : 14, marginTop: userProfile.bio ? 4 : 0 }]}>
+                <Text style={[global_styles.secondaryText, profile_styles.p_link, { fontSize: screenWidth < 350 ? 12 : 14, marginTop: userProfile.bio ? 4 : 0 }]}>
                   {userProfile.enlace}
                 </Text>
               ) : null}
             </View>
 
-            <Pressable style={[global_styles.principalButton, { width: 100, height: 35 }]}> 
-              <Text style={global_styles.principalText}>{t('follow')}</Text>
-            </Pressable>
+            {!isOwnProfile && (
+              <Pressable
+                onPress={toggleFollow}
+                disabled={followPending}
+                style={({ pressed }) => [
+                  global_styles.principalButton,
+                  {
+                    width: 110,
+                    height: 35,
+                    backgroundColor: isFollowing ? colors.backgroundTertiary : colors.primary,
+                    opacity: pressed || followPending ? 0.7 : 1,
+                  },
+                ]}
+              >
+                {followPending ? (
+                  <ActivityIndicator color={isFollowing ? colors.textPrimary : '#fff'} />
+                ) : (
+                  <Text
+                    style={[
+                      global_styles.principalText,
+                      { color: isFollowing ? colors.textPrimary : '#fff' },
+                    ]}
+                  >
+                    {isFollowing ? t('unfollow') : t('follow')}
+                  </Text>
+                )}
+              </Pressable>
+            )}
           </View>
 
         </View>

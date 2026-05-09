@@ -33,17 +33,14 @@ export default function EditProfile() {
 
   if (loading) {
     return (
-      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}> 
+      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}>
         <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
         contentContainerStyle={styles.editProfileContainer}
@@ -57,11 +54,11 @@ export default function EditProfile() {
               key={displayImage}
             />
           ) : (
-            <View style={[styles.editProfileAvatar, styles.editProfileAvatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}> 
+            <View style={[styles.editProfileAvatar, styles.editProfileAvatarPlaceholder, { backgroundColor: colors.backgroundTertiary }]}>
               <Ionicons name="person-outline" size={40} color={colors.iconInactive} />
             </View>
           )}
-          <View style={[styles.editProfileAvatarBadge, { backgroundColor: colors.primary }]}> 
+          <View style={[styles.editProfileAvatarBadge, { backgroundColor: colors.primary }]}>
             <Ionicons name="camera-outline" size={14} color="#fff" />
           </View>
         </Pressable>
@@ -87,7 +84,7 @@ export default function EditProfile() {
             multiline
             maxLength={150}
           />
-          <Text style={[styles.editProfileCharCount, { color: colors.textSecondary }]}> 
+          <Text style={[styles.editProfileCharCount, { color: colors.textSecondary }]}>
             {bio.length}/150
           </Text>
         </Section>
@@ -121,7 +118,6 @@ export default function EditProfile() {
             <Text style={styles.editProfileSaveBtnText}>{t('save_changes')}</Text>
           )}
         </Pressable>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );

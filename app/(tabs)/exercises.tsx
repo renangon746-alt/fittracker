@@ -27,7 +27,7 @@ export default function Exercises() {
   const styles = globalStyles(colors);
 
   return (
-    <ScrollView style={{ backgroundColor: colors.backgroundPrimary }}>
+    <ScrollView style={{ backgroundColor: colors.backgroundSecondary }}>
       <View style={styles.exercisesSearchContainer}>
         <TextInput
           style={[styles.exercisesInput, { 

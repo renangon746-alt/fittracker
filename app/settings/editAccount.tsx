@@ -4,10 +4,11 @@ import { supabase } from '@/lib/supabase';
 import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,16 +24,16 @@ export default function EditAccount() {
   const styles = globalStyles(colors);
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [email, setEmail] = useState('');
+  const [loading, setLoading]           = useState(true);
+  const [saving, setSaving]             = useState(false);
+  const [email, setEmail]               = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
+  const [newPassword, setNewPassword]   = useState('');
+  const [showCurrent, setShowCurrent]   = useState(false);
+  const [showNew, setShowNew]           = useState(false);
 
-  // ── Cargar email actual ───────────────────────────────────────────────────
+  const savedOpacity = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     async function fetchAccount() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -42,27 +43,30 @@ export default function EditAccount() {
     fetchAccount();
   }, []);
 
-  // ── Guardar cambios ───────────────────────────────────────────────────────
+  function showSavedFeedback() {
+    Animated.sequence([
+      Animated.timing(savedOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.delay(1600),
+      Animated.timing(savedOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }
+
   async function handleSave() {
     if (newPassword && newPassword.length < 6) {
       Alert.alert(t('error'), t('new_password_min_length'));
       return;
     }
-
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t('no_active_session'));
 
-      // Cambiar email si ha cambiado
       if (email !== user.email) {
         const { error } = await supabase.auth.updateUser({ email });
         if (error) throw error;
       }
 
-      // Cambiar contraseña si se ha rellenado
       if (newPassword) {
-        // Reautenticar primero con la contraseña actual
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: user.email!,
           password: currentPassword,
@@ -71,11 +75,14 @@ export default function EditAccount() {
 
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         if (error) throw error;
+        setCurrentPassword('');
+        setNewPassword('');
       }
 
       Alert.alert(t('done_title'), t('account_updated_success'), [
         { text: 'OK', onPress: () => router.back() },
       ]);
+      showSavedFeedback();
     } catch (error: any) {
       Alert.alert(t('error'), error.message ?? t('could_not_save_changes'));
     } finally {
@@ -83,7 +90,6 @@ export default function EditAccount() {
     }
   }
 
-  // ── Borrar cuenta ─────────────────────────────────────────────────────────
   function handleDeleteAccount() {
     Alert.alert(
       t('delete_account_confirm_title'),
@@ -94,8 +100,6 @@ export default function EditAccount() {
           text: t('delete_account_button'),
           style: 'destructive',
           onPress: async () => {
-            // Requiere una Edge Function en Supabase para borrar el usuario de Auth
-            // ya que el cliente no puede borrarse a sí mismo por seguridad
             Alert.alert(t('soon'), t('feature_available_soon'));
           },
         },
@@ -103,7 +107,6 @@ export default function EditAccount() {
     );
   }
 
-  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}> 
@@ -113,16 +116,12 @@ export default function EditAccount() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
         contentContainerStyle={styles.settingsContainer}
         keyboardShouldPersistTaps="handled"
       >
-
         {/* ── Correo ── */}
         <Section title={t('email_section')} colors={colors}>
           <View style={styles.editAccountInputRow}>
@@ -145,7 +144,7 @@ export default function EditAccount() {
           <View style={[styles.editAccountInputRow, {
             borderBottomWidth: 0.5,
             borderBottomColor: colors.border,
-          }]}> 
+          }]}>
             <Ionicons name="key-outline" size={18} color={colors.iconInactive} />
             <TextInput
               style={[styles.editAccountInput, styles.editAccountInputFlex, { color: colors.textPrimary }]}
@@ -155,15 +154,10 @@ export default function EditAccount() {
               placeholderTextColor={colors.iconInactive}
               secureTextEntry={!showCurrent}
             />
-            <Pressable onPress={() => setShowCurrent(v => !v)}>
-              <Ionicons
-                name={showCurrent ? 'eye-off-outline' : 'eye-outline'}
-                size={18}
-                color={colors.iconInactive}
-              />
+            <Pressable onPress={() => setShowCurrent(v => !v)} hitSlop={8}>
+              <Ionicons name={showCurrent ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.iconInactive} />
             </Pressable>
           </View>
-
           {/* Contraseña nueva */}
           <View style={styles.editAccountInputRow}>
             <Ionicons name="lock-closed-outline" size={18} color={colors.iconInactive} />
@@ -175,17 +169,13 @@ export default function EditAccount() {
               placeholderTextColor={colors.iconInactive}
               secureTextEntry={!showNew}
             />
-            <Pressable onPress={() => setShowNew(v => !v)}>
-              <Ionicons
-                name={showNew ? 'eye-off-outline' : 'eye-outline'}
-                size={18}
-                color={colors.iconInactive}
-              />
+            <Pressable onPress={() => setShowNew(v => !v)} hitSlop={8}>
+              <Ionicons name={showNew ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.iconInactive} />
             </Pressable>
           </View>
         </Section>
 
-        {/* ── Olvidé mi contraseña ── */}
+        {/* Olvidé contraseña */}
         <Pressable
           onPress={() => router.push({
             pathname: '../../auth/forgotPassword',
@@ -193,12 +183,12 @@ export default function EditAccount() {
           })}
           style={styles.editAccountForgotWrap}
         >
-          <Text style={[styles.editAccountForgotText, { color: colors.primary }]}> 
+          <Text style={[styles.editAccountForgotText, { color: colors.primary }]}>
             {t('forgot_password_link')}
           </Text>
         </Pressable>
 
-        {/* ── Borrar cuenta ── */}
+        {/* Borrar cuenta */}
         <Section colors={colors}>
           <Pressable
             onPress={handleDeleteAccount}
@@ -224,7 +214,6 @@ export default function EditAccount() {
             <Text style={styles.editAccountSaveBtnText}>{t('save_changes')}</Text>
           )}
         </Pressable>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );

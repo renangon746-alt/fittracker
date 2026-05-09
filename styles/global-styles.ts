@@ -1,128 +1,169 @@
-import { StyleSheet } from "react-native";
+import { typography } from '@/constants/typography';
+import { Platform, StyleSheet } from 'react-native';
 
 export const globalStyles = (colors: any) =>
-    StyleSheet.create({
+  StyleSheet.create({
 
-    defaultContainer:{
-        flex: 1, 
-        backgroundColor: colors.backgroundPrimary
+    defaultContainer: {
+      flex: 1,
+      backgroundColor: colors.backgroundPrimary,
     },
 
-    tittleText:{
-        fontSize: 28,
-        fontFamily: 'Inter',
-        padding: 15,
-        color: colors.textPrimary
+    // ── Text ─────────────────────────────────────────────────────────────────
+    largeTitle: {
+      ...typography.largeTitle,
+      color: colors.textPrimary,
     },
-
+    tittleText: {
+      ...typography.title1,
+      color: colors.textPrimary,
+    },
+    title2: {
+      ...typography.title2,
+      color: colors.textPrimary,
+    },
+    headline: {
+      ...typography.headline,
+      color: colors.textPrimary,
+    },
     principalText: {
-        fontSize: 15,
-        fontFamily: 'Inter',
-        color: colors.textPrimary
+      ...typography.callout,
+      color: colors.textPrimary,
     },
-
     secondaryText: {
-        fontSize: 12,
-        fontFamily: 'Poppins',
-        color: colors.textSecondary
+      ...typography.footnote,
+      color: colors.textSecondary,
+    },
+    captionText: {
+      ...typography.caption1,
+      color: colors.textSecondary,
+    },
+    underlineText: {
+      ...typography.footnote,
+      color: colors.primary,
+      textDecorationLine: 'underline',
+    },
+    sectionLabel: {
+      ...typography.caption2Bold,
+      color: colors.textSecondary,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
     },
 
-    underlineText:{
-        fontSize: 12,
-        fontFamily: 'Inter',
-        color: colors.primary,
-        textDecorationLine: 'underline'
-    },
-
+    // ── Inputs ───────────────────────────────────────────────────────────────
     inputs: {
-        margin: 10,
-        padding: 10,
-        borderWidth: 1,
-        borderColor: colors.primary,
-        borderRadius: 8,
-        color: colors.textPrimary,
-        backgroundColor: colors.backgroundSecondary,
-        width: 300
+      ...typography.callout,
+      margin: 10,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: 24,
+      color: colors.textPrimary,
+      backgroundColor: colors.backgroundSecondary,
+      width: 300,
     },
 
+    // ── Buttons ──────────────────────────────────────────────────────────────
+    principalButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 50,
+      width: 250,
+      height: 44,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    },
+    secondaryButton: {
+      backgroundColor: colors.backgroundPrimary,
+      borderRadius: 50,
+      width: 250,
+      height: 44,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    },
+    tertiaryButton: {
+      backgroundColor: colors.backgroundTertiary,
+      borderRadius: 50,
+      width: 250,
+      height: 44,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    },
+
+    // ── Images ───────────────────────────────────────────────────────────────
     principalLogoImage: {
-        width: 150,
-        height: 150
+      width: 150,
+      height: 150,
+    },
+    profileImage: {
+      borderRadius: 50,
+      width: 50,
+      height: 50,
     },
 
-    principalButton:{
-        backgroundColor: colors.primary,
-        borderRadius: 50,
-        width: 250,
-        height:40,
-        alignItems: 'center' as const,
-        justifyContent: 'center' as const
+    // ── Cards ────────────────────────────────────────────────────────────────
+    card: {
+      backgroundColor: colors.backgroundPrimary,
+      borderRadius: 24,
+      padding: 16,
+      ...(Platform.OS === 'ios'
+        ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 }
+        : { elevation: 2 }),
+    },
+    sectionCard: {
+      backgroundColor: colors.backgroundPrimary,
+      borderRadius: 24,
+      overflow: 'hidden' as const,
+      ...(Platform.OS === 'ios'
+        ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 }
+        : { elevation: 2 }),
     },
 
-    secondaryButton:{
-        backgroundColor: colors.textSecondary,
-        borderRadius: 50,
-        width: 250,
-        height:40,
-        alignItems: 'center' as const,
-        justifyContent: 'center' as const
+    // ── Legacy compat (streak/calendar) ──────────────────────────────────────
+    streakContainer: {
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
     },
-
-    tertiaryButton:{
-        backgroundColor: colors.textPrimary,
-        borderRadius: 50,
-        width: 250,
-        height:40,
-        alignItems: 'center' as const,
-        justifyContent: 'center' as const
-    },
-
-    profileImage:{
-        borderRadius: 50,
-        width: 50,
-        height: 50
-    },
-
-    streakContainer:{
-        alignItems: "center",
-        justifyContent: "center"
-    },
-
     streakNumber: {
-        position: "absolute",
-        color: colors.textPrimary,
-        fontSize: 30,
-        fontFamily: "Inter",
-        fontWeight: "bold",
-        top: 11,
-        textShadowColor: 'black',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 2,
+      ...typography.title2,
+      position: 'absolute' as const,
+      color: colors.textPrimary,
+      top: 11,
     },
-
     calendarContainer: {
-        padding: 10,
-        borderRadius: 16,
-        marginVertical: 8,
-        alignItems: 'center',
+      padding: 10,
+      borderRadius: 16,
+      marginVertical: 8,
+      alignItems: 'center' as const,
     },
-
-    calendarRadius:{
-        borderRadius: 16
+    calendarRadius: {          
+      borderRadius: 16,
+      overflow: 'hidden' as const,
     },
-
     graphContainer: {
-        marginVertical: 8,
-        borderRadius: 16,
+      marginVertical: 8,
+      borderRadius: 16,
     },
 
-    icon:{
-        backgroundColor: colors.primary,
-        borderRadius: 50,
-        width: 250,
-        height:40,
-        alignItems: 'center' as const,
-        justifyContent: 'center' as const
+    // ── Saved pill ───────────────────────────────────────────────────────────
+    savedPill: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 5,
+      alignSelf: 'center' as const,
+      marginTop: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 20,
+      elevation: 2,
+    },
+
+    icon: {
+      backgroundColor: colors.primary,
+      borderRadius: 50,
+      width: 250,
+      height: 40,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
     },
 
     backArrowContainer:{
@@ -441,9 +482,7 @@ export const globalStyles = (colors: any) =>
         
     },
 
-    defaultScroll:{
-        paddingBottom: 100
-    }
-
-
-});
+    defaultScroll: {
+      paddingBottom: 100,
+    },
+  });

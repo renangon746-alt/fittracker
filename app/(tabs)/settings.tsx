@@ -1,6 +1,7 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { globalStyles } from '@/styles/global-styles';
+import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useRouter } from 'expo-router';
@@ -169,7 +170,7 @@ export default function Settings() {
           colors={colors}
           icon={<FontAwesome5 name="dumbbell" size={16} color={colors.textPrimary} />}
           label={t('about_us')}
-          onPress={() => router.push('/')}
+          onPress={() => router.push('/settings/about')}
           isLast
         />
       </Section>
@@ -213,7 +214,10 @@ export default function Settings() {
           styles.settingsTabLogoutBtn,
           { backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 },
         ]}
-        onPress={() => { /* cerrar sesión */ }}
+        onPress={async () => {
+          await supabase.auth.signOut();
+          router.replace('/auth/login');
+        }}
       >
         <Text style={styles.settingsTabLogoutText}>{t('logout')}</Text>
       </Pressable>

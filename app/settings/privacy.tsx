@@ -1,12 +1,14 @@
+import { typography } from '@/constants/typography';
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Platform,
   ScrollView,
   Switch,
@@ -21,60 +23,58 @@ export default function Privacy() {
 
   const [publicProfile, setPublicProfile] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
+  const savedOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-  async function fetchPreference() {
-    const { data: { user } } = await supabase.auth.getUser();
+    async function fetchPreference() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setPublicProfile(false); return; }
 
-    if (!user) {
-      // Sin auth todavía — ponemos valor por defecto y salimos
-      setPublicProfile(false);
-      return;
+      const { data, error } = await supabase
+        .from('usuario')
+        .select('perfil_publico')
+        .eq('email', user.email)
+        .single();
+
+      if (error) {
+        Alert.alert(t('error'), t('could_not_load_settings'));
+        setPublicProfile(false);
+        return;
+      }
+
+      setPublicProfile(data.perfil_publico);
     }
 
-    const { data, error } = await supabase
-      .from('usuario')
-      .select('perfil_publico')
-      .eq('email', user.email)
-      .single();
+    fetchPreference();
+  }, [t]);
 
-    if (error) {
-      Alert.alert(t('error'), t('could_not_load_settings'));
-      setPublicProfile(false);
-      return;
-    }
-
-    setPublicProfile(data.perfil_publico);
+  function showSavedFeedback() {
+    Animated.sequence([
+      Animated.timing(savedOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.delay(1400),
+      Animated.timing(savedOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
   }
 
-  fetchPreference();
-}, [t]);
-
-  // ── Guardar cambio en Supabase ────────────────────────────────────────────
   async function handleToggle(value: boolean) {
     setPublicProfile(value);
     setSaving(true);
-
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
+    if (!user) { setSaving(false); return; }
     const { error } = await supabase
-      .from('usuario')
-      .update({ perfil_publico: value })
-      .eq('email', user.email);
-
+      .from('usuario').update({ perfil_publico: value }).eq('email', user.email);
     if (error) {
       setPublicProfile(!value);
       Alert.alert(t('error'), t('could_not_save_change_retry'));
+    } else {
+      showSavedFeedback();
     }
-
     setSaving(false);
   }
 
-  // ── Loading state ─────────────────────────────────────────────────────────
   if (publicProfile === null) {
     return (
-      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}> 
+      <View style={[styles.settingsCentered, { backgroundColor: colors.backgroundSecondary }]}>
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -102,7 +102,7 @@ export default function Privacy() {
               size={20}
               color={colors.textPrimary}
             />
-            <Text style={[styles.settingsRowLabel, { color: colors.textPrimary }]}> 
+            <Text style={[styles.settingsRowLabel, { color: colors.textPrimary }]}>
               {t('public_account')}
             </Text>
           </View>
@@ -121,11 +121,16 @@ export default function Privacy() {
       </View>
 
       {/* ── Descripción dinámica ── */}
-      <Text style={[styles.settingsDescription, { color: colors.textSecondary }]}> 
+      <Text style={[styles.settingsDescription, { color: colors.textSecondary }]}>
         {publicProfile
           ? t('public_account_description')
           : t('private_account_description')}
       </Text>
+
+      <Animated.View style={[styles.savedPill, { backgroundColor: colors.backgroundPrimary, opacity: savedOpacity }]}>
+        <Ionicons name="checkmark-circle" size={15} color={colors.primary} />
+        <Text style={[typography.caption1Bold, { color: colors.primary }]}>{t('done_title')}</Text>
+      </Animated.View>
     </ScrollView>
   );
 }

@@ -7,6 +7,7 @@ interface UserItem {
   userName: string;
   fullName: string;
   email: string;
+  authUuid?: string | null;
 }
 
 interface UserListProps {
@@ -23,6 +24,7 @@ export default function UserList({ users }: UserListProps) {
           userName={user.userName}
           fullName={user.fullName}
           email={user.email}
+          authUuid={user.authUuid}
         />
       ))}
     </View>
