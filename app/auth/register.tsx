@@ -33,6 +33,9 @@ export default function Register() {
                     {errorMsg && <Text style={[global_styles.secondaryText, profile_styles.loadProfileErrorMessage]}>{errorMsg}</Text>}
 
                     <View style={{ paddingTop: 20 }}>
+                        <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>ID</Text>
+                        <TextInput style={global_styles.inputs} value={nombre} onChangeText={setNombre} />
+
                         <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>{t('name')}</Text>
                         <TextInput style={global_styles.inputs} value={nombre} onChangeText={setNombre} />
 
