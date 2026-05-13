@@ -6,7 +6,7 @@ export const globalStyles = (colors: any) =>
 
     defaultContainer: {
       flex: 1,
-      backgroundColor: colors.backgroundPrimary,
+      backgroundColor: colors.backgroundSecondary,
     },
 
     // ── Text ─────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ export const globalStyles = (colors: any) =>
       borderColor: colors.primary,
       borderRadius: 24,
       color: colors.textPrimary,
-      backgroundColor: colors.backgroundSecondary,
+      backgroundColor: colors.backgroundPrimary,
       width: 300,
     },
 

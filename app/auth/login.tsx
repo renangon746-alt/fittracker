@@ -60,7 +60,7 @@ export default function Login(){
                                         borderRadius: 24,
                                         borderWidth: 1.5,
                                         borderColor: active ? colors.primary : colors.border,
-                                        backgroundColor: active ? colors.primary + '22' : 'transparent',
+                                        backgroundColor: active ? colors.primary + '22' : colors.backgroundPrimary,
                                         opacity: pressed ? 0.6 : 1,
                                     })}
                                 >

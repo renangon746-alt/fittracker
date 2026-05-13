@@ -178,13 +178,13 @@ export const trainStyles = (colors: any) =>
         },
 
         rc_container: {
-            width: '90%',
+            width: '95%',
             height: 140,
             backgroundColor: colors.backgroundPrimary,
-            borderRadius: 10,
+            borderRadius: 24,
             padding: 16,
             borderWidth: 1,
-            borderColor: colors.routineCard.border
+            borderColor: colors.backgroundTertiary,
         },
 
         rc_dayEdit: {
@@ -404,7 +404,7 @@ export const trainStyles = (colors: any) =>
             textAlign: 'center',
             paddingVertical: 4,
             paddingHorizontal: 4,
-            borderWidth: 1,
+            borderWidth: 0,
             borderRadius: 6
         },
 

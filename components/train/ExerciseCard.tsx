@@ -24,10 +24,12 @@ interface ExerciseCardProps {
     onReplace: (idRutinaEjercicio: number, newIdEjercicio: number) => void;
     onReorder: (ordered: RoutineExercise[]) => void;
     editMode?: boolean;
+    invalidIndices?: Set<number>;
+    onClearInvalid?: () => void;
 }
 
-const COL_SET = 36;
-const COL_PREV = 100;
+const COL_SET   = 36;
+const COL_PREV  = 100;
 const COL_INPUT = 60;
 const COL_CHECK = 40;
 
@@ -36,19 +38,22 @@ export default function ExerciseCard({
     record, onSetDone, onRestTimeChanged, onNewRecord,
     onRemove, onReplace, onReorder,
     editMode = false,
+    invalidIndices,
+    onClearInvalid,
 }: ExerciseCardProps) {
     const { colors } = useTheme();
     const global_styles = globalStyles(colors);
-    const train_styles = trainStyles(colors);
+    const train_styles  = trainStyles(colors);
     const imgSource = exercise.image_key ? exerciseImageMap[exercise.image_key] : null;
     const { exercises: availableExercises, loading: loadingExercises } = useExercises();
 
-    const [restModalVisible, setRestModalVisible] = useState(false);
-    const [menuVisible, setMenuVisible] = useState(false);
-    const [replaceVisible, setReplaceVisible] = useState(false);
-    const [reorderVisible, setReorderVisible] = useState(false);
+    const [restModalVisible,  setRestModalVisible]  = useState(false);
+    const [menuVisible,       setMenuVisible]        = useState(false);
+    const [replaceVisible,    setReplaceVisible]     = useState(false);
+    const [reorderVisible,    setReorderVisible]     = useState(false);
 
     function updateSet(index: number, field: keyof SetRow, value: string | boolean) {
+        onClearInvalid?.();
         onSetsChange(sets.map((s, i) => i === index ? { ...s, [field]: value } : s));
     }
 
@@ -61,16 +66,26 @@ export default function ExerciseCard({
         const nowDone = !set.done;
         updateSet(index, 'done', nowDone);
         if (nowDone) {
-            const kg = parseFloat(set.kg) || 0;
-            const reps = parseInt(set.reps) || 0;
+            const kg   = parseFloat(set.kg)  || 0;
+            const reps = parseInt(set.reps)  || 0;
             if (record && kg * reps > record.kg * record.reps) onNewRecord();
             const restSecs = exercise.descanso_seg ?? 0;
             if (restSecs > 0) onSetDone(restSecs);
         }
     }
 
-    function sanitizeNumber(v: string) {
-        return v.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+    function sanitizeKg(v: string) {
+        const cleaned = v.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+        const num = parseFloat(cleaned);
+        if (!isNaN(num) && num > 999) return '999';
+        return cleaned;
+    }
+
+    function sanitizeReps(v: string) {
+        const cleaned = v.replace(/[^0-9]/g, '');
+        const num = parseInt(cleaned);
+        if (!isNaN(num) && num > 999) return '999';
+        return cleaned;
     }
 
     const recordLabel = record ? `${record.kg}kg x ${record.reps}` : '—';
@@ -92,7 +107,7 @@ export default function ExerciseCard({
                 </Pressable>
             </View>
 
-            {/* Rest timer — hidden in edit mode */}
+            {/* Rest timer */}
             {!editMode && (
                 <Pressable style={train_styles.ec_restRow} onPress={() => setRestModalVisible(true)}>
                     <Ionicons name="timer-outline" size={16} color={colors.primary} />
@@ -104,55 +119,78 @@ export default function ExerciseCard({
                 </Pressable>
             )}
 
-            {/* Table — hidden in edit mode */}
+            {/* Table */}
             {!editMode && (
                 <>
                     <View style={[train_styles.ec_rowOption, { paddingHorizontal: 12, paddingVertical: 6 }]}>
-                        <Text style={[{ width: COL_SET, textAlign: 'center' }, global_styles.secondaryText]}>SET</Text>
-                        <Text style={[{ width: COL_PREV, textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]}>PREVIOUS</Text>
-                        <Text style={[{ width: COL_INPUT, textAlign: 'center' }, global_styles.secondaryText]}>KG</Text>
-                        <Text style={[{ width: COL_INPUT, textAlign: 'center' }, global_styles.secondaryText]}>REPS</Text>
+                        <Text style={[{ width: COL_SET,   textAlign: 'center' },           global_styles.secondaryText]}>SET</Text>
+                        <Text style={[{ width: COL_PREV,  textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]}>PREVIOUS</Text>
+                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },           global_styles.secondaryText]}>KG</Text>
+                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },           global_styles.secondaryText]}>REPS</Text>
                         <View style={{ width: COL_CHECK }} />
                     </View>
 
-                    {sets.map((set, i) => (
-                        <View key={i} style={[train_styles.ec_rowOption, { paddingHorizontal: 12, paddingVertical: 6 },
-                            set.done && { backgroundColor: colors.primary + '18' }]}>
-                            <Text style={[{ width: COL_SET, textAlign: 'center', fontWeight: '700' }, global_styles.principalText]}>
-                                {set.num}
-                            </Text>
-                            <Text style={[{ width: COL_PREV, textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]} numberOfLines={1}>
-                                {recordLabel}
-                            </Text>
-                            <TextInput
-                                style={[{ width: COL_INPUT, textAlign: 'center', borderWidth: 1, borderRadius: 6, paddingVertical: 4 },
-                                    global_styles.principalText, { borderColor: colors.border, color: colors.textPrimary }]}
-                                value={set.kg}
-                                onChangeText={v => updateSet(i, 'kg', sanitizeNumber(v))}
-                                keyboardType="decimal-pad"
-                                placeholder="0"
-                                placeholderTextColor={colors.textSecondary}
-                                maxLength={6}
-                            />
-                            <TextInput
-                                style={[{ width: COL_INPUT, textAlign: 'center', borderWidth: 1, borderRadius: 6, paddingVertical: 4 },
-                                    global_styles.principalText, { borderColor: colors.border, color: colors.textPrimary }]}
-                                value={set.reps}
-                                onChangeText={v => updateSet(i, 'reps', v.replace(/[^0-9]/g, ''))}
-                                keyboardType="number-pad"
-                                placeholder="0"
-                                placeholderTextColor={colors.textSecondary}
-                                maxLength={4}
-                            />
-                            <Pressable
-                                style={[{ width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-                                    { backgroundColor: set.done ? colors.primary : colors.backgroundPrimary }]}
-                                onPress={() => handleTick(i)}
+                    {sets.map((set, i) => {
+                        const isInvalid = invalidIndices?.has(i) ?? false;
+                        const rowBg = isInvalid
+                            ? 'rgba(255,59,48,0.15)'
+                            : set.done
+                                ? colors.primary + '18'
+                                : 'transparent';
+
+                        return (
+                            <View
+                                key={i}
+                                style={[
+                                    train_styles.ec_rowOption,
+                                    { paddingHorizontal: 12, paddingVertical: 6 },
+                                    { backgroundColor: rowBg },
+                                ]}
                             >
-                                <Ionicons name="checkmark" size={16} color={set.done ? '#fff' : colors.textSecondary} />
-                            </Pressable>
-                        </View>
-                    ))}
+                                <Text style={[{ width: COL_SET, textAlign: 'center', fontWeight: '700' }, global_styles.principalText]}>
+                                    {set.num}
+                                </Text>
+                                <Text style={[{ width: COL_PREV, textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]} numberOfLines={1}>
+                                    {recordLabel}
+                                </Text>
+                                <TextInput
+                                    style={[
+                                        { width: COL_INPUT, textAlign: 'center', paddingVertical: 4 },
+                                        global_styles.principalText,
+                                        { color: colors.textPrimary },
+                                    ]}
+                                    value={set.kg}
+                                    onChangeText={v => updateSet(i, 'kg', sanitizeKg(v))}
+                                    keyboardType="decimal-pad"
+                                    placeholder="0"
+                                    placeholderTextColor={colors.textSecondary}
+                                    maxLength={6}
+                                />
+                                <TextInput
+                                    style={[
+                                        { width: COL_INPUT, textAlign: 'center', paddingVertical: 4 },
+                                        global_styles.principalText,
+                                        { color: colors.textPrimary },
+                                    ]}
+                                    value={set.reps}
+                                    onChangeText={v => updateSet(i, 'reps', sanitizeReps(v))}
+                                    keyboardType="number-pad"
+                                    placeholder="0"
+                                    placeholderTextColor={colors.textSecondary}
+                                    maxLength={4}
+                                />
+                                <Pressable
+                                    style={[
+                                        { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+                                        { backgroundColor: set.done ? colors.primary : colors.backgroundPrimary },
+                                    ]}
+                                    onPress={() => handleTick(i)}
+                                >
+                                    <Ionicons name="checkmark" size={16} color={set.done ? '#fff' : colors.textSecondary} />
+                                </Pressable>
+                            </View>
+                        );
+                    })}
 
                     <Pressable style={[train_styles.ec_addSetBtn, { borderTopColor: colors.border }]} onPress={addSet}>
                         <Text style={[global_styles.principalText, { textAlign: 'center' }]}>+ Add Set</Text>
@@ -180,7 +218,6 @@ export default function ExerciseCard({
                 </Pressable>
             </Modal>
 
-            {/* Replace */}
             <AddExerciseModal
                 visible={replaceVisible}
                 exercises={availableExercises}
@@ -188,16 +225,12 @@ export default function ExerciseCard({
                 onAdd={(newId) => { setReplaceVisible(false); onReplace(exercise.id_rutina_ejercicio, newId); }}
                 onCancel={() => setReplaceVisible(false)}
             />
-
-            {/* Reorder */}
             <ReorderModal
                 visible={reorderVisible}
                 exercises={allExercises}
                 onConfirm={(ordered) => { setReorderVisible(false); onReorder(ordered); }}
                 onCancel={() => setReorderVisible(false)}
             />
-
-            {/* Rest timer */}
             <RestTimerModal
                 visible={restModalVisible}
                 initialSeconds={exercise.descanso_seg ?? 0}
@@ -207,4 +240,3 @@ export default function ExerciseCard({
         </View>
     );
 }
-

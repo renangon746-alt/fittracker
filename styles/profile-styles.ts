@@ -6,7 +6,7 @@ export const profileStyles = (colors: any) =>
     StyleSheet.create({
         auth_container:{
             flex: 1, 
-            backgroundColor: colors.backgroundPrimary, 
+            backgroundColor: colors.backgroundSecondary, 
             flexDirection: 'column',
             alignItems: 'center', 
             paddingTop: 100

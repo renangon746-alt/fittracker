@@ -10,7 +10,7 @@ import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Dimensions, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActiveRoutine, SetsMap, useActiveRoutine } from '../_layout';
 
@@ -76,6 +76,13 @@ export default function Routine() {
     const restSeconds: number = isCurrentRoutine ? (activeRoutine?.restSeconds ?? 0) : 0;
     const restFormatted = `${Math.floor(restSeconds / 60)}:${String(restSeconds % 60).padStart(2, '0')}`;
 
+    const restInitialRef = useRef(0);
+    useEffect(() => {
+        if (restActive) restInitialRef.current = restSeconds;
+        else            restInitialRef.current = 0;
+    }, [restActive]); // capture initial value only when rest starts/stops
+    const restProgress = restInitialRef.current > 0 ? restSeconds / restInitialRef.current : 0;
+
     const setsMap: SetsMap = isCurrentRoutine ? (activeRoutine?.setsMap ?? EMPTY_SETS_MAP) : EMPTY_SETS_MAP;
 
     function getSets(idRutinaEjercicio: number): SetRow[] {
@@ -97,6 +104,127 @@ export default function Routine() {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [recordVisible, setRecordVisible] = useState(false);
+
+    // ── Validation ──────────────────────────────────────────────────────────
+    type CheckType = 'not_done' | 'invalid' | 'reps_zero' | 'kg_zero';
+    const [validationModal, setValidationModal] = useState<{
+        type: CheckType;
+        byExercise: Record<number, number[]>;
+        pendingMap: SetsMap;
+    } | null>(null);
+    const [markedInvalid, setMarkedInvalid] = useState<Record<number, Set<number>>>({});
+
+    function findNotDone(map: SetsMap): Record<number, number[]> {
+        const out: Record<number, number[]> = {};
+        for (const ex of exercises) {
+            const sets = map[ex.id_rutina_ejercicio] ?? [];
+            const bad = sets.reduce<number[]>((acc, s, i) => { if (!s.done) acc.push(i); return acc; }, []);
+            if (bad.length) out[ex.id_rutina_ejercicio] = bad;
+        }
+        return out;
+    }
+
+    function findInvalidSets(map: SetsMap): Record<number, number[]> {
+        const out: Record<number, number[]> = {};
+        for (const ex of exercises) {
+            const sets = map[ex.id_rutina_ejercicio] ?? [];
+            const bad = sets.reduce<number[]>((acc, s, i) => {
+                const kgVal  = parseFloat(s.kg.trim());
+                const repVal = parseInt(s.reps.trim());
+                if (s.kg.trim() === '' || isNaN(kgVal)  || kgVal  > 999 ||
+                    s.reps.trim() === '' || isNaN(repVal) || repVal > 999) acc.push(i);
+                return acc;
+            }, []);
+            if (bad.length) out[ex.id_rutina_ejercicio] = bad;
+        }
+        return out;
+    }
+
+    function findRepsZero(map: SetsMap): Record<number, number[]> {
+        const out: Record<number, number[]> = {};
+        for (const ex of exercises) {
+            const sets = map[ex.id_rutina_ejercicio] ?? [];
+            const bad = sets.reduce<number[]>((acc, s, i) => {
+                if (parseInt(s.reps.trim()) === 0) acc.push(i);
+                return acc;
+            }, []);
+            if (bad.length) out[ex.id_rutina_ejercicio] = bad;
+        }
+        return out;
+    }
+
+    function findKgZero(map: SetsMap): Record<number, number[]> {
+        const out: Record<number, number[]> = {};
+        for (const ex of exercises) {
+            const sets = map[ex.id_rutina_ejercicio] ?? [];
+            const bad = sets.reduce<number[]>((acc, s, i) => {
+                if (parseFloat(s.kg.trim()) === 0) acc.push(i);
+                return acc;
+            }, []);
+            if (bad.length) out[ex.id_rutina_ejercicio] = bad;
+        }
+        return out;
+    }
+
+    function removeBadSets(map: SetsMap, byExercise: Record<number, number[]>): SetsMap {
+        const result = { ...map };
+        for (const [idStr, indices] of Object.entries(byExercise)) {
+            const badSet = new Set(indices);
+            result[Number(idStr)] = (result[Number(idStr)] ?? []).filter((_, i) => !badSet.has(i));
+        }
+        return result;
+    }
+
+    function runValidation(map: SetsMap) {
+        const notDone = findNotDone(map);
+        if (Object.keys(notDone).length > 0) {
+            setValidationModal({ type: 'not_done', byExercise: notDone, pendingMap: map });
+            return;
+        }
+        const invalid = findInvalidSets(map);
+        if (Object.keys(invalid).length > 0) {
+            setValidationModal({ type: 'invalid', byExercise: invalid, pendingMap: map });
+            return;
+        }
+        const repsZero = findRepsZero(map);
+        if (Object.keys(repsZero).length > 0) {
+            setValidationModal({ type: 'reps_zero', byExercise: repsZero, pendingMap: map });
+            return;
+        }
+        const kgZero = findKgZero(map);
+        if (Object.keys(kgZero).length > 0) {
+            setValidationModal({ type: 'kg_zero', byExercise: kgZero, pendingMap: map });
+            return;
+        }
+        doFinishWithMap(map);
+    }
+
+    async function doFinishWithMap(map: SetsMap) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        await finishRoutine(elapsedRef.current, map);
+        clearActive();
+        router.back();
+    }
+
+    function handleValidationFix() {
+        const vm = validationModal!;
+        const marked: Record<number, Set<number>> = {};
+        for (const [idStr, indices] of Object.entries(vm.byExercise))
+            marked[Number(idStr)] = new Set(indices);
+        setMarkedInvalid(marked);
+        setValidationModal(null);
+    }
+
+    function handleValidationSave() {
+        const vm = validationModal!;
+        setValidationModal(null);
+        setMarkedInvalid({});
+        if (vm.type === 'kg_zero') {
+            runValidation(vm.pendingMap); // keep kg=0 sets, continue checks
+        } else {
+            runValidation(removeBadSets(vm.pendingMap, vm.byExercise));
+        }
+    }
     const newRecordCount = isCurrentRoutine ? (activeRoutine?.newRecordCount ?? 0) : 0;
 
     const formatted = (() => {
@@ -124,25 +252,9 @@ export default function Routine() {
         setTimeout(() => setRecordVisible(false), 2500);
     }
 
-    function allSetsDone(): boolean {
-        return exercises.every(ex => {
-            const sets = getSets(ex.id_rutina_ejercicio);
-            return sets.length > 0 && sets.every(s => s.done);
-        });
-    }
-
-    async function handleFinish() {
-        const pendingSets = !allSetsDone();
-        const message = pendingSets
-            ? 'You have incomplete sets. Are you sure you want to finish?'
-            : 'Save this workout?';
-        const confirmed = await confirm(message);
-        if (!confirmed) return;
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        const finalSetsMap = activeRef.current?.setsMap ?? EMPTY_SETS_MAP;
-        await finishRoutine(elapsedRef.current, finalSetsMap);
-        clearActive();
-        router.back();
+    function handleFinish() {
+        const finalMap = activeRef.current?.setsMap ?? EMPTY_SETS_MAP;
+        runValidation(finalMap);
     }
 
     async function handleDiscard() {
@@ -214,6 +326,8 @@ export default function Routine() {
                         onReplace={(idRE, newId) => replaceExercise(idRE, newId)}
                         onReorder={ordered => reorderExercises(ordered)}
                         editMode={isEditMode}
+                        invalidIndices={markedInvalid[ex.id_rutina_ejercicio]}
+                        onClearInvalid={() => setMarkedInvalid(prev => { const n = { ...prev }; delete n[ex.id_rutina_ejercicio]; return n; })}
                     />
                 ))}
 
@@ -226,44 +340,102 @@ export default function Routine() {
                     </Pressable>
                 </View>
 
+                {!isEditMode && (
+                    <Pressable
+                        onPress={handleFinish}
+                        style={({ pressed }) => ({
+                            marginHorizontal: 20,
+                            marginTop: 8,
+                            marginBottom: 16,
+                            paddingVertical: 14,
+                            borderRadius: 24,
+                            alignItems: 'center',
+                            backgroundColor: colors.backgroundPrimary,
+                            borderWidth: 1.5,
+                            borderColor: colors.primary,
+                            opacity: pressed ? 0.75 : 1,
+                        })}
+                    >
+                        <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 15 }}>Finalizar Entrenamiento</Text>
+                    </Pressable>
+                )}
+
             </ScrollView>
 
             {!isEditMode && (
-                <View style={[train_styles.r_bottomBar, { backgroundColor: colors.backgroundSecondary }]}>
+                <View style={[train_styles.r_bottomBar, { backgroundColor: colors.backgroundPrimary }]}>
                     {restActive ? (
-                        <>
+                        <View>
+                            {/* Full-width progress bar — capped at 100% if time is extended */}
+                            <View style={{ height: 5, backgroundColor: colors.border, borderRadius: 4, marginHorizontal: 16, marginBottom: 10 }}>
+                                <View style={{ width: `${Math.round(Math.min(restProgress, 1) * 100)}%`, height: 5, borderRadius: 4, backgroundColor: colors.primary }} />
+                            </View>
                             <View style={train_styles.r_restRow}>
-                                <Pressable style={train_styles.r_adjustBtn} onPress={() => addRestTime(-15)}>
-                                    <Text style={[global_styles.principalText, { fontSize: 14 }]}>-15s</Text>
+                                <Pressable
+                                    style={[train_styles.r_adjustBtn, { backgroundColor: colors.backgroundSecondary, borderRadius: 10, borderWidth: 1.5 }]}
+                                    onPress={() => addRestTime(-15)}
+                                >
+                                    <Text style={[global_styles.principalText, { fontSize: 14, color: '#fff' }]}>-15s</Text>
                                 </Pressable>
                                 <View style={train_styles.r_restCenter}>
-                                    <Text style={[global_styles.secondaryText, { color: colors.primary, marginBottom: 2 }]}>Rest</Text>
                                     <Text style={[global_styles.tittleText, { fontSize: 28 }]}>{restFormatted}</Text>
                                     <Pressable onPress={stopRest}>
                                         <Text style={[global_styles.secondaryText, { color: colors.textSecondary, fontSize: 12 }]}>Skip</Text>
                                     </Pressable>
                                 </View>
-                                <Pressable style={train_styles.r_adjustBtn} onPress={() => addRestTime(15)}>
-                                    <Text style={[global_styles.principalText, { fontSize: 14 }]}>+15s</Text>
+                                <Pressable
+                                    style={[train_styles.r_adjustBtn, { backgroundColor: colors.backgroundSecondary, borderRadius: 10, borderWidth: 1.5}]}
+                                    onPress={() => addRestTime(15)}
+                                >
+                                    <Text style={[global_styles.principalText, { fontSize: 14, color: '#fff' }]}>+15s</Text>
                                 </Pressable>
                             </View>
-                            <Pressable style={[global_styles.principalButton, train_styles.r_finishBtn]} onPress={handleFinish}>
-                                <Text style={[global_styles.principalText, { fontSize: 13 }]}>Finish Routine</Text>
-                            </Pressable>
-                        </>
+                        </View>
                     ) : (
                         <View style={train_styles.r_normalRow}>
                             <Text style={[global_styles.principalText, { fontSize: 18, fontWeight: '600' }]}>{formatted}</Text>
                             <Pressable onPress={() => setRunning(r => !r)} style={train_styles.r_playPauseButton}>
                                 <Ionicons name={running ? 'pause' : 'play'} size={24} color="#000" />
                             </Pressable>
-                            <Pressable style={[global_styles.principalButton, { paddingHorizontal: 18, height: 36 }]} onPress={handleFinish}>
-                                <Text style={[global_styles.principalText, { fontSize: 13 }]}>Finish</Text>
-                            </Pressable>
                         </View>
                     )}
                 </View>
             )}
+
+            {/* Validation modal */}
+            <Modal visible={!!validationModal} transparent animationType="fade" onRequestClose={handleValidationFix}>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+                    <View style={{ backgroundColor: colors.backgroundPrimary, borderRadius: 24, padding: 24, width: '100%', alignItems: 'center', gap: 12 }}>
+                        <Ionicons name="warning-outline" size={36} color={colors.primary} />
+                        <Text style={[global_styles.tittleText, { textAlign: 'center', fontSize: 18 }]}>
+                            {validationModal?.type === 'not_done'  && 'Series sin completar'}
+                            {validationModal?.type === 'invalid'   && 'Series con campos inválidos'}
+                            {validationModal?.type === 'reps_zero' && 'Series con repeticiones en 0'}
+                            {validationModal?.type === 'kg_zero'   && 'Series con peso en 0'}
+                        </Text>
+                        <Text style={[global_styles.secondaryText, { textAlign: 'center', lineHeight: 20 }]}>
+                            {validationModal?.type === 'not_done'  && 'Hay series que no han sido marcadas como completadas. Puedes arreglarlas o guardar sin ellas.'}
+                            {validationModal?.type === 'invalid'   && 'Hay series con campos vacíos o fuera de rango (0–999). Puedes arreglarlas o guardar sin ellas.'}
+                            {validationModal?.type === 'reps_zero' && 'Hay series con 0 repeticiones. Puedes arreglarlas o guardar sin ellas.'}
+                            {validationModal?.type === 'kg_zero'   && 'Hay series con 0 kg (posibles ejercicios sin peso). Puedes arreglarlas o guardar igualmente.'}
+                        </Text>
+                        <Pressable
+                            onPress={handleValidationFix}
+                            style={({ pressed }) => ({ width: '100%', paddingVertical: 14, borderRadius: 24, alignItems: 'center', backgroundColor: colors.primary, opacity: pressed ? 0.75 : 1, marginTop: 4 })}
+                        >
+                            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Arreglar series</Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={handleValidationSave}
+                            style={({ pressed }) => ({ width: '100%', paddingVertical: 14, borderRadius: 24, alignItems: 'center', backgroundColor: colors.backgroundSecondary, opacity: pressed ? 0.75 : 1 })}
+                        >
+                            <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15 }}>
+                                {validationModal?.type === 'kg_zero' ? 'Guardar igualmente' : 'Guardar sin ellas'}
+                            </Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
 
             <NewRecordOverlay visible={recordVisible} />
             <AddExerciseModal
