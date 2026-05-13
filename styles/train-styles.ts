@@ -181,7 +181,7 @@ export const trainStyles = (colors: any) =>
             width: '95%',
             height: 140,
             backgroundColor: colors.backgroundPrimary,
-            borderRadius: 24,
+            borderRadius: 16,
             padding: 16,
             borderWidth: 1,
             borderColor: colors.backgroundTertiary,
@@ -204,8 +204,7 @@ export const trainStyles = (colors: any) =>
         rc_startButtonContainer: {
             alignItems: 'center',
             gap: 20,
-            paddingHorizontal: 10,
-            marginTop: 20
+            marginTop: 16
         },
 
         rc_startButtonPressable: {
