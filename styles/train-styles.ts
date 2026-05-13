@@ -180,7 +180,7 @@ export const trainStyles = (colors: any) =>
         rc_container: {
             width: '90%',
             height: 140,
-            backgroundColor: colors.routineCard.background,
+            backgroundColor: colors.backgroundPrimary,
             borderRadius: 10,
             padding: 16,
             borderWidth: 1,

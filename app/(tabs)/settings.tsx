@@ -1,7 +1,7 @@
-import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
-import { globalStyles } from '@/styles/global-styles';
+import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
+import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useRouter } from 'expo-router';

@@ -29,7 +29,7 @@ export default function Train() {
 
   return (
     <SafeAreaView style={global_styles.defaultContainer}>
-      <ScrollView contentContainerStyle={global_styles.defaultScroll}>
+      <ScrollView contentContainerStyle={global_styles.defaultScroll} style={{backgroundColor: colors.backgroundSecondary}}>
 
         <View style={train_styles.t_tittleAndSearch}>
           <Text style={global_styles.tittleText}>Fast Start</Text>
@@ -49,7 +49,7 @@ export default function Train() {
           <Ionicons name="folder-open" size={24} color={colors.textPrimary} />
         </View>
 
-        {/* Pass refresh so RoutineCard can trigger re-fetch on delete/update */}
+        
         <View style={train_styles.t_routinesFoldersList}>
           <RoutineFolder title="My Routines" routines={routinesByFolder.my_routines} loading={loading} onRefresh={refresh} />
           <RoutineFolder title="Routines Saved" routines={routinesByFolder.saved} loading={loading} onRefresh={refresh} />

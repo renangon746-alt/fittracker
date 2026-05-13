@@ -22,7 +22,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static",
+      "output": "server",
       "name": "FitTracker - App de Ejercicios",
       "shortName": "FitTracker",
       "favicon": "./assets/images/Icon__dumbell_fitTracker.png"

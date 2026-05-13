@@ -76,7 +76,7 @@ export default function ExerciseCard({
     const recordLabel = record ? `${record.kg}kg x ${record.reps}` : '—';
 
     return (
-        <View style={[train_styles.ec_card, { backgroundColor: colors.backgroundSecondary }]}>
+        <View style={[train_styles.ec_card, { backgroundColor: colors.backgroundPrimary }]}>
 
             {/* Header */}
             <View style={train_styles.ec_header}>

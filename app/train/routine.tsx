@@ -163,7 +163,7 @@ export default function Routine() {
 
     return (
         <SafeAreaView style={[global_styles.defaultContainer, { flex: 1 }]}>
-            <ScrollView contentContainerStyle={{ paddingBottom: isEditMode ? 32 : BOTTOM_BAR_HEIGHT + 16 }}>
+            <ScrollView style={{backgroundColor: colors.backgroundSecondary}} contentContainerStyle={{ paddingBottom: isEditMode ? 32 : BOTTOM_BAR_HEIGHT + 16 } }>
 
                 <View style={train_styles.r_tittle}>
                     <Pressable onPress={isEditMode ? () => router.back() : handleMinimize}>
