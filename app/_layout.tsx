@@ -1,14 +1,14 @@
 import { LanguageProvider } from '@/context/LanguageContext';
 import { UserProvider } from '@/context/UserContext';
 import { SetRow } from '@/hooks/train/useRoutineDetail';
-import { trainStyles } from '@/styles/train-styles';
+import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { Stack, router } from "expo-router";
 import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
 export type SetsMap = Record<number, SetRow[]>;
@@ -24,9 +24,7 @@ export interface ActiveRoutine {
 }
 
 interface ActiveRoutineCtx {
-    // Reactive state for UI components that need to re-render (MinimizedBar, stats)
     active: ActiveRoutine | null;
-    // Stable ref — Routine reads this on mount without causing setState-during-render
     activeRef: React.MutableRefObject<ActiveRoutine | null>;
     navigateToRoutine: (id: string, nombre: string) => void;
     tickSeconds: () => void;
@@ -61,10 +59,11 @@ export function useActiveRoutine() {
     return useContext(ActiveRoutineContext);
 }
 
+// ── Minimized bar ─────────────────────────────────────────────────────────────
 function MinimizedRoutineBar() {
-    const { active, minimized, setMinimized, navigateToRoutine } = useActiveRoutine();
+    const { active, minimized, setMinimized, clearActive, navigateToRoutine } = useActiveRoutine();
     const { colors } = useTheme();
-    const train_styles = trainStyles(colors);
+    const insets = useSafeAreaInsets();
 
     if (!active || !minimized) return null;
 
@@ -76,32 +75,84 @@ function MinimizedRoutineBar() {
         ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
         : `${m}:${String(sec).padStart(2, '0')}`;
 
-    const restLabel = active.restActive && active.restSeconds > 0
-        ? ` · Rest ${Math.floor(active.restSeconds / 60)}:${String(active.restSeconds % 60).padStart(2, '0')}`
-        : '';
+    const isResting = active.restActive && active.restSeconds > 0;
+    const restFormatted = `${Math.floor(active.restSeconds / 60)}:${String(active.restSeconds % 60).padStart(2, '0')}`;
+
+    const bottomOffset = insets.bottom + 49 + 20;
 
     return (
         <Pressable
-            style={[train_styles.mb_bar, { backgroundColor: colors.primary }]}
+            style={[
+                styles.pill,
+                {
+                    backgroundColor: colors.backgroundSecondary,
+                    bottom: bottomOffset,
+                    // Subtle border using primary color
+                    borderColor: colors.primary,
+                    borderWidth: 1,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.18,
+                    shadowRadius: 12,
+                    elevation: 10,
+                }
+            ]}
             onPress={() => {
                 setMinimized(false);
                 navigateToRoutine(active.id, active.nombre);
             }}
         >
-            <View style={train_styles.mb_left}>
-                <Text style={train_styles.mb_title} numberOfLines={1}>{active.nombre}{restLabel}</Text>
-                <Text style={train_styles.mb_sub}>Tap to resume</Text>
+            {/* Left: chevron up icon */}
+            <View style={[styles.iconWrap, { backgroundColor: colors.primary + '22' }]}>
+                <Ionicons name="chevron-up" size={18} color={colors.primary} />
             </View>
-            <Text style={train_styles.mb_timer}>{formatted}</Text>
+
+            {/* Center: routine name + status */}
+            <View style={styles.center}>
+                {isResting ? (
+                    <>
+                        <Text style={[styles.statusText, { color: colors.primary }]}>
+                            Descanso {restFormatted}
+                        </Text>
+                        <Text style={[styles.subText, { color: colors.textSecondary }]} numberOfLines={1}>
+                            {active.nombre}
+                        </Text>
+                    </>
+                ) : (
+                    <>
+                        <Text style={[styles.titleText, { color: colors.textPrimary }]} numberOfLines={1}>
+                            {active.nombre}
+                        </Text>
+                        <Text style={[styles.subText, { color: colors.textSecondary }]}>
+                            Tap to resume
+                        </Text>
+                    </>
+                )}
+            </View>
+
+            {/* Timer */}
+            <Text style={[styles.timer, { color: colors.textPrimary }]}>{formatted}</Text>
+
+            {/* Discard button */}
+            <Pressable
+                style={[styles.discardBtn, { backgroundColor: colors.backgroundPrimary }]}
+                onPress={e => {
+                    e.stopPropagation?.();
+                    clearActive();
+                }}
+                hitSlop={8}
+            >
+                <Ionicons name="trash-outline" size={16} color="#FF3B30" />
+            </Pressable>
         </Pressable>
     );
 }
 
+// ── Provider ──────────────────────────────────────────────────────────────────
 function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     const [active, setActive] = useState<ActiveRoutine | null>(null);
     const [minimized, setMinimized] = useState(false);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    // This ref is passed directly into context — stable across renders
     const activeRef = useRef<ActiveRoutine | null>(null);
 
     useEffect(() => {
@@ -130,9 +181,7 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
         const next: ActiveRoutine = (existing && existing.id === id)
             ? existing
             : { id, nombre, seconds: 0, setsMap: {}, newRecordCount: 0, restSeconds: 0, restActive: false };
-        // Write to ref synchronously — Routine will read this on its first render
         activeRef.current = next;
-        // Schedule the state update separately so it doesn't race with navigation
         setActive(next);
         setMinimized(false);
         router.push({ pathname: '/train/routine', params: { id, nombre } });
@@ -207,10 +256,11 @@ function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
 }
 
 function AppStatusBar() {
-  const { theme } = useTheme();
-  return <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />;
+    const { theme } = useTheme();
+    return <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />;
 }
 
+// ── Root layout ───────────────────────────────────────────────────────────────
 export default function RootLayout() {
     const [loaded] = useFonts({
         Inter: require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
@@ -219,38 +269,87 @@ export default function RootLayout() {
 
     if (!loaded) return null;
 
-  return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <LanguageProvider>
-          <UserProvider>
-            <ActiveRoutineProvider>
-              <AppStatusBar />
-              <Head>
-                <title>FitTracker</title>
-                <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
-              </Head>
-              <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/register" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/resetPassword" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-                <Stack.Screen name="errorPage" options={{ headerShown: false }} />
-                <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
-                <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
-                <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
-                <Stack.Screen name="profile/followers" options={{ headerShown: false }} />
-                <Stack.Screen name="profile/following" options={{ headerShown: false }} />
-                <Stack.Screen name="settings" options={{ headerShown: false }} />
-                <Stack.Screen name="train/routine" options={{ headerShown: false }} />
-              </Stack>
-              <MinimizedRoutineBar />
-            </ActiveRoutineProvider>
-          </UserProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
-  );
+    return (
+        <SafeAreaProvider>
+            <ThemeProvider>
+                <LanguageProvider>
+                    <UserProvider>
+                        <ActiveRoutineProvider>
+                            <AppStatusBar />
+                            <Head>
+                                <title>FitTracker</title>
+                                <meta name="description" content="App de seguimiento de ejercicios FitTracker" />
+                            </Head>
+                            <Stack>
+                                <Stack.Screen name="index" options={{ headerShown: false }} />
+                                <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+                                <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+                                <Stack.Screen name="auth/forgotPassword" options={{ headerShown: false }} />
+                                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                <Stack.Screen name="errorPage" options={{ headerShown: false }} />
+                                <Stack.Screen name="profile/profileDescription" options={{ headerShown: false }} />
+                                <Stack.Screen name="profile/ownProfile" options={{ headerShown: false }} />
+                                <Stack.Screen name="profile/editProfile" options={{ headerShown: false }} />
+                                <Stack.Screen name="profile/followers" options={{ headerShown: false }} />
+                                <Stack.Screen name="profile/following" options={{ headerShown: false }} />
+                                <Stack.Screen name="settings" options={{ headerShown: false }} />
+                                <Stack.Screen name="train/routine" options={{ headerShown: false }} />
+                            </Stack>
+                            <MinimizedRoutineBar />
+                        </ActiveRoutineProvider>
+                    </UserProvider>
+                </LanguageProvider>
+            </ThemeProvider>
+        </SafeAreaProvider>
+    );
 }
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+    pill: {
+        position: 'absolute',
+        left: 12,
+        right: 12,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        zIndex: 100,
+        gap: 10,
+    },
+    iconWrap: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    center: {
+        flex: 1,
+    },
+    statusText: {
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    titleText: {
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    subText: {
+        fontSize: 11,
+        marginTop: 1,
+    },
+    timer: {
+        fontSize: 16,
+        fontWeight: '600',
+        letterSpacing: -0.3,
+    },
+    discardBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+});

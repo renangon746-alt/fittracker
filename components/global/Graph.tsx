@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Dimensions, Platform, Pressable, Text, View } from 'react-native';
 import Svg, {
-  Circle, Defs, Line, LinearGradient, Path,
-  Polyline, Stop, Text as SvgText,
+    Circle, Defs, Line, LinearGradient, Path,
+    Polyline, Stop, Text as SvgText,
 } from 'react-native-svg';
 
 interface GraphProps {

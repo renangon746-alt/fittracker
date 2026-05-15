@@ -13,7 +13,7 @@ export default function Cal({ fechasEntrenadas = [] }: CalProps) {
     const screenWidth = Dimensions.get('window').width;
     const [selectedDate, setSelectedDate] = useState('');
     const { colors } = useTheme();
-    const global_styles = globalStyles(colors);
+    const styles = globalStyles(colors);
 
     const workoutDays = fechasEntrenadas.reduce<Record<string, { marked: boolean; dotColor: string }>>((acc, date) => {
         acc[date] = { marked: true, dotColor: colors.calendar.dot };
@@ -21,7 +21,7 @@ export default function Cal({ fechasEntrenadas = [] }: CalProps) {
     }, {});
 
     return (
-        <View style={global_styles.calendarContainer}>
+        <View style={styles.calendarContainer}>
             <Calendar
                 onDayPress={(day) => setSelectedDate(day.dateString)}
                 markedDates={{
@@ -33,7 +33,7 @@ export default function Cal({ fechasEntrenadas = [] }: CalProps) {
                     }
                 }}
                 theme={calendarTheme(colors)}
-                style={[global_styles.calendarRadius, { width: screenWidth - 60 }]}
+                style={[styles.calendarRadius, { width: screenWidth - 60 }]}
             />
         </View>
     );
