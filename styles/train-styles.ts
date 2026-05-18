@@ -758,6 +758,84 @@ export const trainStyles = (colors: any) =>
             borderRadius: 12, 
             alignItems: 'center', 
             justifyContent: 'center' 
+        }, 
+
+        whc_card: {
+            borderRadius: 16,
+            padding: 14,
+            marginBottom: 10,
+        },
+
+        whc_cardHeader: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 4,
+        },
+
+        whc_iconWrap: {
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(128,128,128,0.1)',
+        },
+
+        whc_modalBackdrop: {
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+        },
+
+        whc_modalSheet: {
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            padding: 24,
+            paddingBottom: 36,
+        },
+
+        whc_handle: {
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            alignSelf: 'center',
+            marginBottom: 16,
+        },
+
+        whc_exerciseBlock: {
+            borderTopWidth: StyleSheet.hairlineWidth,
+            paddingVertical: 12,
+        },
+
+        whc_tableRow: {
+            flexDirection: 'row',
+            paddingVertical: 3,
+        },
+
+        whc_colSet: { 
+            width: 40, 
+            textAlign: 'center', 
+            fontSize: 13 
+        },
+
+        whc_colKg: { 
+            width: 70, 
+            textAlign: 'center', 
+            fontSize: 13 
+        },
+
+        whc_colReps: { 
+            flex: 1, 
+            textAlign: 'center', 
+            fontSize: 13 
+        },
+
+        whc_closeBtn: {
+            marginTop: 16,
+            height: 44,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
         },
         
     });

@@ -5,7 +5,7 @@ import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
 interface ReorderModalProps {
     visible: boolean;
@@ -75,7 +75,3 @@ export default function ReorderModal({ visible, exercises, onConfirm, onCancel }
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    
-});
