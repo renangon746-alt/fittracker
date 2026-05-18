@@ -87,7 +87,6 @@ function MinimizedRoutineBar() {
                 {
                     backgroundColor: colors.backgroundSecondary,
                     bottom: bottomOffset,
-                    // Subtle border using primary color
                     borderColor: colors.primary,
                     borderWidth: 1,
                     shadowColor: '#000',
@@ -148,7 +147,7 @@ function MinimizedRoutineBar() {
     );
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
+// Provider 
 function ActiveRoutineProvider({ children }: { children: React.ReactNode }) {
     const [active, setActive] = useState<ActiveRoutine | null>(null);
     const [minimized, setMinimized] = useState(false);

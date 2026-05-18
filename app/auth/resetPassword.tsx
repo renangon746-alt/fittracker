@@ -6,7 +6,7 @@ import { profileStyles } from "@/styles/profile-styles";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ResetPassword() {
@@ -99,48 +99,50 @@ export default function ResetPassword() {
 
     return (
         <SafeAreaView style={global_styles.defaultContainer}>
-            <ScrollView contentContainerStyle={global_styles.defaultScroll}>
-                <View style={profile_styles.auth_container}>
-                    <Image
-                        source={require("../../assets/images/Icon__dumbell_fitTracker.png")}
-                        style={global_styles.principalLogoImage}
-                    />
-                    <Text style={global_styles.tittleText}>Restablecer Contraseña</Text>
-
-                    <View style={{ paddingTop: 20 }}>
-                        <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>Nueva contraseña</Text>
-                        <TextInput
-                            style={global_styles.inputs}
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+                <ScrollView contentContainerStyle={global_styles.defaultScroll}>
+                    <View style={profile_styles.auth_container}>
+                        <Image
+                            source={require("../../assets/images/Icon__dumbell_fitTracker.png")}
+                            style={global_styles.principalLogoImage}
                         />
-                    </View>
+                        <Text style={global_styles.tittleText}>Restablecer Contraseña</Text>
 
-                    <View style={{ paddingTop: 20 }}>
-                        <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>Repetir contraseña</Text>
-                        <TextInput
-                            style={global_styles.inputs}
-                            value={repeatPassword}
-                            onChangeText={setRepeatPassword}
-                            secureTextEntry
-                        />
-                    </View>
+                        <View style={{ paddingTop: 20 }}>
+                            <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>Nueva contraseña</Text>
+                            <TextInput
+                                style={global_styles.inputs}
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                            />
+                        </View>
 
-                    {errorMsg && <Text style={[global_styles.secondaryText, { color: 'red', textAlign: 'center', marginTop: 10 }]}>{errorMsg}</Text>}
-                    {successMsg && <Text style={[global_styles.secondaryText, { color: 'green', textAlign: 'center', marginTop: 10 }]}>{successMsg}</Text>}
+                        <View style={{ paddingTop: 20 }}>
+                            <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>Repetir contraseña</Text>
+                            <TextInput
+                                style={global_styles.inputs}
+                                value={repeatPassword}
+                                onChangeText={setRepeatPassword}
+                                secureTextEntry
+                            />
+                        </View>
 
-                    <View style={profile_styles.buttonContainer}>
-                        <Pressable style={global_styles.principalButton} onPress={handleResetPassword}>
-                            <Text style={global_styles.principalText}>Confirmar</Text>
+                        {errorMsg && <Text style={[global_styles.secondaryText, { color: 'red', textAlign: 'center', marginTop: 10 }]}>{errorMsg}</Text>}
+                        {successMsg && <Text style={[global_styles.secondaryText, { color: 'green', textAlign: 'center', marginTop: 10 }]}>{successMsg}</Text>}
+
+                        <View style={profile_styles.buttonContainer}>
+                            <Pressable style={global_styles.principalButton} onPress={handleResetPassword}>
+                                <Text style={global_styles.principalText}>Confirmar</Text>
+                            </Pressable>
+                        </View>
+
+                        <Pressable onPress={() => router.replace("/auth/login")}>
+                            <Text style={global_styles.underlineText}>{t("back")}</Text>
                         </Pressable>
                     </View>
-
-                    <Pressable onPress={() => router.replace("/auth/login")}>
-                        <Text style={global_styles.underlineText}>{t("back")}</Text>
-                    </Pressable>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
