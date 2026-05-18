@@ -186,7 +186,7 @@ export const trainStyles = (colors: any) =>
             borderWidth: 1,
             borderColor: colors.backgroundTertiary,
         },
-
+ 
         rc_dayEdit: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -514,6 +514,42 @@ export const trainStyles = (colors: any) =>
             borderRadius: 16,
             alignItems: 'center',
             justifyContent: 'center',
+        },
+
+        rtm_controls: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 20,
+            marginVertical: 20,
+        },
+
+        rtm_adjBtn: {
+            width: 52,
+            height: 52,
+            borderRadius: 26,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+
+        rtm_display: {
+            minWidth: 140,
+            alignItems: 'center',
+        },
+
+        rtm_presets: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 8,
+            justifyContent: 'center',
+            marginBottom: 20,
+        },
+
+        rtm_chip: {
+            paddingHorizontal: 14,
+            paddingVertical: 7,
+            borderRadius: 20,
+            borderWidth: 1.5,
         },
 
         nro_overlay: {
