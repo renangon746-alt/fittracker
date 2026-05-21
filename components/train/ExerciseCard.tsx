@@ -8,8 +8,11 @@ import { RoutineExercise, SetRow } from '@/hooks/train/useRoutineDetail';
 import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { Image, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+    Animated, Image, Modal, PanResponder,
+    Pressable, Text, TextInput, View,
+} from 'react-native';
 
 interface ExerciseCardProps {
     exercise: RoutineExercise;
@@ -32,7 +35,153 @@ const COL_SET   = 36;
 const COL_PREV  = 100;
 const COL_INPUT = 60;
 const COL_CHECK = 40;
+const SWIPE_THRESHOLD = 80; // px to trigger delete
 
+// ── Swipeable set row ─────────────────────────────────────────────────────────
+function SwipeableSetRow({
+    set, index, isInvalid, recordLabel, colors, global_styles,
+    onUpdateKg, onUpdateReps, onTick, onDelete,
+    sanitizeKg, sanitizeReps,
+}: {
+    set: SetRow;
+    index: number;
+    isInvalid: boolean;
+    recordLabel: string;
+    colors: any;
+    global_styles: any;
+    onUpdateKg: (v: string) => void;
+    onUpdateReps: (v: string) => void;
+    onTick: () => void;
+    onDelete: () => void;
+    sanitizeKg: (v: string) => string;
+    sanitizeReps: (v: string) => string;
+}) {
+    const translateX = useRef(new Animated.Value(0)).current;
+    const deleteOpacity = translateX.interpolate({
+        inputRange: [0, SWIPE_THRESHOLD],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onMoveShouldSetPanResponder: (_, g) =>
+                Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy),
+            onPanResponderMove: (_, g) => {
+                if (g.dx > 0) translateX.setValue(g.dx);
+            },
+            onPanResponderRelease: (_, g) => {
+                if (g.dx >= SWIPE_THRESHOLD) {
+                    // Animate out then delete
+                    Animated.timing(translateX, {
+                        toValue: 400,
+                        duration: 180,
+                        useNativeDriver: true,
+                    }).start(() => onDelete());
+                } else {
+                    // Snap back
+                    Animated.spring(translateX, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                        bounciness: 6,
+                    }).start();
+                }
+            },
+            onPanResponderTerminate: () => {
+                Animated.spring(translateX, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                }).start();
+            },
+        })
+    ).current;
+
+    const rowBg = isInvalid
+        ? 'rgba(255,59,48,0.15)'
+        : set.done
+            ? colors.primary + '18'
+            : 'transparent';
+
+    return (
+        <View style={{ position: 'relative', overflow: 'hidden' }}>
+            {/* Delete background revealed on swipe */}
+            <Animated.View
+                style={{
+                    position: 'absolute',
+                    left: 0, top: 0, bottom: 0,
+                    width: SWIPE_THRESHOLD + 20,
+                    backgroundColor: '#FF3B30',
+                    justifyContent: 'center',
+                    alignItems: 'flex-start',
+                    paddingLeft: 16,
+                    opacity: deleteOpacity,
+                }}
+            >
+                <Ionicons name="trash-outline" size={20} color="#fff" />
+            </Animated.View>
+
+            {/* Row content */}
+            <Animated.View
+                style={[
+                    {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        gap: 8,
+                        backgroundColor: rowBg,
+                    },
+                    { transform: [{ translateX }] },
+                ]}
+                {...panResponder.panHandlers}
+            >
+                <Text style={[{ width: COL_SET, textAlign: 'center', fontWeight: '700' }, global_styles.principalText]}>
+                    {set.num}
+                </Text>
+                <Text style={[{ width: COL_PREV, textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]} numberOfLines={1}>
+                    {recordLabel}
+                </Text>
+                <TextInput
+                    style={[
+                        { width: COL_INPUT, textAlign: 'center', paddingVertical: 4 },
+                        global_styles.principalText,
+                        { color: colors.textPrimary },
+                    ]}
+                    value={set.kg}
+                    onChangeText={v => onUpdateKg(sanitizeKg(v))}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor={colors.textSecondary}
+                    maxLength={6}
+                />
+                <TextInput
+                    style={[
+                        { width: COL_INPUT, textAlign: 'center', paddingVertical: 4 },
+                        global_styles.principalText,
+                        { color: colors.textPrimary },
+                    ]}
+                    value={set.reps}
+                    onChangeText={v => onUpdateReps(sanitizeReps(v))}
+                    keyboardType="number-pad"
+                    placeholder="0"
+                    placeholderTextColor={colors.textSecondary}
+                    maxLength={4}
+                />
+                <Pressable
+                    style={[
+                        { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+                        { backgroundColor: set.done ? colors.primary : colors.backgroundPrimary },
+                    ]}
+                    onPress={onTick}
+                >
+                    <Ionicons name="checkmark" size={16} color={set.done ? '#fff' : colors.textSecondary} />
+                </Pressable>
+            </Animated.View>
+        </View>
+    );
+}
+
+// ── ExerciseCard ──────────────────────────────────────────────────────────────
 export default function ExerciseCard({
     exercise, allExercises, sets, onSetsChange,
     record, onSetDone, onRestTimeChanged, onNewRecord,
@@ -47,14 +196,21 @@ export default function ExerciseCard({
     const imgSource = exercise.image_key ? exerciseImageMap[exercise.image_key] : null;
     const { exercises: availableExercises, loading: loadingExercises } = useExercises();
 
-    const [restModalVisible,  setRestModalVisible]  = useState(false);
-    const [menuVisible,       setMenuVisible]        = useState(false);
-    const [replaceVisible,    setReplaceVisible]     = useState(false);
-    const [reorderVisible,    setReorderVisible]     = useState(false);
+    const [restModalVisible, setRestModalVisible] = useState(false);
+    const [menuVisible,      setMenuVisible]       = useState(false);
+    const [replaceVisible,   setReplaceVisible]    = useState(false);
+    const [reorderVisible,   setReorderVisible]    = useState(false);
 
     function updateSet(index: number, field: keyof SetRow, value: string | boolean) {
         onClearInvalid?.();
         onSetsChange(sets.map((s, i) => i === index ? { ...s, [field]: value } : s));
+    }
+
+    function deleteSet(index: number) {
+        const updated = sets
+            .filter((_, i) => i !== index)
+            .map((s, i) => ({ ...s, num: i + 1 }));
+        onSetsChange(updated);
     }
 
     function addSet() {
@@ -97,7 +253,7 @@ export default function ExerciseCard({
             <View style={train_styles.ec_header}>
                 {imgSource
                     ? <Image source={imgSource} style={train_styles.ec_headerImage} />
-                    : <View style={[train_styles.ec_headerImage, { backgroundColor: colors.backgroundPrimary }]} />
+                    : <View style={[train_styles.ec_headerImage, { backgroundColor: colors.backgroundSecondary }]} />
                 }
                 <Text style={[global_styles.principalText, train_styles.ec_headerTitle, { color: colors.primary }]}>
                     {exercise.nombre}
@@ -122,75 +278,33 @@ export default function ExerciseCard({
             {/* Table */}
             {!editMode && (
                 <>
+                    {/* Column headers */}
                     <View style={[train_styles.ec_rowOption, { paddingHorizontal: 12, paddingVertical: 6 }]}>
-                        <Text style={[{ width: COL_SET,   textAlign: 'center' },           global_styles.secondaryText]}>SET</Text>
+                        <Text style={[{ width: COL_SET,   textAlign: 'center' },                global_styles.secondaryText]}>SET</Text>
                         <Text style={[{ width: COL_PREV,  textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]}>PREVIOUS</Text>
-                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },           global_styles.secondaryText]}>KG</Text>
-                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },           global_styles.secondaryText]}>REPS</Text>
+                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },                global_styles.secondaryText]}>KG</Text>
+                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },                global_styles.secondaryText]}>REPS</Text>
                         <View style={{ width: COL_CHECK }} />
                     </View>
 
-                    {sets.map((set, i) => {
-                        const isInvalid = invalidIndices?.has(i) ?? false;
-                        const rowBg = isInvalid
-                            ? 'rgba(255,59,48,0.15)'
-                            : set.done
-                                ? colors.primary + '18'
-                                : 'transparent';
-
-                        return (
-                            <View
-                                key={i}
-                                style={[
-                                    train_styles.ec_rowOption,
-                                    { paddingHorizontal: 12, paddingVertical: 6 },
-                                    { backgroundColor: rowBg },
-                                ]}
-                            >
-                                <Text style={[{ width: COL_SET, textAlign: 'center', fontWeight: '700' }, global_styles.principalText]}>
-                                    {set.num}
-                                </Text>
-                                <Text style={[{ width: COL_PREV, textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]} numberOfLines={1}>
-                                    {recordLabel}
-                                </Text>
-                                <TextInput
-                                    style={[
-                                        { width: COL_INPUT, textAlign: 'center', paddingVertical: 4 },
-                                        global_styles.principalText,
-                                        { color: colors.textPrimary },
-                                    ]}
-                                    value={set.kg}
-                                    onChangeText={v => updateSet(i, 'kg', sanitizeKg(v))}
-                                    keyboardType="decimal-pad"
-                                    placeholder="0"
-                                    placeholderTextColor={colors.textSecondary}
-                                    maxLength={6}
-                                />
-                                <TextInput
-                                    style={[
-                                        { width: COL_INPUT, textAlign: 'center', paddingVertical: 4 },
-                                        global_styles.principalText,
-                                        { color: colors.textPrimary },
-                                    ]}
-                                    value={set.reps}
-                                    onChangeText={v => updateSet(i, 'reps', sanitizeReps(v))}
-                                    keyboardType="number-pad"
-                                    placeholder="0"
-                                    placeholderTextColor={colors.textSecondary}
-                                    maxLength={4}
-                                />
-                                <Pressable
-                                    style={[
-                                        { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-                                        { backgroundColor: set.done ? colors.primary : colors.backgroundPrimary },
-                                    ]}
-                                    onPress={() => handleTick(i)}
-                                >
-                                    <Ionicons name="checkmark" size={16} color={set.done ? '#fff' : colors.textSecondary} />
-                                </Pressable>
-                            </View>
-                        );
-                    })}
+                    {/* Swipeable set rows */}
+                    {sets.map((set, i) => (
+                        <SwipeableSetRow
+                            key={`${exercise.id_rutina_ejercicio}-${i}`}
+                            set={set}
+                            index={i}
+                            isInvalid={invalidIndices?.has(i) ?? false}
+                            recordLabel={recordLabel}
+                            colors={colors}
+                            global_styles={global_styles}
+                            onUpdateKg={v => updateSet(i, 'kg', v)}
+                            onUpdateReps={v => updateSet(i, 'reps', v)}
+                            onTick={() => handleTick(i)}
+                            onDelete={() => deleteSet(i)}
+                            sanitizeKg={sanitizeKg}
+                            sanitizeReps={sanitizeReps}
+                        />
+                    ))}
 
                     <Pressable style={[train_styles.ec_addSetBtn, { borderTopColor: colors.border }]} onPress={addSet}>
                         <Text style={[global_styles.principalText, { textAlign: 'center' }]}>+ Add Set</Text>
