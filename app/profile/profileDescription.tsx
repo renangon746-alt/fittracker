@@ -30,6 +30,7 @@ interface UserProfile {
   nombre: string;
   email: string;
   auth_uuid?: string;
+  nickname?: string;
   racha_actual?: number;
   bio?: string;
   enlace?: string;
@@ -79,7 +80,7 @@ export default function ProfileDescription() {
 
         const { data: profile, error } = await supabase
           .from('usuario')
-          .select('id_usuario, nombre, email, auth_uuid, racha_actual, bio, enlace, perfil_publico')
+          .select('id_usuario, nombre, email, auth_uuid, nickname, racha_actual, bio, enlace, perfil_publico')
           .eq('id_usuario', selectedUserId)
           .single();
 
@@ -150,9 +151,16 @@ export default function ProfileDescription() {
               onError={() => setImgError(true)}
               style={global_styles.profileImage}
             />
-            <Text style={[global_styles.tittleText, { fontSize: screenWidth < 350 ? 18 : 24 }]} numberOfLines={1}>
-              {userProfile.nombre}
-            </Text>
+            <View style={{ flexDirection: 'column' }}>
+              <Text style={[global_styles.tittleText, { fontSize: screenWidth < 350 ? 18 : 24 }]} numberOfLines={1}>
+                {userProfile.nombre}
+              </Text>
+              {userProfile.nickname ? (
+                <Text style={[global_styles.secondaryText, { fontSize: screenWidth < 350 ? 12 : 14, marginTop: 2 }]}>
+                  @{userProfile.nickname}
+                </Text>
+              ) : null}
+            </View>
             <StreakBadge count={userProfile.racha_actual || 0} />
           </View>
 

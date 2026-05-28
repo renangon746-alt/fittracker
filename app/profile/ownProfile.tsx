@@ -78,9 +78,16 @@ export default function OwnProfile() {
               onError={() => setImgError(true)}
               style={global_styles.profileImage}
             />
-            <Text style={[global_styles.tittleText, { fontSize: screenWidth < 350 ? 18 : 24 }]} numberOfLines={1}>
-              {userProfile.nombre}
-            </Text>
+            <View style={{ flexDirection: 'column' }}>
+              <Text style={[global_styles.tittleText, { fontSize: screenWidth < 350 ? 18 : 24 }]} numberOfLines={1}>
+                {userProfile.nombre}
+              </Text>
+              {userProfile.nickname ? (
+                <Text style={[global_styles.secondaryText, { fontSize: screenWidth < 350 ? 12 : 14, marginTop: 2 }]}>
+                  @{userProfile.nickname}
+                </Text>
+              ) : null}
+            </View>
             <StreakBadge count={userProfile.racha_actual || 0} />
           </View>
 
