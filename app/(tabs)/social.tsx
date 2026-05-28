@@ -13,6 +13,7 @@ interface DbUser {
   nickname?: string | null;
   email?: string | null;
   auth_uuid?: string | null;
+  perfil_publico?: boolean;
 }
 
 interface SocialUser {
@@ -60,8 +61,18 @@ export default function Social() {
 
         const { data, error } = await supabase
           .from('usuario')
-          .select('id_usuario, nombre, nickname, email, auth_uuid')
+          .select('id_usuario, nombre, nickname, email, auth_uuid, perfil_publico')
           .order('nombre', { ascending: true });
+
+        // Load IDs of users that the logged-in user already follows
+        let followingIds: Set<number> = new Set();
+        if (loggedUserId) {
+          const { data: followingData } = await supabase
+            .from('seguidor')
+            .select('id_usuario_seguido')
+            .eq('id_usuario_seguidor', loggedUserId);
+          followingIds = new Set((followingData ?? []).map((r: any) => r.id_usuario_seguido));
+        }
 
         if (error) {
           setErrorMsg(`${t('error_loading_users')}: ${error.message}`);
@@ -70,6 +81,7 @@ export default function Social() {
 
         const mappedUsers: SocialUser[] = ((data as DbUser[] | null) ?? [])
           .filter((user) => user.id_usuario !== loggedUserId)
+          .filter((user) => user.perfil_publico === true || followingIds.has(user.id_usuario))
           .map((user) => ({
             id: user.id_usuario,
             userName: (user.nickname && user.nickname.trim().length > 0)

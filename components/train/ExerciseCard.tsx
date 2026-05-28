@@ -2,6 +2,7 @@ import { exerciseImageMap } from '@/assets/data/exerciseImageMap';
 import AddExerciseModal from '@/components/train/AddExerciseModal';
 import ReorderModal from '@/components/train/ReorderModal';
 import RestTimerModal from '@/components/train/RestTimerModal';
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useExercises } from '@/hooks/train/useExercises';
 import { RoutineExercise, SetRow } from '@/hooks/train/useRoutineDetail';
@@ -191,6 +192,7 @@ export default function ExerciseCard({
     onClearInvalid,
 }: ExerciseCardProps) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles  = trainStyles(colors);
     const imgSource = exercise.image_key ? exerciseImageMap[exercise.image_key] : null;
@@ -268,9 +270,9 @@ export default function ExerciseCard({
                 <Pressable style={train_styles.ec_restRow} onPress={() => setRestModalVisible(true)}>
                     <Ionicons name="timer-outline" size={16} color={colors.primary} />
                     <Text style={[global_styles.secondaryText, { color: colors.primary, marginLeft: 6 }]}>
-                        Rest Timer: {exercise.descanso_seg
+                        {t('rest_timer')}: {exercise.descanso_seg
                             ? `${Math.floor(exercise.descanso_seg / 60)}min ${exercise.descanso_seg % 60}s`
-                            : 'Not set — tap to set'}
+                            : t('rest_timer_not_set')}
                     </Text>
                 </Pressable>
             )}
@@ -280,10 +282,10 @@ export default function ExerciseCard({
                 <>
                     {/* Column headers */}
                     <View style={[train_styles.ec_rowOption, { paddingHorizontal: 12, paddingVertical: 6 }]}>
-                        <Text style={[{ width: COL_SET,   textAlign: 'center' },                global_styles.secondaryText]}>SET</Text>
-                        <Text style={[{ width: COL_PREV,  textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]}>PREVIOUS</Text>
-                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },                global_styles.secondaryText]}>KG</Text>
-                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },                global_styles.secondaryText]}>REPS</Text>
+                        <Text style={[{ width: COL_SET,   textAlign: 'center' },                global_styles.secondaryText]}>{t('set')}</Text>
+                        <Text style={[{ width: COL_PREV,  textAlign: 'center', fontSize: 13 }, global_styles.secondaryText]}>{t('previous')}</Text>
+                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },                global_styles.secondaryText]}>{t('kg')}</Text>
+                        <Text style={[{ width: COL_INPUT, textAlign: 'center' },                global_styles.secondaryText]}>{t('reps')}</Text>
                         <View style={{ width: COL_CHECK }} />
                     </View>
 
@@ -307,7 +309,7 @@ export default function ExerciseCard({
                     ))}
 
                     <Pressable style={[train_styles.ec_addSetBtn, { borderTopColor: colors.border }]} onPress={addSet}>
-                        <Text style={[global_styles.principalText, { textAlign: 'center' }]}>+ Add Set</Text>
+                        <Text style={[global_styles.principalText, { textAlign: 'center' }]}>{t('add_set')}</Text>
                     </Pressable>
                 </>
             )}
@@ -318,15 +320,15 @@ export default function ExerciseCard({
                     <View style={[train_styles.ec_menuCard, { backgroundColor: colors.backgroundSecondary }]}>
                         <Pressable style={train_styles.ec_menuItem} onPress={() => { setMenuVisible(false); onRemove(exercise.id_rutina_ejercicio); }}>
                             <Ionicons name="trash-outline" size={18} color="red" />
-                            <Text style={[global_styles.principalText, { color: 'red', marginLeft: 10 }]}>Remove exercise</Text>
+                            <Text style={[global_styles.principalText, { color: 'red', marginLeft: 10 }]}>{t('remove_exercise')}</Text>
                         </Pressable>
                         <Pressable style={train_styles.ec_menuItem} onPress={() => { setMenuVisible(false); setReplaceVisible(true); }}>
                             <Ionicons name="swap-horizontal-outline" size={18} color={colors.textPrimary} />
-                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Replace exercise</Text>
+                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>{t('replace_exercise')}</Text>
                         </Pressable>
                         <Pressable style={train_styles.ec_menuItem} onPress={() => { setMenuVisible(false); setReorderVisible(true); }}>
                             <Ionicons name="reorder-three-outline" size={18} color={colors.textPrimary} />
-                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Reorder exercises</Text>
+                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>{t('reorder_exercises')}</Text>
                         </Pressable>
                     </View>
                 </Pressable>

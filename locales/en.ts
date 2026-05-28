@@ -259,6 +259,16 @@ export default {
   not_following_anyone: "Not following anyone yet",
   streak: "Streak",
 
+  // Follow requests
+  send_follow_request: "Request to follow",
+  follow_request_sent: "Request sent",
+  follow_requests: "Follow requests",
+  pending_requests: "Pending requests",
+  no_pending_requests: "No pending requests",
+  accept: "Accept",
+  reject: "Reject",
+  private_profile_message: "This profile is private. Send a follow request to see their content.",
+
   // Edit profile
   name_section: "NAME",
   bio_section: "BIO",
@@ -284,6 +294,70 @@ export default {
 
   // Misc
   train_tab_placeholder: "Train tab",
+
+  // Train tab
+  fast_start: "Fast Start",
+  create_new_routine: "Create new routine",
+  start_empty_training: "Start empty training +",
+  routines: "Routines",
+  my_routines: "My Routines",
+  routines_saved: "Routines Saved",
+  other_folders: "Other Folders",
+
+  // Routine screen
+  routine_fallback: "Routine",
+  duration: "Duration",
+  records: "Records",
+  sets: "Sets",
+  add_exercise: "+ Add Exercise",
+  finish_workout: "Finish Workout",
+  skip: "Skip",
+  sets_not_done: "Sets not completed",
+  sets_invalid: "Sets with invalid fields",
+  sets_reps_zero: "Sets with 0 reps",
+  sets_kg_zero: "Sets with 0 kg",
+  sets_not_done_desc: "There are sets that haven't been marked as completed. You can fix them or save without them.",
+  sets_invalid_desc: "There are sets with empty or out-of-range fields (0–999). You can fix them or save without them.",
+  sets_reps_zero_desc: "There are sets with 0 reps. You can fix them or save without them.",
+  sets_kg_zero_desc: "There are sets with 0 kg (possible bodyweight exercises). You can save anyway.",
+  fix_sets: "Fix sets",
+  save_without_them: "Save without them",
+  save_anyway: "Save anyway",
+  discard_workout: "This workout will not be saved. Discard?",
+
+  // Reset password
+  reset_password_title: "Reset Password",
+  repeat_password: "Repeat password",
+  invalid_or_expired_link: "Invalid or expired link.",
+  no_active_session_reset: "No active session. Please use the link from your email again.",
+  fill_all_fields: "Please fill in all fields",
+  password_updated_success: "Password updated successfully",
+
+  // Train components
+  new_routine: "New Routine",
+  routine_name_placeholder: "Routine name...",
+  folder: "Folder",
+  add_exercise_title: "Add Exercise",
+  search_exercise_placeholder: "Search exercise...",
+  rest_timer: "Rest Timer",
+  done: "Done",
+  start_routine: "Start routine",
+  delete_routine: "Delete routine",
+  edit_exercises: "Edit exercises",
+  edit_data: "Edit data",
+  set: "SET",
+  previous: "PREVIOUS",
+  reps: "REPS",
+  remove_exercise: "Remove exercise",
+  replace_exercise: "Replace exercise",
+  reorder_exercises: "Reorder exercises",
+  add_set: "+ Add Set",
+  rest_timer_not_set: "Not set — tap to set",
+  edit_routine: "Edit Routine",
+  reorder_exercises_title: "Reorder Exercises",
+  close: "Close",
+  never_trained: "Never trained",
+  no_sets_recorded: "No sets recorded",
 
   // About screen
   about_tagline: "Your training companion",

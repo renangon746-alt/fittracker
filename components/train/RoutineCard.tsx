@@ -1,5 +1,6 @@
 import { useActiveRoutine } from "@/app/_layout";
 import EditRoutineDataModal from "@/components/train/EditRoutineDataModal";
+import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { FolderKey } from "@/hooks/train/useCreateRoutine";
 import { useRoutineDetail } from "@/hooks/train/useRoutineDetail";
@@ -19,8 +20,8 @@ interface RoutineCardProps {
     onUpdated?: () => void;
 }
 
-function formatLastTrained(iso: string | null | undefined): string {
-    if (!iso) return 'Never trained';
+function formatLastTrained(iso: string | null | undefined, t: (key: string) => string): string {
+    if (!iso) return t('never_trained');
     const date = new Date(iso);
     const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
     const day = date.getDate();
@@ -33,11 +34,11 @@ function formatLastTrained(iso: string | null | undefined): string {
     return `${weekday} ${day}${suffix} ${month} ${year}`;
 }
 
-function confirm(message: string): Promise<boolean> {
+function confirm(message: string, t: (key: string) => string): Promise<boolean> {
     if (Platform.OS === 'web') return Promise.resolve(window.confirm(message));
     return new Promise(resolve => {
-        Alert.alert('Confirm', message, [
-            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        Alert.alert(t('confirm'), message, [
+            { text: t('cancel'), style: 'cancel', onPress: () => resolve(false) },
             { text: 'OK', style: 'destructive', onPress: () => resolve(true) },
         ]);
     });
@@ -45,6 +46,7 @@ function confirm(message: string): Promise<boolean> {
 
 export default function RoutineCard({ id, title, lastTrained, carpeta = 'my_routines', onDeleted, onUpdated }: RoutineCardProps) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
     const { navigateToRoutine } = useActiveRoutine();
@@ -55,7 +57,7 @@ export default function RoutineCard({ id, title, lastTrained, carpeta = 'my_rout
 
     async function handleDelete() {
         setMenuVisible(false);
-        const confirmed = await confirm(`Delete "${title}"? This cannot be undone.`);
+        const confirmed = await confirm(`${t('delete_routine')}: "${title}"?`, t);
         if (!confirmed) return;
         await deleteRoutine();
         onDeleted?.();
@@ -77,7 +79,7 @@ export default function RoutineCard({ id, title, lastTrained, carpeta = 'my_rout
         <View style={train_styles.rc_container}>
             <View style={train_styles.rc_dayEdit}>
                 <Text style={{ ...global_styles.secondaryText, color: colors.routineCard.day }}>
-                    {formatLastTrained(lastTrained)}
+                    {formatLastTrained(lastTrained, t)}
                 </Text>
                 {/* 3-dot menu trigger */}
                 <Pressable onPress={() => setMenuVisible(true)}>
@@ -96,7 +98,7 @@ export default function RoutineCard({ id, title, lastTrained, carpeta = 'my_rout
                     style={[global_styles.principalButton, train_styles.rc_startButtonPressable]}
                     onPress={() => navigateToRoutine(id, title)}
                 >
-                    <Text style={global_styles.principalText}>Start routine</Text>
+                    <Text style={global_styles.principalText}>{t('start_routine')}</Text>
                 </Pressable>
             </View>
 
@@ -106,15 +108,15 @@ export default function RoutineCard({ id, title, lastTrained, carpeta = 'my_rout
                     <View style={[train_styles.rc_menuCard, { backgroundColor: colors.backgroundSecondary }]}>
                         <Pressable style={train_styles.rc_menuItem} onPress={handleDelete}>
                             <Ionicons name="trash-outline" size={18} color="red" />
-                            <Text style={[global_styles.principalText, { color: 'red', marginLeft: 10 }]}>Delete routine</Text>
+                            <Text style={[global_styles.principalText, { color: 'red', marginLeft: 10 }]}>{t('delete_routine')}</Text>
                         </Pressable>
                         <Pressable style={train_styles.rc_menuItem} onPress={handleEditExercises}>
                             <Ionicons name="barbell-outline" size={18} color={colors.textPrimary} />
-                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Edit exercises</Text>
+                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>{t('edit_exercises')}</Text>
                         </Pressable>
                         <Pressable style={train_styles.rc_menuItem} onPress={() => { setMenuVisible(false); setEditModalVisible(true); }}>
                             <Ionicons name="create-outline" size={18} color={colors.textPrimary} />
-                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>Edit data</Text>
+                            <Text style={[global_styles.principalText, { marginLeft: 10 }]}>{t('edit_data')}</Text>
                         </Pressable>
                     </View>
                 </Pressable>

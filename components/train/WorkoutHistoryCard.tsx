@@ -92,9 +92,9 @@ export default function WorkoutHistoryCard({ item }: Props) {
                                 </Text>
                                 {/* Column headers */}
                                 <View style={train_styles.whc_tableRow}>
-                                    <Text style={[train_styles.whc_colSet, global_styles.secondaryText]}>SET</Text>
-                                    <Text style={[train_styles.whc_colKg, global_styles.secondaryText]}>KG</Text>
-                                    <Text style={[train_styles.whc_colReps, global_styles.secondaryText]}>REPS</Text>
+                                    <Text style={[train_styles.whc_colSet, global_styles.secondaryText]}>{t('set')}</Text>
+                                    <Text style={[train_styles.whc_colKg, global_styles.secondaryText]}>{t('kg')}</Text>
+                                    <Text style={[train_styles.whc_colReps, global_styles.secondaryText]}>{t('reps')}</Text>
                                 </View>
                                 {series.map((s, i) => (
                                     <View key={i} style={train_styles.whc_tableRow}>
@@ -110,7 +110,7 @@ export default function WorkoutHistoryCard({ item }: Props) {
 
                         {item.series.length === 0 && (
                             <Text style={[global_styles.secondaryText, { textAlign: 'center', marginVertical: 24 }]}>
-                                No sets recorded
+                                {t('no_sets_recorded')}
                             </Text>
                         )}
                     </ScrollView>
@@ -119,7 +119,7 @@ export default function WorkoutHistoryCard({ item }: Props) {
                         style={[train_styles.whc_closeBtn, { backgroundColor: colors.backgroundPrimary }]}
                         onPress={() => setPreviewVisible(false)}
                     >
-                        <Text style={global_styles.principalText}>Close</Text>
+                        <Text style={global_styles.principalText}>{t('close')}</Text>
                     </Pressable>
                 </View>
             </Modal>

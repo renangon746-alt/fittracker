@@ -4,6 +4,7 @@ import StreakBadge from "@/components/global/StreakBadge";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useFollowers } from "@/hooks/social/useFollowers";
+import { useFollowRequestStatus } from "@/hooks/social/useFollowRequests";
 import { supabase } from "@/lib/supabase";
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from "@/styles/profile-styles";
@@ -32,6 +33,7 @@ interface UserProfile {
   racha_actual?: number;
   bio?: string;
   enlace?: string;
+  perfil_publico?: boolean;
 }
 
 export default function ProfileDescription() {
@@ -56,6 +58,15 @@ export default function ProfileDescription() {
     toggle: toggleFollow,
   } = useFollowers(targetId);
 
+  const {
+    hasPendingRequest,
+    sendRequest,
+    cancelRequest,
+  } = useFollowRequestStatus(targetId);
+
+  const isPrivate = userProfile?.perfil_publico === false;
+  const canViewProfile = !isPrivate || isFollowing || isOwnProfile;
+
   useEffect(() => {
     async function loadUserProfile() {
       try {
@@ -68,7 +79,7 @@ export default function ProfileDescription() {
 
         const { data: profile, error } = await supabase
           .from('usuario')
-          .select('id_usuario, nombre, email, auth_uuid, racha_actual, bio, enlace')
+          .select('id_usuario, nombre, email, auth_uuid, racha_actual, bio, enlace, perfil_publico')
           .eq('id_usuario', selectedUserId)
           .single();
 
@@ -184,14 +195,28 @@ export default function ProfileDescription() {
 
             {!isOwnProfile && (
               <Pressable
-                onPress={toggleFollow}
+                onPress={async () => {
+                  if (isPrivate && !isFollowing) {
+                    if (hasPendingRequest) {
+                      await cancelRequest();
+                    } else {
+                      await sendRequest();
+                    }
+                  } else {
+                    await toggleFollow();
+                  }
+                }}
                 disabled={followPending}
                 style={({ pressed }) => [
                   global_styles.principalButton,
                   {
-                    width: 110,
+                    width: isPrivate && !isFollowing ? 150 : 110,
                     height: 35,
-                    backgroundColor: isFollowing ? colors.backgroundTertiary : colors.primary,
+                    backgroundColor: isFollowing
+                      ? colors.backgroundTertiary
+                      : hasPendingRequest
+                        ? colors.backgroundTertiary
+                        : colors.primary,
                     opacity: pressed || followPending ? 0.7 : 1,
                   },
                 ]}
@@ -202,10 +227,16 @@ export default function ProfileDescription() {
                   <Text
                     style={[
                       global_styles.principalText,
-                      { color: isFollowing ? colors.textPrimary : '#fff' },
+                      { color: isFollowing || hasPendingRequest ? colors.textPrimary : '#fff', fontSize: 13 },
                     ]}
                   >
-                    {isFollowing ? t('unfollow') : t('follow')}
+                    {isFollowing
+                      ? t('unfollow')
+                      : isPrivate
+                        ? hasPendingRequest
+                          ? t('follow_request_sent')
+                          : t('send_follow_request')
+                        : t('follow')}
                   </Text>
                 )}
               </Pressable>

@@ -1,6 +1,7 @@
 import AddExerciseModal from '@/components/train/AddExerciseModal';
 import ExerciseCard from '@/components/train/ExerciseCard';
 import NewRecordOverlay from '@/components/train/NewRecordOverlay';
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useExercises } from '@/hooks/train/useExercises';
 import { useRecords } from '@/hooks/train/useRecords';
@@ -18,11 +19,11 @@ const screenWidth = Dimensions.get('window').width;
 const BOTTOM_BAR_HEIGHT = 110;
 const EMPTY_SETS_MAP: SetsMap = {};
 
-function confirm(message: string): Promise<boolean> {
+function confirm(message: string, t: (key: string) => string): Promise<boolean> {
     if (Platform.OS === 'web') return Promise.resolve(window.confirm(message));
     return new Promise(resolve => {
-        Alert.alert('Confirm', message, [
-            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        Alert.alert(t('confirm'), message, [
+            { text: t('cancel'), style: 'cancel', onPress: () => resolve(false) },
             { text: 'OK', onPress: () => resolve(true) },
         ]);
     });
@@ -30,6 +31,7 @@ function confirm(message: string): Promise<boolean> {
 
 export default function Routine() {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
 
@@ -258,7 +260,7 @@ export default function Routine() {
     }
 
     async function handleDiscard() {
-        const confirmed = await confirm('This workout will not be saved. Discard?');
+        const confirmed = await confirm(t('discard_workout'), t);
         if (!confirmed) return;
         if (intervalRef.current) clearInterval(intervalRef.current);
         clearActive();
@@ -282,7 +284,7 @@ export default function Routine() {
                         <Ionicons name={isEditMode ? 'arrow-back' : 'chevron-down'} size={20} color={colors.textPrimary} />
                     </Pressable>
                     <Text style={[global_styles.tittleText, { flex: 1, textAlign: 'center', marginHorizontal: 8 }]} numberOfLines={1}>
-                        {nombre ?? 'Routine'}
+                        {nombre ?? t('routine_fallback')}
                     </Text>
                     {isEditMode
                         ? <View style={{ width: 24 }} />
@@ -295,15 +297,15 @@ export default function Routine() {
                 {!isEditMode && (
                     <View style={train_styles.r_statistics}>
                         <View style={train_styles.r_stat}>
-                            <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 16 }]}>Duration</Text>
+                            <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 16 }]}>{t('duration')}</Text>
                             <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{formatted}</Text>
                         </View>
                         <View style={train_styles.r_stat}>
-                            <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 16 }]}>Records</Text>
+                            <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 16 }]}>{t('records')}</Text>
                             <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{newRecordCount}</Text>
                         </View>
                         <View style={train_styles.r_stat}>
-                            <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 16 }]}>Sets</Text>
+                            <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 16 }]}>{t('sets')}</Text>
                             <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{completedSets}</Text>
                         </View>
                     </View>
@@ -336,7 +338,7 @@ export default function Routine() {
                         style={[global_styles.principalButton, train_styles.r_addExercisePressable]}
                         onPress={() => setModalVisible(true)}
                     >
-                        <Text style={global_styles.principalText}>+ Add Exercise</Text>
+                        <Text style={global_styles.principalText}>{t('add_exercise')}</Text>
                     </Pressable>
                 </View>
 
@@ -356,7 +358,7 @@ export default function Routine() {
                             opacity: pressed ? 0.75 : 1,
                         })}
                     >
-                        <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 15 }}>Finalizar Entrenamiento</Text>
+                        <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 15 }}>{t('finish_workout')}</Text>
                     </Pressable>
                 )}
 
@@ -380,7 +382,7 @@ export default function Routine() {
                                 <View style={train_styles.r_restCenter}>
                                     <Text style={[global_styles.tittleText, { fontSize: 28 }]}>{restFormatted}</Text>
                                     <Pressable onPress={stopRest}>
-                                        <Text style={[global_styles.secondaryText, { color: colors.textSecondary, fontSize: 12 }]}>Skip</Text>
+                                        <Text style={[global_styles.secondaryText, { color: colors.textSecondary, fontSize: 12 }]}>{t('skip')}</Text>
                                     </Pressable>
                                 </View>
                                 <Pressable
@@ -408,10 +410,10 @@ export default function Routine() {
                     <View style={{ backgroundColor: colors.backgroundPrimary, borderRadius: 24, padding: 24, width: '100%', alignItems: 'center', gap: 12 }}>
                         <Ionicons name="warning-outline" size={36} color={colors.primary} />
                         <Text style={[global_styles.tittleText, { textAlign: 'center', fontSize: 18 }]}>
-                            {validationModal?.type === 'not_done'  && 'Series sin completar'}
-                            {validationModal?.type === 'invalid'   && 'Series con campos inválidos'}
-                            {validationModal?.type === 'reps_zero' && 'Series con repeticiones en 0'}
-                            {validationModal?.type === 'kg_zero'   && 'Series con peso en 0'}
+                            {validationModal?.type === 'not_done'  && t('sets_not_done')}
+                            {validationModal?.type === 'invalid'   && t('sets_invalid')}
+                            {validationModal?.type === 'reps_zero' && t('sets_reps_zero')}
+                            {validationModal?.type === 'kg_zero'   && t('sets_kg_zero')}
                         </Text>
                         <Text style={[global_styles.secondaryText, { textAlign: 'center', lineHeight: 20 }]}>
                             {validationModal?.type === 'not_done'  && 'Hay series que no han sido marcadas como completadas. Puedes arreglarlas o guardar sin ellas.'}
@@ -423,14 +425,14 @@ export default function Routine() {
                             onPress={handleValidationFix}
                             style={({ pressed }) => ({ width: '100%', paddingVertical: 14, borderRadius: 24, alignItems: 'center', backgroundColor: colors.primary, opacity: pressed ? 0.75 : 1, marginTop: 4 })}
                         >
-                            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Arreglar series</Text>
+                            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{t('fix_sets')}</Text>
                         </Pressable>
                         <Pressable
                             onPress={handleValidationSave}
                             style={({ pressed }) => ({ width: '100%', paddingVertical: 14, borderRadius: 24, alignItems: 'center', backgroundColor: colors.backgroundSecondary, opacity: pressed ? 0.75 : 1 })}
                         >
                             <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15 }}>
-                                {validationModal?.type === 'kg_zero' ? 'Guardar igualmente' : 'Guardar sin ellas'}
+                                {validationModal?.type === 'kg_zero' ? t('save_anyway') : t('save_without_them')}
                             </Text>
                         </Pressable>
                     </View>

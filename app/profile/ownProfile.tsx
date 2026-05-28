@@ -5,6 +5,7 @@ import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { useFollowers } from "@/hooks/social/useFollowers";
+import { useIncomingFollowRequests } from "@/hooks/social/useFollowRequests";
 import { globalStyles } from "@/styles/global-styles";
 import { profileStyles } from "@/styles/profile-styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,6 +34,7 @@ export default function OwnProfile() {
 
   const { userProfile, avatarUrl, loading, errorMsg } = useUser();
   const { followers, following } = useFollowers(userProfile?.id_usuario ?? null);
+  const { requests, acceptRequest, rejectRequest } = useIncomingFollowRequests();
 
   if (loading) {
     return (
@@ -119,6 +121,60 @@ export default function OwnProfile() {
           </View>
 
         </View>
+
+        {/* Follow requests */}
+        {requests.length > 0 && (
+          <View style={{ marginTop: 20, paddingHorizontal: 20 }}>
+            <Text style={[global_styles.tittleText, { fontSize: 18, marginBottom: 12 }]}>
+              {t('follow_requests')}
+            </Text>
+            {requests.map((req) => (
+              <View
+                key={req.id_solicitud}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: colors.backgroundPrimary,
+                  borderRadius: 12,
+                  padding: 12,
+                  marginBottom: 8,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[global_styles.principalText, { fontWeight: '700' }]}>
+                    {req.solicitante?.nombre ?? 'Usuario'}
+                  </Text>
+                  <Text style={[global_styles.secondaryText, { fontSize: 12 }]}>
+                    {req.solicitante?.nickname ? `@${req.solicitante.nickname}` : `user${req.id_solicitante}`}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => acceptRequest(req.id_solicitud)}
+                  style={{
+                    backgroundColor: colors.primary,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
+                    marginRight: 8,
+                  }}
+                >
+                  <Text style={[global_styles.principalText, { color: '#fff', fontSize: 13 }]}>{t('accept')}</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => rejectRequest(req.id_solicitud)}
+                  style={{
+                    backgroundColor: colors.backgroundTertiary,
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
+                  }}
+                >
+                  <Text style={[global_styles.principalText, { fontSize: 13 }]}>{t('reject')}</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Charts section */}
         <View style={profile_styles.p_charts}>

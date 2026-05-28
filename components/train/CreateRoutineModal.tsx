@@ -1,3 +1,4 @@
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { FOLDER_OPTIONS, FolderKey } from '@/hooks/train/useCreateRoutine';
 import { globalStyles } from '@/styles/global-styles';
@@ -21,6 +22,7 @@ export default function CreateRoutineModal({
     saving, errorMsg, onConfirm, onCancel,
 }: CreateRoutineModalProps) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
 
@@ -28,20 +30,20 @@ export default function CreateRoutineModal({
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
             <View style={train_styles.crm_overlay}>
                 <View style={[train_styles.crm_card]}>
-                    <Text style={[global_styles.tittleText, train_styles.crm_title]}>New Routine</Text>
+                    <Text style={[global_styles.tittleText, train_styles.crm_title]}>{t('new_routine')}</Text>
 
                     {/* Name input */}
-                    <Text style={[global_styles.principalText, train_styles.crm_nameInputLabel]}>Name</Text>
+                    <Text style={[global_styles.principalText, train_styles.crm_nameInputLabel]}>{t('name')}</Text>
                     <TextInput style={[global_styles.inputs, train_styles.crm_input]}
                         value={nombre}
                         onChangeText={setNombre}
-                        placeholder="Routine name..."
+                        placeholder={t('routine_name_placeholder')}
                         placeholderTextColor={colors.textSecondary}
                         maxLength={50}
                     />
 
                     {/* Folder selector */}
-                    <Text style={[global_styles.principalText, train_styles.crm_folderSelectorLabel]}>Folder</Text>
+                    <Text style={[global_styles.principalText, train_styles.crm_folderSelectorLabel]}>{t('folder')}</Text>
                     <View style={train_styles.crm_folderOptions}>
                         {FOLDER_OPTIONS.map(opt => {
                             const selected = carpeta === opt.value;
@@ -72,7 +74,7 @@ export default function CreateRoutineModal({
                             onPress={onCancel}
                             disabled={saving}
                         >
-                            <Text style={global_styles.principalText}>Cancel</Text>
+                            <Text style={global_styles.principalText}>{t('cancel')}</Text>
                         </Pressable>
 
                         <Pressable
@@ -82,7 +84,7 @@ export default function CreateRoutineModal({
                         >
                             {saving
                                 ? <ActivityIndicator color="#fff" />
-                                : <Text style={global_styles.principalText}>Create</Text>
+                                : <Text style={global_styles.principalText}>{t('create')}</Text>
                             }
                         </Pressable>
                     </View>

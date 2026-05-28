@@ -38,7 +38,7 @@ export default function ResetPassword() {
 
                     if (error) {
                         console.error("Error al establecer sesión:", error.message);
-                        setErrorMsg("Enlace inválido o expirado.");
+                        setErrorMsg(t('invalid_or_expired_link'));
                     } else {
                         console.log("Sesión de recuperación establecida");
                     }
@@ -67,17 +67,17 @@ export default function ResetPassword() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-            setErrorMsg("No hay una sesión activa. Usa el enlace de tu correo nuevamente.");
+            setErrorMsg(t('no_active_session_reset'));
             return;
         }
 
         if (!password || !repeatPassword) {
-            setErrorMsg("Completa todos los campos");
+            setErrorMsg(t('fill_all_fields'));
             return;
         }
 
         if (password !== repeatPassword) {
-            setErrorMsg("Las contraseñas no coinciden");
+            setErrorMsg(t('passwords_dont_match'));
             return;
         }
 
@@ -90,7 +90,7 @@ export default function ResetPassword() {
             return;
         }
 
-        setSuccessMsg("Contraseña actualizada correctamente");
+        setSuccessMsg(t('password_updated_success'));
         
         setTimeout(() => {
             router.replace("/auth/login");
@@ -106,10 +106,10 @@ export default function ResetPassword() {
                             source={require("../../assets/images/Icon__dumbell_fitTracker.png")}
                             style={global_styles.principalLogoImage}
                         />
-                        <Text style={global_styles.tittleText}>Restablecer Contraseña</Text>
+                        <Text style={global_styles.tittleText}>{t('reset_password_title')}</Text>
 
                         <View style={{ paddingTop: 20 }}>
-                            <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>Nueva contraseña</Text>
+                            <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>{t('new_password')}</Text>
                             <TextInput
                                 style={global_styles.inputs}
                                 value={password}
@@ -119,7 +119,7 @@ export default function ResetPassword() {
                         </View>
 
                         <View style={{ paddingTop: 20 }}>
-                            <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>Repetir contraseña</Text>
+                            <Text style={[global_styles.principalText, { paddingLeft: 10 }]}>{t('repeat_password')}</Text>
                             <TextInput
                                 style={global_styles.inputs}
                                 value={repeatPassword}
@@ -133,7 +133,7 @@ export default function ResetPassword() {
 
                         <View style={profile_styles.buttonContainer}>
                             <Pressable style={global_styles.principalButton} onPress={handleResetPassword}>
-                                <Text style={global_styles.principalText}>Confirmar</Text>
+                                <Text style={global_styles.principalText}>{t('confirm')}</Text>
                             </Pressable>
                         </View>
 

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
@@ -21,6 +22,7 @@ function formatTime(s: number): string {
 
 export default function RestTimerModal({ visible, initialSeconds, onConfirm, onCancel }: RestTimerModalProps) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
 
@@ -48,7 +50,7 @@ export default function RestTimerModal({ visible, initialSeconds, onConfirm, onC
                 {/* Handle */}
                 <View style={[train_styles.rtm_handle, { backgroundColor: colors.border }]} />
 
-                <Text style={[global_styles.tittleText, train_styles.rtm_title]}>Rest Timer</Text>
+                <Text style={[global_styles.tittleText, train_styles.rtm_title]}>{t('rest_timer')}</Text>
 
                 {/* Main +/- controls */}
                 <View style={train_styles.rtm_controls}>
@@ -102,7 +104,7 @@ export default function RestTimerModal({ visible, initialSeconds, onConfirm, onC
                     style={[train_styles.rtm_doneBtn, { backgroundColor: colors.primary }]}
                     onPress={() => onConfirm(seconds)}
                 >
-                    <Text style={[global_styles.principalText, { color: '#fff', fontSize: 16 }]}>Done</Text>
+                    <Text style={[global_styles.principalText, { color: '#fff', fontSize: 16 }]}>{t('done')}</Text>
                 </Pressable>
             </View>
         </Modal>

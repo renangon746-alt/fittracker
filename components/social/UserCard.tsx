@@ -100,8 +100,8 @@ export default function UserCard({ id, userName, fullName, authUuid }: UserCardP
         )}
       </View>
       <View style={styles.userCardTextContainer}>
-        <Text style={[styles.userCardUserName, { color: colors.textPrimary }]}>@{fullName}</Text>
-        <Text style={[styles.userCardFullName, { color: colors.textSecondary }]}>{userName}</Text>
+        <Text style={[styles.userCardUserName, { color: colors.textPrimary }]}>{userName}</Text>
+        <Text style={[styles.userCardFullName, { color: colors.textSecondary }]}>@{fullName}</Text>
       </View>
       <Ionicons name="chevron-forward-outline" size={24} color={colors.primary} />
     </Pressable>

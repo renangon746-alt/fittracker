@@ -1,4 +1,5 @@
 import { exerciseImageMap } from '@/assets/data/exerciseImageMap';
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { RoutineExercise } from '@/hooks/train/useRoutineDetail';
 import { globalStyles } from '@/styles/global-styles';
@@ -16,6 +17,7 @@ interface ReorderModalProps {
 
 export default function ReorderModal({ visible, exercises, onConfirm, onCancel }: ReorderModalProps) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
     const [list, setList] = useState<RoutineExercise[]>([...exercises]);
@@ -37,7 +39,7 @@ export default function ReorderModal({ visible, exercises, onConfirm, onCancel }
         <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
             <View style={train_styles.rm_overlay}>
                 <View style={[train_styles.rm_card, { backgroundColor: colors.backgroundSecondary }]}>
-                    <Text style={[global_styles.tittleText, { marginBottom: 16 }]}>Reorder Exercises</Text>
+                    <Text style={[global_styles.tittleText, { marginBottom: 16 }]}>{t('reorder_exercises_title')}</Text>
 
                     <ScrollView style={train_styles.rm_list} showsVerticalScrollIndicator={false}>
                         {list.map((ex, i) => {
@@ -64,10 +66,10 @@ export default function ReorderModal({ visible, exercises, onConfirm, onCancel }
 
                     <View style={train_styles.rm_actions}>
                         <Pressable style={[train_styles.rm_btn]} onPress={onCancel}>
-                            <Text style={global_styles.principalText}>Cancel</Text>
+                            <Text style={global_styles.principalText}>{t('cancel')}</Text>
                         </Pressable>
                         <Pressable style={[train_styles.rm_btn]} onPress={() => onConfirm(list)}>
-                            <Text style={[global_styles.principalText, { color: '#fff' }]}>Save</Text>
+                            <Text style={[global_styles.principalText, { color: '#fff' }]}>{t('save')}</Text>
                         </Pressable>
                     </View>
                 </View>

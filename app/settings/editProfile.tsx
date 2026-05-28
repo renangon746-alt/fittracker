@@ -64,17 +64,6 @@ export default function EditProfile() {
         </Pressable>
 
 
-        <Section title={"ID"} colors={colors}>
-          <TextInput
-            style={[styles.editProfileInput, { color: colors.textPrimary }]}
-            value={nombre}
-            onChangeText={setNombre}
-            placeholder={"ID"}
-            placeholderTextColor={colors.iconInactive}
-            maxLength={50}
-          />
-        </Section>
-
         <Section title={t('name_section')} colors={colors}>
           <TextInput
             style={[styles.editProfileInput, { color: colors.textPrimary }]}

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { FOLDER_OPTIONS, FolderKey } from '@/hooks/train/useCreateRoutine';
 import { globalStyles } from '@/styles/global-styles';
@@ -17,6 +18,7 @@ export default function EditRoutineDataModal({
     visible, initialNombre, initialCarpeta, onConfirm, onCancel,
 }: EditRoutineDataModalProps) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
     const [nombre, setNombre] = useState(initialNombre);
@@ -25,7 +27,7 @@ export default function EditRoutineDataModal({
     const [error, setError] = useState('');
 
     async function handleSave() {
-        if (!nombre.trim()) { setError('Name is required.'); return; }
+        if (!nombre.trim()) { setError(t('required_field')); return; }
         setSaving(true);
         await onConfirm(nombre.trim(), carpeta);
         setSaving(false);
@@ -35,19 +37,19 @@ export default function EditRoutineDataModal({
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
             <View style={train_styles.erdm_overlay}>
                 <View style={[train_styles.erdm_card]}>
-                    <Text style={[global_styles.tittleText, { marginBottom: 16 }]}>Edit Routine</Text>
+                    <Text style={[global_styles.tittleText, { marginBottom: 16 }]}>{t('edit_routine')}</Text>
 
-                    <Text style={[global_styles.principalText, { marginBottom: 6 }]}>Name</Text>
+                    <Text style={[global_styles.principalText, { marginBottom: 6 }]}>{t('name')}</Text>
                     <TextInput
                         style={[global_styles.inputs, { marginBottom: 16 }]}
                         value={nombre}
                         onChangeText={setNombre}
-                        placeholder="Routine name..."
+                        placeholder={t('routine_name_placeholder')}
                         placeholderTextColor={colors.textSecondary}
                         maxLength={50}
                     />
 
-                    <Text style={[global_styles.principalText, { marginBottom: 8 }]}>Folder</Text>
+                    <Text style={[global_styles.principalText, { marginBottom: 8 }]}>{t('folder')}</Text>
                     <View style={train_styles.crm_folderOptions}>
                         {FOLDER_OPTIONS.map(opt => {
                             const selected = carpeta === opt.value;
@@ -74,12 +76,12 @@ export default function EditRoutineDataModal({
 
                     <View style={train_styles.erdm_actions}>
                         <Pressable style={[train_styles.erdm_btn, { backgroundColor: colors.backgroundPrimary }]} onPress={onCancel} disabled={saving}>
-                            <Text style={global_styles.principalText}>Cancel</Text>
+                            <Text style={global_styles.principalText}>{t('cancel')}</Text>
                         </Pressable>
                         <Pressable style={[train_styles.erdm_btn, { backgroundColor: colors.primary }]} onPress={handleSave} disabled={saving}>
                             {saving
                                 ? <ActivityIndicator color="#fff" />
-                                : <Text style={[global_styles.principalText, { color: '#fff' }]}>Save</Text>
+                                : <Text style={[global_styles.principalText, { color: '#fff' }]}>{t('save')}</Text>
                             }
                         </Pressable>
                     </View>

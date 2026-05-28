@@ -1,4 +1,5 @@
 import { exerciseImageMap } from '@/assets/data/exerciseImageMap';
+import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 
 import { globalStyles } from '@/styles/global-styles';
@@ -23,6 +24,7 @@ export default function AddExerciseModal({
     visible, exercises, loadingExercises, onAdd, onCancel,
 }: AddExerciseModalProps) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
     const [query, setQuery] = useState('');
@@ -50,7 +52,7 @@ export default function AddExerciseModal({
         <Modal visible={visible} transparent animationType="slide" onRequestClose={handleCancel}>
             <View style={train_styles.aem_overlay}>
                 <View style={[train_styles.aem_card, { backgroundColor: colors.backgroundSecondary }]}>
-                    <Text style={[global_styles.tittleText, { marginBottom: 12 }]}>Add Exercise</Text>
+                    <Text style={[global_styles.tittleText, { marginBottom: 12 }]}>{t('add_exercise_title')}</Text>
 
                     {/* Search bar */}
                     <View style={[train_styles.aem_searchRow, { backgroundColor: colors.backgroundPrimary }]}>
@@ -59,7 +61,7 @@ export default function AddExerciseModal({
                             style={[global_styles.principalText, { flex: 1, marginLeft: 8 }]}
                             value={query}
                             onChangeText={setQuery}
-                            placeholder="Search exercise..."
+                            placeholder={t('search_exercise_placeholder')}
                             placeholderTextColor={colors.textSecondary}
                         />
                     </View>
@@ -101,14 +103,14 @@ export default function AddExerciseModal({
                     {/* Actions */}
                     <View style={train_styles.aem_actions}>
                         <Pressable style={[global_styles.secondaryButton, train_styles.aem_actionBtn]} onPress={handleCancel}>
-                            <Text style={global_styles.principalText}>Cancel</Text>
+                            <Text style={global_styles.principalText}>{t('cancel')}</Text>
                         </Pressable>
                         <Pressable
                             style={[global_styles.principalButton, train_styles.aem_actionBtn, { opacity: selected === null ? 0.5 : 1 }]}
                             onPress={handleConfirm}
                             disabled={selected === null}
                         >
-                            <Text style={global_styles.principalText}>Add</Text>
+                            <Text style={global_styles.principalText}>{t('add')}</Text>
                         </Pressable>
                     </View>
                 </View>
