@@ -1,8 +1,10 @@
 import Cal from "@/components/global/Cal";
 import Graph from "@/components/global/Graph";
 import StreakBadge from "@/components/global/StreakBadge";
+import WorkoutHistoryCard from "@/components/train/WorkoutHistoryCard";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useProfileStats } from "@/hooks/auth/useProfileStats";
 import { useFollowers } from "@/hooks/social/useFollowers";
 import { useFollowRequestStatus } from "@/hooks/social/useFollowRequests";
 import { supabase } from "@/lib/supabase";
@@ -49,20 +51,9 @@ export default function ProfileDescription() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const targetId = userProfile?.id_usuario ?? null;
-  const {
-    followers,
-    following,
-    isFollowing,
-    isOwnProfile,
-    pending: followPending,
-    toggle: toggleFollow,
-  } = useFollowers(targetId);
-
-  const {
-    hasPendingRequest,
-    sendRequest,
-    cancelRequest,
-  } = useFollowRequestStatus(targetId);
+  const { followers, following, isFollowing, isOwnProfile, pending: followPending, toggle: toggleFollow } = useFollowers(targetId);
+  const { hasPendingRequest, sendRequest, cancelRequest } = useFollowRequestStatus(targetId);
+  const { pesosGrafico, fechasEntrenadas, workoutHistory, totalWorkouts } = useProfileStats(targetId);
 
   const isPrivate = userProfile?.perfil_publico === false;
   const canViewProfile = !isPrivate || isFollowing || isOwnProfile;
@@ -71,11 +62,7 @@ export default function ProfileDescription() {
     async function loadUserProfile() {
       try {
         const selectedUserId = Number(id);
-
-        if (!id || Number.isNaN(selectedUserId)) {
-          setErrorMsg(t('invalid_user_id'));
-          return;
-        }
+        if (!id || Number.isNaN(selectedUserId)) { setErrorMsg(t('invalid_user_id')); return; }
 
         const { data: profile, error } = await supabase
           .from('usuario')
@@ -87,12 +74,8 @@ export default function ProfileDescription() {
           setErrorMsg(`${t('error_loading_profile')}: ${error.message}`);
         } else if (profile) {
           setUserProfile(profile);
-
           if (profile.auth_uuid) {
-            const { data } = supabase.storage
-              .from('avatars')
-              .getPublicUrl(`${profile.auth_uuid}/avatar.jpg`);
-
+            const { data } = supabase.storage.from('avatars').getPublicUrl(`${profile.auth_uuid}/avatar.jpg`);
             setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
           }
         } else {
@@ -104,7 +87,6 @@ export default function ProfileDescription() {
         setLoading(false);
       }
     }
-
     loadUserProfile();
   }, [id, t]);
 
@@ -143,7 +125,6 @@ export default function ProfileDescription() {
         {/* Profile header */}
         <View style={profile_styles.p_headerContainer}>
 
-          {/* Avatar and username row */}
           <View style={profile_styles.p_avatarUsernameContainer}>
             <Image
               source={imgError || !avatarUrl ? defaultAvatar : { uri: avatarUrl }}
@@ -156,11 +137,10 @@ export default function ProfileDescription() {
             <StreakBadge count={userProfile.racha_actual || 0} />
           </View>
 
-          {/* Profile statistics */}
           <View style={profile_styles.p_profileStatsContainer}>
             <View style={profile_styles.p_stat}>
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>0</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>{totalWorkouts}</Text>
             </View>
             <Pressable
               style={profile_styles.p_stat}
@@ -197,11 +177,7 @@ export default function ProfileDescription() {
               <Pressable
                 onPress={async () => {
                   if (isPrivate && !isFollowing) {
-                    if (hasPendingRequest) {
-                      await cancelRequest();
-                    } else {
-                      await sendRequest();
-                    }
+                    hasPendingRequest ? await cancelRequest() : await sendRequest();
                   } else {
                     await toggleFollow();
                   }
@@ -212,11 +188,7 @@ export default function ProfileDescription() {
                   {
                     width: isPrivate && !isFollowing ? 150 : 110,
                     height: 35,
-                    backgroundColor: isFollowing
-                      ? colors.backgroundTertiary
-                      : hasPendingRequest
-                        ? colors.backgroundTertiary
-                        : colors.primary,
+                    backgroundColor: isFollowing ? colors.backgroundTertiary : hasPendingRequest ? colors.backgroundTertiary : colors.primary,
                     opacity: pressed || followPending ? 0.7 : 1,
                   },
                 ]}
@@ -224,19 +196,8 @@ export default function ProfileDescription() {
                 {followPending ? (
                   <ActivityIndicator color={isFollowing ? colors.textPrimary : '#fff'} />
                 ) : (
-                  <Text
-                    style={[
-                      global_styles.principalText,
-                      { color: isFollowing || hasPendingRequest ? colors.textPrimary : '#fff', fontSize: 13 },
-                    ]}
-                  >
-                    {isFollowing
-                      ? t('unfollow')
-                      : isPrivate
-                        ? hasPendingRequest
-                          ? t('follow_request_sent')
-                          : t('send_follow_request')
-                        : t('follow')}
+                  <Text style={[global_styles.principalText, { color: isFollowing || hasPendingRequest ? colors.textPrimary : '#fff', fontSize: 13 }]}>
+                    {isFollowing ? t('unfollow') : isPrivate ? hasPendingRequest ? t('follow_request_sent') : t('send_follow_request') : t('follow')}
                   </Text>
                 )}
               </Pressable>
@@ -245,11 +206,46 @@ export default function ProfileDescription() {
 
         </View>
 
-        {/* Charts section */}
-        <View style={profile_styles.p_charts}>
-          <Graph />
-          <Cal />
-        </View>
+        
+
+        {/* Charts — only visible if profile is public or followed */}
+        {canViewProfile ? (
+          <>
+
+            {/* Workout history */}
+            <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
+              <Text style={[global_styles.tittleText, { fontSize: 18, marginBottom: 12 }]}>
+                {t('recent_workouts')}
+              </Text>
+              {workoutHistory.length === 0 ? (
+                <Text style={[global_styles.secondaryText, { textAlign: 'center', marginVertical: 16 }]}>
+                  {t('no_workouts_yet')}
+                </Text>
+              ) : (
+                workoutHistory.map(item => (
+                  <WorkoutHistoryCard key={item.id_entrenamiento} item={item} />
+                ))
+              )}
+              
+            </View>
+            <View style={profile_styles.p_charts}>
+              <Graph data={pesosGrafico} />
+              <Cal fechasEntrenadas={fechasEntrenadas} />
+            </View>
+
+            
+          </>
+        ) : (
+          <View style={{ alignItems: 'center', marginTop: 40, paddingHorizontal: 32 }}>
+            <Ionicons name="lock-closed-outline" size={40} color={colors.textSecondary} />
+            <Text style={[global_styles.principalText, { marginTop: 12, textAlign: 'center' }]}>
+              {t('private_profile')}
+            </Text>
+            <Text style={[global_styles.secondaryText, { marginTop: 6, textAlign: 'center' }]}>
+              {t('follow_to_see_content')}
+            </Text>
+          </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>

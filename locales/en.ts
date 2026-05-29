@@ -392,4 +392,11 @@ export default {
   month_oct: "Oct",
   month_nov: "Nov",
   month_dec: "Dec",
+
+
+  // Workout history
+  recent_workouts: "Recent Workouts",
+  no_workouts_yet: "No workouts recorded yet",
+  follow_to_see_content: "Follow this user to see their workouts and stats",
+  more: "more",
 }

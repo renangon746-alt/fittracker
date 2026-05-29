@@ -394,4 +394,9 @@ streak: "Racha",
   month_oct: "Oct",
   month_nov: "Nov",
   month_dec: "Dic",
+
+  // Workout history
+  recent_workouts: "Entrenamientos recientes",
+  no_workouts_yet: "Aún no hay entrenamientos registrados",
+  follow_to_see_content: "Sigue a este usuario para ver sus entrenamientos y estadísticas",
 };
