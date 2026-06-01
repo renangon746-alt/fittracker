@@ -1,8 +1,10 @@
 import Cal from "@/components/global/Cal";
 import Graph from "@/components/global/Graph";
 import StreakBadge from "@/components/global/StreakBadge";
+import WorkoutHistoryCard from "@/components/train/WorkoutHistoryCard";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useProfileStats } from "@/hooks/auth/useProfileStats";
 import { useFollowers } from "@/hooks/social/useFollowers";
 import { useFollowRequestStatus } from "@/hooks/social/useFollowRequests";
 import { supabase } from "@/lib/supabase";
@@ -63,10 +65,18 @@ export default function ProfileDescription() {
     hasPendingRequest,
     sendRequest,
     cancelRequest,
+    pending: requestPending,
   } = useFollowRequestStatus(targetId);
 
   const isPrivate = userProfile?.perfil_publico === false;
   const canViewProfile = !isPrivate || isFollowing || isOwnProfile;
+
+  const {
+    pesosGrafico,
+    fechasEntrenadas,
+    workoutHistory,
+    loading: statsLoading,
+  } = useProfileStats(canViewProfile ? targetId : null);
 
   useEffect(() => {
     async function loadUserProfile() {
@@ -214,7 +224,7 @@ export default function ProfileDescription() {
                     await toggleFollow();
                   }
                 }}
-                disabled={followPending}
+                disabled={followPending || requestPending}
                 style={({ pressed }) => [
                   global_styles.principalButton,
                   {
@@ -225,11 +235,11 @@ export default function ProfileDescription() {
                       : hasPendingRequest
                         ? colors.backgroundTertiary
                         : colors.primary,
-                    opacity: pressed || followPending ? 0.7 : 1,
+                    opacity: pressed || followPending || requestPending ? 0.7 : 1,
                   },
                 ]}
               >
-                {followPending ? (
+                {followPending || requestPending ? (
                   <ActivityIndicator color={isFollowing ? colors.textPrimary : '#fff'} />
                 ) : (
                   <Text
@@ -253,11 +263,30 @@ export default function ProfileDescription() {
 
         </View>
 
-        {/* Charts section */}
-        <View style={profile_styles.p_charts}>
-          <Graph />
-          <Cal />
-        </View>
+        {/* Charts & History — only if profile is visible */}
+        {canViewProfile && (
+          <>
+            <View style={profile_styles.p_charts}>
+              <Graph data={pesosGrafico} />
+              <Cal fechasEntrenadas={fechasEntrenadas} />
+            </View>
+
+            {statsLoading ? (
+              <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            ) : workoutHistory.length > 0 ? (
+              <View style={{ marginTop: 8, paddingHorizontal: 20 }}>
+                <Text style={[global_styles.tittleText, { fontSize: 18, marginBottom: 12 }]}>
+                  {t('history')}
+                </Text>
+                {workoutHistory.map((item) => (
+                  <WorkoutHistoryCard key={item.id_entrenamiento} item={item} />
+                ))}
+              </View>
+            ) : null}
+          </>
+        )}
 
       </ScrollView>
     </SafeAreaView>

@@ -1,3 +1,4 @@
+import { toISODate } from '@/app/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 
@@ -18,9 +19,7 @@ interface ProfileStats {
     loading: boolean;
 }
 
-function toDateStr(d: Date) {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
+
 
 export function useProfileStats(idUsuario: number | null): ProfileStats {
     const [pesosGrafico, setPesosGrafico] = useState<PesoPoint[]>([]);
@@ -54,7 +53,7 @@ export function useProfileStats(idUsuario: number | null): ProfileStats {
                     .not('fecha_fin', 'is', null)
                     .order('fecha_inicio', { ascending: false });
 
-                const fechas = [...new Set((entrenos ?? []).map(e => toDateStr(new Date(e.fecha_inicio))))];
+                const fechas = [...new Set((entrenos ?? []).map(e => toISODate(e.fecha_inicio)))];
                 setFechasEntrenadas(fechas);
 
                 // Last 5 workouts with series detail

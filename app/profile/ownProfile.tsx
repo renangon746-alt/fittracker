@@ -1,9 +1,11 @@
 import Cal from "@/components/global/Cal";
 import Graph from "@/components/global/Graph";
 import StreakBadge from "@/components/global/StreakBadge";
+import WorkoutHistoryCard from "@/components/train/WorkoutHistoryCard";
 import { useTranslation } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
+import { useProfileStats } from "@/hooks/auth/useProfileStats";
 import { useFollowers } from "@/hooks/social/useFollowers";
 import { useIncomingFollowRequests } from "@/hooks/social/useFollowRequests";
 import { globalStyles } from "@/styles/global-styles";
@@ -33,8 +35,15 @@ export default function OwnProfile() {
   const [imgError, setImgError] = useState(false);
 
   const { userProfile, avatarUrl, loading, errorMsg } = useUser();
-  const { followers, following } = useFollowers(userProfile?.id_usuario ?? null);
+  const { followers, following, refresh: refreshFollowers } = useFollowers(userProfile?.id_usuario ?? null);
   const { requests, acceptRequest, rejectRequest } = useIncomingFollowRequests();
+
+  const {
+    pesosGrafico,
+    fechasEntrenadas,
+    workoutHistory,
+    loading: statsLoading,
+  } = useProfileStats(userProfile?.id_usuario ?? null);
 
   if (loading) {
     return (
@@ -156,7 +165,10 @@ export default function OwnProfile() {
                   </Text>
                 </View>
                 <Pressable
-                  onPress={() => acceptRequest(req.id_solicitud)}
+                  onPress={async () => {
+                    await acceptRequest(req.id_solicitud);
+                    refreshFollowers();
+                  }}
                   style={{
                     backgroundColor: colors.primary,
                     borderRadius: 8,
@@ -168,7 +180,10 @@ export default function OwnProfile() {
                   <Text style={[global_styles.principalText, { color: '#fff', fontSize: 13 }]}>{t('accept')}</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => rejectRequest(req.id_solicitud)}
+                  onPress={async () => {
+                    await rejectRequest(req.id_solicitud);
+                    refreshFollowers();
+                  }}
                   style={{
                     backgroundColor: colors.backgroundTertiary,
                     borderRadius: 8,
@@ -185,9 +200,25 @@ export default function OwnProfile() {
 
         {/* Charts section */}
         <View style={profile_styles.p_charts}>
-          <Graph />
-          <Cal />
+          <Graph data={pesosGrafico} />
+          <Cal fechasEntrenadas={fechasEntrenadas} />
         </View>
+
+        {/* Workout history */}
+        {statsLoading ? (
+          <View style={{ alignItems: 'center', marginVertical: 20 }}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
+        ) : workoutHistory.length > 0 ? (
+          <View style={{ marginTop: 8, paddingHorizontal: 20 }}>
+            <Text style={[global_styles.tittleText, { fontSize: 18, marginBottom: 12 }]}>
+              {t('history')}
+            </Text>
+            {workoutHistory.map((item) => (
+              <WorkoutHistoryCard key={item.id_entrenamiento} item={item} />
+            ))}
+          </View>
+        ) : null}
 
       </ScrollView>
     </SafeAreaView>
