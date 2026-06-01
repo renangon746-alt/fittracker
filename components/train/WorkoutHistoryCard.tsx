@@ -1,3 +1,4 @@
+import { exerciseImageMap } from '@/assets/data/exerciseImageMap';
 import { useTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { WorkoutHistoryItem } from '@/hooks/auth/useProfileStats';
@@ -5,7 +6,7 @@ import { globalStyles } from '@/styles/global-styles';
 import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
 interface Props {
     item: WorkoutHistoryItem;
@@ -29,10 +30,10 @@ export default function WorkoutHistoryCard({ item }: Props) {
     const train_styles = trainStyles(colors);
     const [previewVisible, setPreviewVisible] = useState(false);
 
-    // Group series by exercise
-    const byExercise = item.series.reduce<Record<string, typeof item.series>>((acc, s) => {
-        if (!acc[s.ejercicio]) acc[s.ejercicio] = [];
-        acc[s.ejercicio].push(s);
+    // Group series by exercise — keep image_key from first occurrence
+    const byExercise = item.series.reduce<Record<string, { series: typeof item.series; image_key: string | null }>>((acc, s) => {
+        if (!acc[s.ejercicio]) acc[s.ejercicio] = { series: [], image_key: s.image_key };
+        acc[s.ejercicio].series.push(s);
         return acc;
     }, {});
 
@@ -61,7 +62,7 @@ export default function WorkoutHistoryCard({ item }: Props) {
                 {/* Exercise preview — up to 3 */}
                 {Object.keys(byExercise).slice(0, 3).map(ex => (
                     <Text key={ex} style={[global_styles.secondaryText, { fontSize: 12, marginTop: 2, marginLeft: 44 }]} numberOfLines={1}>
-                        {ex} · {byExercise[ex].length} {t('sets')}
+                        {ex} · {byExercise[ex].series.length} {t('sets')}
                     </Text>
                 ))}
                 {Object.keys(byExercise).length > 3 && (
@@ -75,7 +76,6 @@ export default function WorkoutHistoryCard({ item }: Props) {
             <Modal visible={previewVisible} transparent animationType="slide" onRequestClose={() => setPreviewVisible(false)}>
                 <Pressable style={train_styles.whc_modalBackdrop} onPress={() => setPreviewVisible(false)} />
                 <View style={[train_styles.whc_modalSheet, { backgroundColor: colors.backgroundSecondary }]}>
-                    {/* Handle */}
                     <View style={[train_styles.whc_handle, { backgroundColor: colors.border }]} />
 
                     <Text style={[global_styles.tittleText, { marginBottom: 4 }]}>{item.rutina_nombre}</Text>
@@ -84,29 +84,40 @@ export default function WorkoutHistoryCard({ item }: Props) {
                         {item.duracion_min ? ` · ${item.duracion_min} min` : ''}
                     </Text>
 
-                    <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
-                        {Object.entries(byExercise).map(([ex, series]) => (
-                            <View key={ex} style={[train_styles.whc_exerciseBlock, { borderTopColor: colors.border }]}>
-                                <Text style={[global_styles.principalText, { color: colors.primary, fontWeight: '700', marginBottom: 6 }]}>
-                                    {ex}
-                                </Text>
-                                {/* Column headers */}
-                                <View style={train_styles.whc_tableRow}>
-                                    <Text style={[train_styles.whc_colSet, global_styles.secondaryText]}>{t('set')}</Text>
-                                    <Text style={[train_styles.whc_colKg, global_styles.secondaryText]}>{t('kg')}</Text>
-                                    <Text style={[train_styles.whc_colReps, global_styles.secondaryText]}>{t('reps')}</Text>
-                                </View>
-                                {series.map((s, i) => (
-                                    <View key={i} style={train_styles.whc_tableRow}>
-                                        <Text style={[train_styles.whc_colSet, global_styles.principalText, { fontWeight: '700' }]}>
-                                            {s.num_serie}
+                    <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+                        {Object.entries(byExercise).map(([ex, { series, image_key }]) => {
+                            const imgSource = image_key ? exerciseImageMap[image_key] : null;
+                            return (
+                                <View key={ex} style={[train_styles.whc_exerciseBlock, { borderTopColor: colors.border }]}>
+                                    {/* Exercise header with image */}
+                                    <View style={train_styles.whc_exHeader}>
+                                        {imgSource
+                                            ? <Image source={imgSource} style={train_styles.whc_exImg} />
+                                            : <View style={[train_styles.whc_exImg, { backgroundColor: colors.backgroundPrimary, borderRadius: 20 }]} />
+                                        }
+                                        <Text style={[global_styles.principalText, { color: colors.primary, fontWeight: '700', flex: 1 }]}>
+                                            {ex}
                                         </Text>
-                                        <Text style={[train_styles.whc_colKg, global_styles.principalText]}>{s.peso_kg}</Text>
-                                        <Text style={[train_styles.whc_colReps, global_styles.principalText]}>{s.repeticiones}</Text>
                                     </View>
-                                ))}
-                            </View>
-                        ))}
+
+                                    {/* Column headers */}
+                                    <View style={train_styles.whc_tableRow}>
+                                        <Text style={[train_styles.whc_colSet, global_styles.secondaryText]}>{t('set')}</Text>
+                                        <Text style={[train_styles.whc_colKg, global_styles.secondaryText]}>{t('kg')}</Text>
+                                        <Text style={[train_styles.whc_colReps, global_styles.secondaryText]}>{t('reps')}</Text>
+                                    </View>
+                                    {series.map((s, i) => (
+                                        <View key={i} style={train_styles.whc_tableRow}>
+                                            <Text style={[train_styles.whc_colSet, global_styles.principalText, { fontWeight: '700' }]}>
+                                                {s.num_serie}
+                                            </Text>
+                                            <Text style={[train_styles.whc_colKg, global_styles.principalText]}>{s.peso_kg}</Text>
+                                            <Text style={[train_styles.whc_colReps, global_styles.principalText]}>{s.repeticiones}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            );
+                        })}
 
                         {item.series.length === 0 && (
                             <Text style={[global_styles.secondaryText, { textAlign: 'center', marginVertical: 24 }]}>

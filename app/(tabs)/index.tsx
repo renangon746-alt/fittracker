@@ -6,6 +6,7 @@ import WeightChart, { PesoPoint } from '@/components/dashboard/WeightChart';
 import { typography } from '@/constants/typography';
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/context/LanguageContext';
+import { toISODate } from '@/app/utils/dateUtils';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -56,10 +57,6 @@ function getSaludo(t: (key: string) => string) {
   return t('greeting_evening');
 }
 
-function toDateStr(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 const SHADOW = Platform.select({
   ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 },
   android: { elevation: 2 },
@@ -84,12 +81,19 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
   ];
 
   async function handleSave() {
-    const val = parseFloat(pesoStr.replace(',', '.'));
-    if (!val || val < 20 || val > 400) { Alert.alert(t('error'), t('invalid_weight')); return; }
+    const clean = pesoStr.replace(',', '.').trim();
+    if (!/^\d+([.]\d{1,2})?$/.test(clean)) { Alert.alert(t('error'), t('invalid_weight')); return; }
+    const val = parseFloat(clean);
+    if (val < 20 || val > 400) { Alert.alert(t('error'), t('invalid_weight')); return; }
     setSaving(true);
-    await onSave(val, fase);
-    setSaving(false);
-    setPesoStr(''); setFase(null); onClose();
+    try {
+      await onSave(val, fase);
+      setPesoStr(''); setFase(null); onClose();
+    } catch {
+      Alert.alert(t('error'), t('could_not_save_weight'));
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -215,7 +219,7 @@ export default function Dashboard() {
         .eq('id_usuario', idUsuario).gte('fecha_inicio', calendarStart.toISOString()).not('fecha_fin', 'is', null);
 
       const fechasEntrenadas = [...new Set(
-        (allEntrenos ?? []).map(e => toDateStr(new Date(e.fecha_inicio)))
+        (allEntrenos ?? []).map(e => toISODate(e.fecha_inicio))
       )];
 
       const { data: series } = await supabase
@@ -263,8 +267,27 @@ export default function Dashboard() {
   }
 
   async function handleSavePeso(peso: number, fase: Fase) {
-    if (!data.idUsuario) return;
-    await supabase.from('peso').insert({ id_usuario: data.idUsuario, peso_kg: peso, fecha: new Date().toISOString().split('T')[0], fase });
+    if (!data.idUsuario) throw new Error('No user');
+    const today = toISODate(new Date());
+
+    // Check if weight already exists for today
+    const { data: existing } = await supabase
+      .from('peso')
+      .select('id_peso')
+      .eq('id_usuario', data.idUsuario)
+      .eq('fecha', today)
+      .maybeSingle();
+
+    const payload = { id_usuario: data.idUsuario, peso_kg: peso, fecha: today, fase };
+    const { error } = existing
+      ? await supabase.from('peso').update(payload).eq('id_peso', existing.id_peso)
+      : await supabase.from('peso').insert(payload);
+
+    if (error) {
+      console.error('handleSavePeso:', error);
+      throw error;
+    }
+
     const { data: pesos } = await supabase.from('peso').select('peso_kg, fecha, fase').eq('id_usuario', data.idUsuario).order('fecha', { ascending: true });
     setData(prev => ({
       ...prev,
@@ -287,8 +310,9 @@ export default function Dashboard() {
       const { error: upErr } = await supabase.storage.from('avatars').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      await supabase.from('foto_progreso').insert({ id_usuario: data.idUsuario, url: urlData.publicUrl, fecha: new Date().toISOString().split('T')[0] });
-      setData(prev => ({ ...prev, fotoProgreso: { url: urlData.publicUrl, fecha: new Date().toISOString().split('T')[0] } }));
+      const today = toISODate(new Date());
+      await supabase.from('foto_progreso').insert({ id_usuario: data.idUsuario, url: urlData.publicUrl, fecha: today });
+      setData(prev => ({ ...prev, fotoProgreso: { url: urlData.publicUrl, fecha: today } }));
     } catch { Alert.alert(t('error'), t('could_not_save_photo')); }
   }
 

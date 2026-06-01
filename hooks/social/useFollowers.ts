@@ -77,7 +77,7 @@ export function useFollowers(targetUserId: number | null) {
   }, [currentUserId, targetUserId]);
 
   const unfollow = useCallback(async () => {
-    if (!currentUserId || !targetUserId) return;
+    if (!currentUserId || !targetUserId || currentUserId === targetUserId) return;
     setPending(true);
     setSummary(s => ({ ...s, isFollowing: false, followers: Math.max(0, s.followers - 1) }));
     const { error } = await supabase

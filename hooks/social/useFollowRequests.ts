@@ -22,6 +22,8 @@ export function useFollowRequestStatus(targetUserId: number | null) {
 
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!currentUserId || !targetUserId || currentUserId === targetUserId) {
@@ -48,25 +50,39 @@ export function useFollowRequestStatus(targetUserId: number | null) {
   }, [refresh]);
 
   const sendRequest = useCallback(async () => {
-    if (!currentUserId || !targetUserId) return;
-    const { error } = await supabase
+    if (!currentUserId || !targetUserId || pending) return;
+    setPending(true);
+    setError(null);
+    const { error: err } = await supabase
       .from('solicitud_seguimiento')
       .insert({ id_solicitante: currentUserId, id_destinatario: targetUserId });
-    if (!error) setHasPendingRequest(true);
-  }, [currentUserId, targetUserId]);
+    if (err) {
+      setError(err.message);
+    } else {
+      setHasPendingRequest(true);
+    }
+    setPending(false);
+  }, [currentUserId, targetUserId, pending]);
 
   const cancelRequest = useCallback(async () => {
-    if (!currentUserId || !targetUserId) return;
-    const { error } = await supabase
+    if (!currentUserId || !targetUserId || pending) return;
+    setPending(true);
+    setError(null);
+    const { error: err } = await supabase
       .from('solicitud_seguimiento')
       .delete()
       .eq('id_solicitante', currentUserId)
       .eq('id_destinatario', targetUserId)
       .eq('estado', 'pendiente');
-    if (!error) setHasPendingRequest(false);
-  }, [currentUserId, targetUserId]);
+    if (err) {
+      setError(err.message);
+    } else {
+      setHasPendingRequest(false);
+    }
+    setPending(false);
+  }, [currentUserId, targetUserId, pending]);
 
-  return { hasPendingRequest, loading, sendRequest, cancelRequest, refresh };
+  return { hasPendingRequest, loading, pending, error, sendRequest, cancelRequest, refresh };
 }
 
 export function useIncomingFollowRequests() {
@@ -125,7 +141,9 @@ export function useIncomingFollowRequests() {
 
   const acceptRequest = useCallback(async (requestId: number) => {
     const { error } = await supabase.rpc('aceptar_solicitud_seguimiento', { solicitud_id: requestId });
-    if (!error) {
+    if (error) {
+      console.error('acceptRequest:', error);
+    } else {
       setRequests(prev => prev.filter(r => r.id_solicitud !== requestId));
     }
   }, []);
@@ -135,7 +153,9 @@ export function useIncomingFollowRequests() {
       .from('solicitud_seguimiento')
       .update({ estado: 'rechazada' })
       .eq('id_solicitud', requestId);
-    if (!error) {
+    if (error) {
+      console.error('rejectRequest:', error);
+    } else {
       setRequests(prev => prev.filter(r => r.id_solicitud !== requestId));
     }
   }, []);

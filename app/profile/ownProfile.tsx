@@ -42,6 +42,7 @@ export default function OwnProfile() {
     pesosGrafico,
     fechasEntrenadas,
     workoutHistory,
+    totalWorkouts,
     loading: statsLoading,
   } = useProfileStats(userProfile?.id_usuario ?? null);
 
@@ -80,7 +81,6 @@ export default function OwnProfile() {
         {/* Profile header */}
         <View style={profile_styles.p_headerContainer}>
 
-          {/* Avatar and username row */}
           <View style={profile_styles.p_avatarUsernameContainer}>
             <Image
               source={imgError || !avatarUrl ? defaultAvatar : { uri: avatarUrl }}
@@ -100,11 +100,10 @@ export default function OwnProfile() {
             <StreakBadge count={userProfile.racha_actual || 0} />
           </View>
 
-          {/* Profile statistics */}
           <View style={profile_styles.p_profileStatsContainer}>
             <View style={profile_styles.p_stat}>
               <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 12 : 14 }]}>{t('trainings')}</Text>
-              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>0</Text>
+              <Text style={[global_styles.principalText, { fontSize: screenWidth < 350 ? 16 : 18 }]}>{totalWorkouts}</Text>
             </View>
             <Pressable
               style={profile_styles.p_stat}
@@ -122,15 +121,14 @@ export default function OwnProfile() {
             </Pressable>
           </View>
 
-          {/* Bio + link */}
           <View style={profile_styles.op_bio}>
             {userProfile.bio ? (
-                <Text style={[global_styles.secondaryText, profile_styles.p_bio, {fontSize: screenWidth < 350 ? 12 : 14 }]}>
+              <Text style={[global_styles.secondaryText, profile_styles.p_bio, { fontSize: screenWidth < 350 ? 12 : 14 }]}>
                 {userProfile.bio}
               </Text>
             ) : null}
             {userProfile.enlace ? (
-                <Text style={[global_styles.secondaryText, profile_styles.p_link,{fontSize: screenWidth < 350 ? 12 : 14, marginTop: userProfile.bio ? 4 : 0 }]}>
+              <Text style={[global_styles.secondaryText, profile_styles.p_link, { fontSize: screenWidth < 350 ? 12 : 14, marginTop: userProfile.bio ? 4 : 0 }]}>
                 {userProfile.enlace}
               </Text>
             ) : null}
@@ -198,28 +196,27 @@ export default function OwnProfile() {
           </View>
         )}
 
-        {/* Charts section */}
+        {/* Workout history */}
+        <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
+          <Text style={[global_styles.tittleText, { fontSize: 18, marginBottom: 12 }]}>
+            {t('recent_workouts')}
+          </Text>
+          {workoutHistory.length === 0 ? (
+            <Text style={[global_styles.secondaryText, { textAlign: 'center', marginVertical: 16 }]}>
+              {t('no_workouts_yet')}
+            </Text>
+          ) : (
+            workoutHistory.map(item => (
+              <WorkoutHistoryCard key={item.id_entrenamiento} item={item} />
+            ))
+          )}
+        </View>
+
+        {/* Charts */}
         <View style={profile_styles.p_charts}>
           <Graph data={pesosGrafico} />
           <Cal fechasEntrenadas={fechasEntrenadas} />
         </View>
-
-        {/* Workout history */}
-        {statsLoading ? (
-          <View style={{ alignItems: 'center', marginVertical: 20 }}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
-        ) : workoutHistory.length > 0 ? (
-          <View style={{ marginTop: 8, paddingHorizontal: 20 }}>
-            <Text style={[global_styles.tittleText, { fontSize: 18, marginBottom: 12 }]}>
-              {t('history')}
-            </Text>
-            {workoutHistory.map((item) => (
-              <WorkoutHistoryCard key={item.id_entrenamiento} item={item} />
-            ))}
-          </View>
-        ) : null}
-
       </ScrollView>
     </SafeAreaView>
   );

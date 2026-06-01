@@ -837,5 +837,18 @@ export const trainStyles = (colors: any) =>
             alignItems: 'center',
             justifyContent: 'center',
         },
+
+        whc_exHeader: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 8,
+        },
+
+        whc_exImg: {
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+        },
         
     });
