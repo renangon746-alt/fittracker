@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
 
 export default function Exercises() { 
 
@@ -27,8 +27,16 @@ export default function Exercises() {
   const styles = globalStyles(colors);
 
   return (
-    <ScrollView style={{ backgroundColor: colors.backgroundSecondary }}>
-      <View style={styles.exercisesSearchContainer}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.exercisesSearchContainer}>
         <TextInput
           style={[styles.exercisesInput, { 
             backgroundColor: colors.backgroundTertiary, 
@@ -57,6 +65,7 @@ export default function Exercises() {
       ) : (
         <MuscleList exercises={search} />
       )}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

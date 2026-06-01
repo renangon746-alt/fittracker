@@ -7,8 +7,8 @@ import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import {
-    ActivityIndicator, FlatList, Image, Modal,
-    Pressable, Text, TextInput, View,
+    ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Modal,
+    Platform, Pressable, Text, TextInput, View,
 } from 'react-native';
 import { Exercise } from './useExercises';
 
@@ -50,7 +50,10 @@ export default function AddExerciseModal({
 
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={handleCancel}>
-            <View style={train_styles.aem_overlay}>
+            <KeyboardAvoidingView
+                style={train_styles.aem_overlay}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
                 <View style={[train_styles.aem_card, { backgroundColor: colors.backgroundSecondary }]}>
                     <Text style={[global_styles.tittleText, { marginBottom: 12 }]}>{t('add_exercise_title')}</Text>
 
@@ -74,6 +77,7 @@ export default function AddExerciseModal({
                             data={filtered}
                             keyExtractor={item => String(item.id_ejercicio)}
                             style={train_styles.aem_list}
+                            keyboardShouldPersistTaps="handled"
                             renderItem={({ item }) => {
                                 const isSelected = selected === item.id_ejercicio;
                                 const imgSource = item.image_key ? exerciseImageMap[item.image_key] : null;
@@ -114,7 +118,7 @@ export default function AddExerciseModal({
                         </Pressable>
                     </View>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal> 
     );
 }

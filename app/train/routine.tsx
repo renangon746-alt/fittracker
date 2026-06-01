@@ -11,7 +11,7 @@ import { trainStyles } from '@/styles/train-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Dimensions, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActiveRoutine, SetsMap, useActiveRoutine } from '../_layout';
 
@@ -277,7 +277,15 @@ export default function Routine() {
 
     return (
         <SafeAreaView style={[global_styles.defaultContainer, { flex: 1 }]}>
-            <ScrollView style={{backgroundColor: colors.backgroundSecondary}} contentContainerStyle={{ paddingBottom: isEditMode ? 32 : BOTTOM_BAR_HEIGHT + 16 } }>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+                <ScrollView
+                    style={{ backgroundColor: colors.backgroundSecondary }}
+                    contentContainerStyle={{ paddingBottom: isEditMode ? 32 : BOTTOM_BAR_HEIGHT + 16 }}
+                    keyboardShouldPersistTaps="handled"
+                >
 
                 <View style={train_styles.r_tittle}>
                     <Pressable onPress={isEditMode ? () => router.back() : handleMinimize}>
@@ -363,6 +371,7 @@ export default function Routine() {
                 )}
 
             </ScrollView>
+            </KeyboardAvoidingView>
 
             {!isEditMode && (
                 <View style={[train_styles.r_bottomBar, { backgroundColor: colors.backgroundPrimary }]}>

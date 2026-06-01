@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { globalStyles } from '@/styles/global-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
 
 interface DbUser {
   id_usuario: number;
@@ -118,8 +118,16 @@ export default function Social() {
   }, [query, users]);
 
   return (
-    <ScrollView style={{ backgroundColor: colors.backgroundSecondary }}>
-      <View style={styles.socialSearchContainer}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.socialSearchContainer}>
         <TextInput
           style={[
             styles.socialInput,
@@ -153,6 +161,7 @@ export default function Social() {
       ) : (
         <Text style={[styles.socialEmptyText, { color: colors.textSecondary }]}>{t('no_users_found')}</Text>
       )}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

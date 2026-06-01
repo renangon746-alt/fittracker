@@ -28,6 +28,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Fase = 'volumen' | 'definicion' | 'mantenimiento' | null;
 
@@ -70,6 +71,7 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
   colors: ReturnType<typeof useTheme>['colors'];
 }) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [pesoStr, setPesoStr] = useState('');
   const [fase, setFase] = useState<Fase>(null);
   const [saving, setSaving] = useState(false);
@@ -101,7 +103,7 @@ function AddWeightModal({ visible, onClose, onSave, colors }: {
       <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }} onPress={onClose}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <Pressable onPress={e => e.stopPropagation()}>
-            <View style={{ backgroundColor: colors.backgroundPrimary, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.backgroundPrimary, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 24 + insets.bottom, alignItems: 'center' }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 20 }} />
               <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 24, color: colors.textPrimary }}>{t('register_weight')}</Text>
 
@@ -327,7 +329,7 @@ export default function Dashboard() {
       <View style={{ flex: 1 }} onLayout={onLayout}>
         <ScrollView
           style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}
-          contentContainerStyle={{ paddingBottom: 36 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Topbar ── */}

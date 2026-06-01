@@ -223,7 +223,7 @@ export const globalStyles = (colors: any) =>
     },
 
     // Settings tab
-    settingsTabContainer: { paddingVertical: 24, paddingBottom: 48 },
+    settingsTabContainer: { paddingVertical: 24, paddingBottom: 100 },
     settingsTabSection: { marginBottom: 28 },
     settingsTabSectionTitle: {
         fontSize: 11,

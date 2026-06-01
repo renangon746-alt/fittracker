@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+
+# Expo / build caches
+.expo/
+
+# Test coverage reports
+coverage/
+
+# Git
+.git/
+
+# Claude IDE local config
+.claude/
+
+# Entregas y documentación del instituto (no código)
+FINAL/
+anexos/
+
+# Documentos de la memoria / presentación
+Diario_Tecnico*.docx
+Memoria_FitTracker*.docx
+Memoria FitTracker*.pdf
+Memoria FitTracker*.docx
+FitTracker_Presentacion*.pptx
+FitTracker_Presentacion*.pdf
+Gantt_FitTracker.xlsx
+Informe de seguimiento.docx
+Informe de seguimiento.pdf
+Tareas_Dual.doc
+Grupo2.zip
+Grupo2_Garcia_Alejandro.zip
+FOLLOW_SYSTEM_README.md
+IMPLEMENTATION_SUMMARY.md
+
+# Scripts auxiliares de una sola vez
+inspect_output.txt
+inspect_pptx.py
+inspect_styles.py
+inspect_styles.txt
+modify_presentation.py
+
+# Archivos de video / imágenes sueltos
+mp4.mp4
+slide-*.jpg
+slides_modified.txt
+slides_text.txt
+
+# Archivos temporales de Office
+~$*
