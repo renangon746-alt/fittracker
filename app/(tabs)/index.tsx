@@ -212,22 +212,26 @@ export default function Dashboard() {
 
       const { data: semana } = await supabase
         .from('entrenamiento').select('id_entrenamiento, fecha_inicio')
-        .eq('id_usuario', idUsuario).gte('fecha_inicio', startWeek.toISOString()).not('fecha_fin', 'is', null);
+        .eq('id_usuario', idUsuario).gte('fecha_inicio', toISODate(startWeek)).not('fecha_fin', 'is', null);
 
       const calendarStart = new Date(startWeek);
       calendarStart.setDate(startWeek.getDate() - 42);
       const { data: allEntrenos } = await supabase
         .from('entrenamiento').select('fecha_inicio')
-        .eq('id_usuario', idUsuario).gte('fecha_inicio', calendarStart.toISOString()).not('fecha_fin', 'is', null);
+        .eq('id_usuario', idUsuario).gte('fecha_inicio', toISODate(calendarStart)).not('fecha_fin', 'is', null);
 
       const fechasEntrenadas = [...new Set(
         (allEntrenos ?? []).map(e => toISODate(e.fecha_inicio))
       )];
 
-      const { data: series } = await supabase
-        .from('serie').select('peso_kg, repeticiones')
-        .in('id_entrenamiento', (semana ?? []).map(e => e.id_entrenamiento));
-      const volumen = (series ?? []).reduce((a, s) => a + (s.peso_kg ?? 0) * (s.repeticiones ?? 0), 0);
+      let volumen = 0;
+      const semanaIds = (semana ?? []).map(e => e.id_entrenamiento);
+      if (semanaIds.length > 0) {
+        const { data: series } = await supabase
+          .from('serie').select('peso_kg, repeticiones')
+          .in('id_entrenamiento', semanaIds);
+        volumen = (series ?? []).reduce((a, s) => a + (s.peso_kg ?? 0) * (s.repeticiones ?? 0), 0);
+      }
 
       let mejorMarca = null;
       const { data: todosEntrenos } = await supabase
@@ -303,13 +307,18 @@ export default function Dashboard() {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) { Alert.alert(t('permission_needed'), t('gallery_permission')); return; }
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.5, base64: true });
       if (result.canceled || !data.idUsuario || !result.assets || result.assets.length === 0) return;
       const uri = result.assets[0].uri;
+      const base64 = result.assets[0].base64;
+      if (!base64) { Alert.alert(t('error'), t('could_not_save_photo')); return; }
       const fileName = `checkin_${data.idUsuario}_${Date.now()}.jpg`;
-      const resp = await fetch(uri);
-      const blob = await resp.blob();
-      const { error: upErr } = await supabase.storage.from('avatars').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const { error: upErr } = await supabase.storage.from('avatars').upload(fileName, bytes, { upsert: true, contentType: 'image/jpeg' });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
       const today = toISODate(new Date());
@@ -405,7 +414,7 @@ export default function Dashboard() {
           <View style={{ flexDirection: 'row', gap: GAP, paddingHorizontal: H_PAD }}>
             <Pressable
               style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 14, borderRadius: 24, backgroundColor: colors.backgroundPrimary, opacity: pressed ? 0.7 : 1 }, SHADOW]}
-              onPress={() => router.push('/(tabs)/train')}
+              onPress={() => router.push('/profile/ownProfile')}
             >
               <Ionicons name="time-outline" size={18} color={colors.textPrimary} />
               <Text style={[typography.caption1Bold, { color: colors.textPrimary }]}>{t('history')}</Text>

@@ -17,6 +17,7 @@ export function useEditProfile() {
     const [enlace, setEnlace] = useState('');
     const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
     const [localImageUri, setLocalImageUri] = useState<string | null>(null);
+    const [localImageBase64, setLocalImageBase64] = useState<string | null>(null);
 
     // Populate fields from the global context — no extra query needed
     useEffect(() => {
@@ -42,11 +43,13 @@ export function useEditProfile() {
                 mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [1, 1],
-                quality: 0.8,
+                quality: 0.5,
+                base64: true,
             });
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 setLocalImageUri(result.assets[0].uri);
+                setLocalImageBase64(result.assets[0].base64 ?? null);
             }
         } catch (err) {
             console.error('Image picker error:', err);
@@ -62,14 +65,17 @@ export function useEditProfile() {
             let fotoUrl = fotoPerfil;
 
             // Upload new avatar if the user picked one
-            if (localImageUri) {
+            if (localImageBase64) {
                 const fileName = `${authUserId}/avatar.jpg`;
-                const response = await fetch(localImageUri);
-                const blob = await response.blob();
+                const binary = atob(localImageBase64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
 
                 const { error: uploadError } = await supabase.storage
                     .from('avatars')
-                    .upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
+                    .upload(fileName, bytes, { upsert: true, contentType: 'image/jpeg' });
 
                 if (uploadError) throw uploadError;
 
