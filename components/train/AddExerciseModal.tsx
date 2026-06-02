@@ -10,6 +10,7 @@ import {
     ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Modal,
     Platform, Pressable, Text, TextInput, View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Exercise } from './useExercises';
 
 interface AddExerciseModalProps {
@@ -27,6 +28,7 @@ export default function AddExerciseModal({
     const { t } = useTranslation();
     const global_styles = globalStyles(colors);
     const train_styles = trainStyles(colors);
+    const insets = useSafeAreaInsets();
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState<number | null>(null);
 
@@ -105,7 +107,7 @@ export default function AddExerciseModal({
                     )}
 
                     {/* Actions */}
-                    <View style={train_styles.aem_actions}>
+                    <View style={[train_styles.aem_actions, { paddingBottom: insets.bottom }]}>
                         <Pressable style={[global_styles.secondaryButton, train_styles.aem_actionBtn]} onPress={handleCancel}>
                             <Text style={global_styles.principalText}>{t('cancel')}</Text>
                         </Pressable>

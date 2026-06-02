@@ -13,6 +13,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActiveRoutine, SetsMap, useActiveRoutine } from '../_layout';
 
 const screenWidth = Dimensions.get('window').width;
@@ -38,6 +39,8 @@ export default function Routine() {
     const { id, nombre, editMode: editModeParam } = useLocalSearchParams<{ id: string; nombre: string; editMode?: string }>();
     const routineId = Number(id);
     const isEditMode = editModeParam === '1';
+
+    const insets = useSafeAreaInsets();
 
     const {
         active, activeRef, tickSeconds, updateSetsMap, updateRecordCount,
@@ -283,7 +286,7 @@ export default function Routine() {
             >
                 <ScrollView
                     style={{ backgroundColor: colors.backgroundSecondary }}
-                    contentContainerStyle={{ paddingBottom: isEditMode ? 32 : BOTTOM_BAR_HEIGHT + 16 }}
+                    contentContainerStyle={{ paddingBottom: isEditMode ? 32 + insets.bottom : BOTTOM_BAR_HEIGHT + 16 + insets.bottom }}
                     keyboardShouldPersistTaps="handled"
                 >
 
@@ -374,7 +377,7 @@ export default function Routine() {
             </KeyboardAvoidingView>
 
             {!isEditMode && (
-                <View style={[train_styles.r_bottomBar, { backgroundColor: colors.backgroundPrimary }]}>
+                <View style={[train_styles.r_bottomBar, { backgroundColor: colors.backgroundPrimary, paddingBottom: 12 + insets.bottom }]}>
                     {restActive ? (
                         <View>
                             {/* Full-width progress bar — capped at 100% if time is extended */}

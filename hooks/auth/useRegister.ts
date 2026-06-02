@@ -21,14 +21,14 @@ export function useRegister() {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.5,
             base64: true,
         });
 
-        if (!result.canceled) {
+        if (!result.canceled && result.assets && result.assets.length > 0) {
             setImageUri(result.assets[0].uri);
             setImageBase64(result.assets[0].base64 ?? null);
         }

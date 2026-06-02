@@ -250,6 +250,7 @@ export default {
   gallery_permission: "Necesitamos acceso a tu galería.",
   error: "Error",
   could_not_save_photo: "No se pudo guardar la foto.",
+  could_not_select_photo: "No se pudo seleccionar la foto.",
   add: "Añadir",
   loading: "Cargando...",
 

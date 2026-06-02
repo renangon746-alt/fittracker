@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/Icon__dumbell_fitTracker.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.alextrack2013.FitTracker"
     },
     "web": {
       "output": "server",
@@ -45,6 +46,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "de4b56f9-1f97-4828-a7a0-e10132b00312"
+      }
     }
   }
 }

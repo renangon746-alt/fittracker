@@ -249,6 +249,7 @@ export default {
   gallery_permission: "We need access to your gallery.",
   error: "Error",
   could_not_save_photo: "Could not save the photo.",
+  could_not_select_photo: "Could not select the photo.",
   add: "Add",
   loading: "Loading...",
 

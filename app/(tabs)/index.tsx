@@ -300,12 +300,12 @@ export default function Dashboard() {
   }
 
   async function handleCheckIn() {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(t('permission_needed'), t('gallery_permission')); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
-    if (result.canceled || !data.idUsuario) return;
-    const uri = result.assets[0].uri;
     try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) { Alert.alert(t('permission_needed'), t('gallery_permission')); return; }
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+      if (result.canceled || !data.idUsuario || !result.assets || result.assets.length === 0) return;
+      const uri = result.assets[0].uri;
       const fileName = `checkin_${data.idUsuario}_${Date.now()}.jpg`;
       const resp = await fetch(uri);
       const blob = await resp.blob();
@@ -315,7 +315,9 @@ export default function Dashboard() {
       const today = toISODate(new Date());
       await supabase.from('foto_progreso').insert({ id_usuario: data.idUsuario, url: urlData.publicUrl, fecha: today });
       setData(prev => ({ ...prev, fotoProgreso: { url: urlData.publicUrl, fecha: today } }));
-    } catch { Alert.alert(t('error'), t('could_not_save_photo')); }
+    } catch {
+      Alert.alert(t('error'), t('could_not_save_photo'));
+    }
   }
 
   if (loading) return (

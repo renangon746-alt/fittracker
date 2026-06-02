@@ -31,21 +31,26 @@ export function useEditProfile() {
     }, [userProfile, contextAvatarUrl]);
 
     async function handlePickImage() {
-        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!permission.granted) {
-            Alert.alert(t('permission_needed'), t('gallery_permission'));
-            return;
-        }
+        try {
+            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permission.granted) {
+                Alert.alert(t('permission_needed'), t('gallery_permission'));
+                return;
+            }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-        });
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+            });
 
-        if (!result.canceled) {
-            setLocalImageUri(result.assets[0].uri);
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                setLocalImageUri(result.assets[0].uri);
+            }
+        } catch (err) {
+            console.error('Image picker error:', err);
+            Alert.alert(t('error'), t('could_not_select_photo'));
         }
     }
 
